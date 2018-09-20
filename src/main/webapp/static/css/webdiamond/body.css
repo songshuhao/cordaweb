@@ -1,0 +1,18 @@
+/*modal open then padding-right=19px*n bug 
+add by shuhao.song*/
+body {
+         padding-right: 0px !important; 
+     }
+     
+*.modal-open {
+		overflow-y: scroll;
+		padding-right: 0 !important;
+	}
+	
+.p1{
+overflow: hidden;
+text-overflow: ellipsis;
+display: -webkit-box;
+-webkit-line-clamp: 5;
+-webkit-box-orient: vertical;
+}

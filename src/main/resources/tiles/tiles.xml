@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+	"-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+	"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<definition name="baseLayout" template="/layout/baseLayout.jsp">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="header" value="/layout/header.jsp"/>
+		<put-attribute name="menu" value=""/>
+		<put-attribute name="body" value=""/>
+		<put-attribute name="footer" value="/layout/footer.jsp"/>
+	</definition>
+	<definition name="welcome" extends="baseLayout">
+		<put-attribute name="title" value="Greeting"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+	</definition>
+	
+	<definition name="basketList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/basketList.jsp"/>
+	</definition>
+	<definition name="diamondsList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/diamondsList.jsp"/>
+	</definition>
+	
+	<definition name="confirmList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/confirmList.jsp"/>
+	</definition>
+	
+	<definition name="confirmgiaList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/confirmgiaList.jsp"/>
+	</definition>
+	
+	<definition name="moveList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/moveList.jsp"/>
+	</definition>
+	
+	<definition name="movevaultList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/movevaultList.jsp"/>
+	</definition>
+	
+	<definition name="auditList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/auditList.jsp"/>
+	</definition>
+	
+	<definition name="auditauditerList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/auditauditerList.jsp"/>
+	</definition>
+	
+	<definition name="historyList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/historyList.jsp"/>
+	</definition>
+	
+	<definition name="transferList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/transferList.jsp"/>
+	</definition>
+	
+	<definition name="transfervaultList" extends="baseLayout">
+		<put-attribute name="title" value="Diamond Trading"/>
+		<put-attribute name="menu" value="/layout/menu.jsp"/>
+		<put-attribute name="body" value="/pages/transfervaultList.jsp"/>
+	</definition>
+	
+</tiles-definitions>
