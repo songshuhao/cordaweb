@@ -27,13 +27,13 @@ import net.corda.core.contracts.StateAndRef;
 
 @Service
 public class BasketInfoServcieCordaImpl implements PackageInfoService {
-	@Autowired
+	//@Autowired
 	private CordaApi cordaApi;
 	private DiamondTradeApi diamondApi;
 	// private Logger logger = LoggerFactory.getLogger(getClass());
 	private Logger logger = LogManager.getLogger(getClass());
 
-	@PostConstruct
+	//@PostConstruct
 	public void init() {
 		diamondApi = cordaApi.getTradediamondinf();
 	}

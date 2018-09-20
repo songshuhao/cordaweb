@@ -49,7 +49,7 @@ public class DiamondsInfoController extends BaseController {
 	private DiamondsinfoMapper diamondsinfoMapper;
 	@Autowired
 	private BasketinfoMapper basketinfoMapper;
-	@Autowired
+	//@Autowired
 	private CordaApi cordaApi;
 	private String aoc = "O=AOC,L=HKSAR,C=CN";
 

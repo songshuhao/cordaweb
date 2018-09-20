@@ -17,7 +17,7 @@ public class CordaApiImpl implements CordaApi {
 	private NodeRPCConnection noderpcconn=null;
 	private DiamondTradeApi diamondtradeinf;
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
-	@Autowired
+	//@Autowired
 	private PermConfigHelperInf permconfighelperinf;
 	private String nodeuser=null;
 	private String username=null;

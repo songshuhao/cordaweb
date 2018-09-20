@@ -21,7 +21,7 @@ import ats.blockchain.web.corda.CordaApi;
 public class CommonController {
 
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
-	@Autowired
+	//@Autowired
 	private CordaApi cordaApi;
 	
 	@RequestMapping("/getOtherUser")
