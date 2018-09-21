@@ -149,8 +149,8 @@
                 //sortOrder: "asc",     //排序方式 
                 sidePagination: "client", //服务端处理分页server
                 pageNumber: 1,                       //初始化加载第一页，默认第一页
-                pageSize: 5,                       //每页的记录行数（*）
-                pageList: [5,10, 25],//每页的记录行数（*）
+                pageSize: 10,                       //每页的记录行数（*）
+                pageList: [5, 10, 25, 50],          //每页的记录行数（*）
                 //contentType : "application/x-www-form-urlencoded",
                 queryParams: queryParams, //传递参数（*）
                 toolbar:"#toolbar",//工具栏
@@ -219,7 +219,6 @@
  
   //Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
-    	//console.log($("#addForm").data('bootstrapValidator'));
     	document.getElementById("addForm").reset();
     	$("#addForm").data('bootstrapValidator').destroy();
     	$('#addForm').data('bootstrapValidator',null);
@@ -268,7 +267,7 @@
                 return false;
             }
         }
-        var index = layer.load(1);
+        var index = layer.load();
     	var formData = new FormData($("#importForm")[0]);
         $.ajax({
             //接口地址
@@ -300,7 +299,7 @@
     function submit()
     {
     	var url = "<%=basePath %>/basket/submitBasketList";
-    	var index = layer.load(1);
+    	var index = layer.load();
     	$.ajax({
 			url:url,
 			method:"post",
@@ -336,7 +335,7 @@
                 return false;
             }
         }
-        var index = layer.load(1);
+        var index = layer.load();
 		var param = $("#addForm").serializeArray();
 		//debugger;
 		$.ajax({

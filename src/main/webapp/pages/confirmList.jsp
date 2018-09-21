@@ -92,8 +92,8 @@
                 //sortOrder: "asc",     //排序方式 
                 sidePagination: "client", //服务端处理分页server
                 pageNumber: 1,                       //初始化加载第一页，默认第一页
-                pageSize: 5,                       //每页的记录行数（*）
-                pageList: [5,10, 25],//每页的记录行数（*）
+                pageSize: 10,                       //每页的记录行数（*）
+                pageList: [5, 10, 25, 50],          //每页的记录行数（*）
                 //contentType : "application/x-www-form-urlencoded",
                 queryParams: queryParams, //传递参数（*）
                 toolbar:"#toolbar",//工具栏
@@ -180,7 +180,7 @@
     function submit()
     {
     	
-    	var index = layer.load(1);
+    	var index = layer.load();
     	var url = "<%=basePath %>/confirm/submitBasketList";
     	var param = {"step":step};
     	$.ajax({
@@ -231,7 +231,7 @@
         }
         
         
-        var index = layer.load(1);
+        var index = layer.load();
 		var param = $("#addForm").serializeArray();
 		param.push({"name":"step","value":step});
 		$.ajax({

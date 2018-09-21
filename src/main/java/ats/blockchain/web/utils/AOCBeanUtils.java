@@ -34,10 +34,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ResourceUtils;
 
 import com.csvreader.CsvReader;
+import com.google.common.collect.Lists;
+import com.greenbirdtech.blockchain.cordapp.diamond.data.DiamondInfo;
 
+import ats.blockchain.cordapp.diamond.data.DiamondsInfo1;
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
+import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.model.UserInfo;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.identity.AbstractParty;
@@ -358,9 +362,18 @@ public class AOCBeanUtils {
 		pkgInf.setOwner(data.getOwner());
 		pkgInf.setVault(data.getVault()!=null?data.getVault().getName().toString():"");
 		pkgInf.setGradlab(data.getGradlab()!=null? data.getGradlab().getName().toString():"");
-		
 		pad.setPkgInfo(pkgInf);
-		pad.setDiamondList(data.getDiamondinfolist());
+		List<DiamondsInfo1> list = data.getDiamondinfolist();
+		List<Diamondsinfo> diList = Lists.newArrayList();
+		if(list !=null ) {
+			for(DiamondsInfo1 li :list) {
+				Diamondsinfo di = new Diamondsinfo();
+				BeanUtils.copyProperties(li, di);
+				diList.add(di);
+			}
+			pad.setDiamondList(diList);
+		}
+		
 		return pad;
 	}
 	

@@ -24,8 +24,8 @@ import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.FileUtils;
 import ats.blockchain.web.utils.ResultUtil;
 
-//@Controller
-//@RequestMapping("/basket")
+@Controller
+@RequestMapping("/basket")
 public class BasketInfoController2 extends BaseController {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Resource
@@ -75,7 +75,7 @@ public class BasketInfoController2 extends BaseController {
 	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber, int pageSize, HttpServletRequest request)
 			throws JSONException {
 		PagedObjectDTO dto = new PagedObjectDTO();
-		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(PackageState.PKG_ISSUE);
+		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(PackageState.PKG_CREATE,PackageState.PKG_ISSUE);
 		dto.setRows(list);
 		dto.setTotal((long) list.size());
 		return dto;

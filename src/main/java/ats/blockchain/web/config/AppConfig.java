@@ -13,7 +13,7 @@ import ats.blockchain.web.corda.impl.PermConfigHelper;
 public class AppConfig{
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	/*@Bean(initMethod = "init")
+	@Bean(initMethod = "init")
 	public PermConfigHelperInf permconfighelperinf() {
 		logger.info("init PermConfigHelperInf");
 		return (new PermConfigHelper());
@@ -23,5 +23,5 @@ public class AppConfig{
 	public CordaApiImpl cordaApi() {
 		logger.info("init cordaApi");
 		return (new CordaApiImpl());
-	}*/
+	}
 }

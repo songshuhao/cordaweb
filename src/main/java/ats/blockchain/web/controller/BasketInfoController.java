@@ -30,8 +30,8 @@ import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.FileUtils;
 
-@Controller
-@RequestMapping("/basket")
+//@Controller
+//@RequestMapping("/basket")
 public class BasketInfoController extends BaseController
 {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());

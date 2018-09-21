@@ -27,13 +27,13 @@ import net.corda.core.contracts.StateAndRef;
 
 @Service
 public class BasketInfoServcieCordaImpl implements PackageInfoService {
-	//@Autowired
+	@Autowired
 	private CordaApi cordaApi;
 	private DiamondTradeApi diamondApi;
 	// private Logger logger = LoggerFactory.getLogger(getClass());
 	private Logger logger = LogManager.getLogger(getClass());
 
-	//@PostConstruct
+	@PostConstruct
 	public void init() {
 		diamondApi = cordaApi.getTradediamondinf();
 	}
@@ -99,7 +99,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	
 
 	@Override
-	public List<PackageInfo> getPackageInfoByStatus(String status) {
+	public List<PackageInfo> getPackageInfoByStatus(String... status) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateByStatus(status);
 		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		List<PackageInfo> pkgList = new ArrayList<PackageInfo>();
@@ -110,7 +110,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	}
 	
 	@Override
-	public List<PackageState> getPackageStateByStatus(String status) {
+	public List<PackageState> getPackageStateByStatus(String... status) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateByStatus(status);
 		List<PackageState> pkgList = new ArrayList<PackageState>();
 		for (StateAndRef<PackageState> pad : list) {
@@ -120,7 +120,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	}
 	
 	@Override
-	public List<PackageInfo> getPackageInfoById(String basketNo) {
+	public List<PackageInfo> getPackageInfoById(String... basketNo) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);
 		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		List<PackageInfo> pkgList = new ArrayList<PackageInfo>();
@@ -131,7 +131,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	}
 	
 	@Override
-	public List<PackageState> getPackageStateById(String basketNo) {
+	public List<PackageState> getPackageStateById(String... basketNo) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);
 		List<PackageState> pkgList = new ArrayList<PackageState>();
 		for (StateAndRef<PackageState> pad : list) {

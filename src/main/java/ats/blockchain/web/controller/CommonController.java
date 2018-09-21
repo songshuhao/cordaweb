@@ -16,12 +16,11 @@ import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.corda.CordaApi;
 
 @Controller
-
 @RequestMapping("/common")
 public class CommonController {
 
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
-	//@Autowired
+	@Autowired
 	private CordaApi cordaApi;
 	
 	@RequestMapping("/getOtherUser")

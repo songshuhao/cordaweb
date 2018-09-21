@@ -11,13 +11,13 @@ public interface PackageInfoService {
 
 	List<PackageInfo> getPackageInfo();
 
-	List<PackageInfo> getPackageInfoById(String basketNo);
+	List<PackageInfo> getPackageInfoById(String... basketNo);
 
-	List<PackageInfo> getPackageInfoByStatus(String status);
+	List<PackageInfo> getPackageInfoByStatus(String... status);
 
-	List<PackageState> getPackageStateByStatus(String status);
+	List<PackageState> getPackageStateByStatus(String... status);
 
-	List<PackageState> getPackageStateById(String basketNo);
+	List<PackageState> getPackageStateById(String... basketNo);
 
 	/**
 	 * 

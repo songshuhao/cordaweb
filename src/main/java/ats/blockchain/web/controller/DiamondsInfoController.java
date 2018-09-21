@@ -41,8 +41,8 @@ import ats.blockchain.web.utils.DateFormatUtils;
 import ats.blockchain.web.utils.FileUtils;
 import net.corda.core.contracts.StateAndRef;
 
-@Controller
-@RequestMapping("/diamond")
+//@Controller
+//@RequestMapping("/diamond")
 public class DiamondsInfoController extends BaseController {
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
@@ -53,8 +53,6 @@ public class DiamondsInfoController extends BaseController {
 	private CordaApi cordaApi;
 	private String aoc = "O=AOC,L=HKSAR,C=CN";
 
-	
-	
 	@RequestMapping("/addDiamondInfo")
 	@ResponseBody
 	public String addDiamondInfo(Diamondsinfo diamondsinfo) throws JSONException {
@@ -137,16 +135,17 @@ public class DiamondsInfoController extends BaseController {
 		List<Diamondsinfo> diamondList=   Lists.newArrayList();
 		 List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		for(PackageAndDiamond pad :padList) {
-			List<DiamondsInfo1> dl = pad.getDiamondList();
+			List<Diamondsinfo> dl = pad.getDiamondList();
 			PackageInfo pkg = pad.getPkgInfo();
 			if(dl!=null&& dl.size()>0) {
 				logger.debug("package has diamond , add to result, basketno: {}, size: {}",pkg.getBasketno(),dl.size());
-				for(DiamondsInfo1 dc :dl) {
-					Diamondsinfo di = new Diamondsinfo();
-					BeanUtils.copyProperties(dc, di);
-					logger.debug("copy diamondsInfo1: {} ,diamondInfo: {}",dc,di);
-					diamondList.add(di);
-				}
+				diamondList.addAll(dl);
+//				for(DiamondsInfo1 dc :dl) {
+//					Diamondsinfo di = new Diamondsinfo();
+//					BeanUtils.copyProperties(dc, di);
+//					logger.debug("copy diamondsInfo1: {} ,diamondInfo: {}",dc,di);
+//					diamondList.add(di);
+//				}
 			}else {
 				int num = pkg.getDiamondsnumber();
 				logger.debug("package has no diamond , convert PackageInfo to DiamondInfo, basketno: {}, size: {}",pkg.getBasketno(),num);

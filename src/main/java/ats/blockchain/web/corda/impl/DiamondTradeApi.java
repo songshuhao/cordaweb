@@ -7,9 +7,11 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,20 +20,21 @@ import org.springframework.beans.BeanUtils;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.greenbirdtech.blockchain.cordapp.diamond.data.DiamondState;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondAuditFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondAuditRespFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondCollectFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondMoveFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondMoveRespFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondRedeemFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondTransferFlow;
-import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondTransferRespFlow;
-import com.greenbirdtech.blockchain.cordapp.webdiamond.util.StringUtil;
 
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo1;
 import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.cordapp.diamond.flow.DiamondAuditFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondAuditRespFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondCollectFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondMoveFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondMoveRespFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondRedeemFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondTransferFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondTransferRespFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageCreateFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageRemoveFlow;
@@ -39,6 +42,7 @@ import ats.blockchain.cordapp.diamond.util.ClassMethodFactory;
 import ats.blockchain.cordapp.diamond.util.Constants;
 import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.bean.PackageInfo;
+import ats.blockchain.web.utils.StringUtil;
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCClientConfiguration;
 import net.corda.client.rpc.CordaRPCConnection;
@@ -52,6 +56,8 @@ import net.corda.core.messaging.FlowHandle;
 import net.corda.core.node.NodeInfo;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.Vault.Page;
+import net.corda.core.node.services.Vault.StateMetadata;
+import net.corda.core.node.services.Vault.StateStatus;
 import net.corda.core.node.services.vault.Builder;
 import net.corda.core.node.services.vault.CriteriaExpression;
 import net.corda.core.node.services.vault.QueryCriteria;
@@ -107,38 +113,67 @@ public class DiamondTradeApi {
 	}
 
 	public List<StateAndRef<PackageState>> getPackageStateByStatus(String... status) {
-		logger.debug("getPackageStateByStatus :{}", Arrays.toString(status));
+		logger.debug("getPackageStateByStatus :{}", status);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
 		Field statusField = getField(PackageState.class, "status");
-		CriteriaExpression exp = Builder.in(statusField, Arrays.asList(status));
-		logger.debug("getPackageStateByStatus :{}", exp.getClass().getGenericSuperclass().getTypeName());
+		CriteriaExpression exp = Builder.equal(statusField, status);
 		QueryCriteria crit = new VaultCustomQueryCriteria(exp);
 		generalCriteria.and(crit);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(generalCriteria, PackageState.class);
-
-		return result.getStates();
+		 HashSet<String> set = Sets.newHashSet(status);
+		
+			List<StateAndRef<PackageState>> states = result.getStates();
+			List<StateMetadata> stateMeta = result.getStatesMetadata();
+			logger.debug("getPackageStateByStatus :{}, state size: {} , meta size: {}.",status,states.size(),stateMeta.size());
+			logger.debug("query status:{} ",set);
+			List<StateAndRef<PackageState>> list = Lists.newArrayList();
+			for(int j = 0;j< states.size();j++) {
+				StateAndRef<PackageState> s = states.get(j);
+				StateMetadata m = stateMeta.get(j);
+				StateStatus status2 = m.getStatus();
+				PackageState data = s.getState().getData();
+				String dStatus = data.getStatus();
+				logger.debug("baskNo: {} ,consumed status:{} ,status :{} ",data.getBasketno(),status2,dStatus);
+				if(status2.equals(Vault.StateStatus.UNCONSUMED)&& set.contains(dStatus)) {
+					logger.debug("status match :{}",data.getBasketno());
+					list.add(s);
+				}
+			}
+			logger.debug("query result size:{} ",list.size());
+			return list;
 	}
-	
+
 	public List<StateAndRef<PackageState>> getPackageStateById(String... basketNo) {
-		logger.debug("getPackageStateById :{}", Arrays.toString(basketNo));
+		logger.debug("getPackageStateById :{}",basketNo);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
 		Field statusField = getField(PackageState.class, "basketno");
-		CriteriaExpression exp = Builder.in(statusField,  Arrays.asList(basketNo));
-		QueryCriteria crit = new VaultCustomQueryCriteria(exp);
+		CriteriaExpression exp = Builder.equal(statusField, basketNo);
+		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
 		generalCriteria.and(crit);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(generalCriteria, PackageState.class);
-
-		return result.getStates();
+		
+		HashSet<String> set = Sets.newHashSet(basketNo);
+		List<StateAndRef<PackageState>> states = result.getStates();
+		List<StateMetadata> stateMeta = result.getStatesMetadata();
+		logger.debug("getPackageStateById :{}, state size: {} , meta size: {}.",basketNo,states.size(),stateMeta.size());
+		List<StateAndRef<PackageState>> list = Lists.newArrayList();
+		for(int j = 0;j< states.size();j++) {
+			StateAndRef<PackageState> s = states.get(j);
+			StateMetadata m = stateMeta.get(j);
+			if(m.getStatus().equals(Vault.StateStatus.UNCONSUMED)&& set.contains(s.getState().getData().getBasketno())) {
+				list.add(s);
+			}
+		}
+		
+		return list;
 	}
 
-	
-	
 	public List<StateAndRef<DiamondState>> getDiamondStateByStatus(int status) {
 		logger.debug("getPackageStateByStatus :{}", status);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
 		Field statusField = getField(DiamondState.class, "status");
 		CriteriaExpression exp = Builder.equal(statusField, status);
-	
+
 		logger.debug("getPackageStateByStatus :{}", exp.getClass().getGenericSuperclass().getTypeName());
 		QueryCriteria crit = new VaultCustomQueryCriteria(exp);
 		generalCriteria.and(crit);
@@ -160,14 +195,14 @@ public class DiamondTradeApi {
 		return (diamondlist);
 	}
 
-	public DiamondState getCounterPartyDiamond(String counterparty, String externalid) throws DiamondWebException {
-		DiamondState diamondstate = null;
+	public PackageState getCounterPartyDiamond(String counterparty, String externalid) throws DiamondWebException {
+		PackageState diamondstate = null;
 		CordaX500Name x500Name = CordaX500Name.parse(counterparty);
 		final Party counterIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (counterIdentity == null)
 			throw new DiamondWebException("Counterparty not found");
 		try {
-			FlowHandle<DiamondState> flowhandle = rpcops.startFlowDynamic(DiamondCollectFlow.Initiator.class,
+			FlowHandle<PackageState> flowhandle = rpcops.startFlowDynamic(DiamondCollectFlow.Initiator.class,
 					counterIdentity, externalid);
 			diamondstate = flowhandle.getReturnValue().get();
 		} catch (ExecutionException ee) {
@@ -184,7 +219,8 @@ public class DiamondTradeApi {
 	 * 
 	 * @param supplier
 	 * @param pkgInfo
-	 * @param state enum in PackageState 
+	 * @param state
+	 *            enum in PackageState
 	 * @return
 	 * @throws DiamondWebException
 	 */
@@ -194,16 +230,16 @@ public class DiamondTradeApi {
 		}
 		String externalid = pkgInfo.getBasketno();
 		String stateStr = Constants.PKG_STATE_MAP.get(state);
-		logger.debug("{} :aoc {}, externalId:{} ,pkgInfo: {} ",stateStr, supplier, externalid, pkgInfo);
+		logger.debug("{} :aoc {}, externalId:{} ,pkgInfo: {} ", stateStr, supplier, externalid, pkgInfo);
 		CordaX500Name x500Name = CordaX500Name.parse(supplier);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null) {
-			logger.error("{} supplier not found {}",stateStr, supplier);
-			throw new DiamondWebException(stateStr +" supplier not found");
+			logger.error("{} supplier not found {}", stateStr, supplier);
+			throw new DiamondWebException(stateStr + " supplier not found");
 		}
 		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
 		if ((supplierlist == null) || (supplierlist.size() == 0)) {
-			logger.error("{} Unknown supplier ",stateStr);
+			logger.error("{} Unknown supplier ", stateStr);
 			throw new DiamondWebException("Unknown supplier");
 		}
 		logger.debug("getLegalIdentities {} ", supplierlist.toString());
@@ -213,11 +249,11 @@ public class DiamondTradeApi {
 				initClass = PackageCreateFlow.Initiator.class;
 			} else if (PackageState.PKG_ISSUE.equals(state)) {
 				initClass = PackageIssueFlow.Initiator.class;
-			}else if (PackageState.PKG_REMOVE.equals(state)) {
+			} else if (PackageState.PKG_REMOVE.equals(state)) {
 				initClass = PackageRemoveFlow.Initiator.class;
-			}else {
-				logger.error("Unsupport operation in createPackage: {}",stateStr);
-				throw new DiamondWebException("Unsupport operation :"+stateStr);
+			} else {
+				logger.error("Unsupport operation in createPackage: {}", stateStr);
+				throw new DiamondWebException("Unsupport operation :" + stateStr);
 			}
 
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(initClass, aocIdentity, pkgInfo);
@@ -230,7 +266,7 @@ public class DiamondTradeApi {
 			strbuf.append(supplierlist.get(0).getName());
 			return (strbuf.toString());
 		} catch (Exception ex) {
-			logger.error("Failure to "+stateStr, ex);
+			logger.error("Failure to " + stateStr, ex);
 			throw new DiamondWebException(ex);
 		}
 	}
@@ -252,7 +288,7 @@ public class DiamondTradeApi {
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName());
+			strbuf.append(supplierlist.get(0).getName()).append(" externalid ").append(externalid);
 			return (strbuf.toString());
 		} catch (ExecutionException ee) {
 			logger.warn("Failure to issue diamond:", ee);
@@ -476,27 +512,40 @@ public class DiamondTradeApi {
 				}
 			}
 			DiamondTradeApi api = new DiamondTradeApi(cordarpcops);
-//			String pkgStr = "{\"aoc\":\"O=AOC,L=HKSAR,C=CN\",\"basketno\":\"bsk1001\",\"diamondsnumber\":1,\"mimweight\":1,\"productcode\":\"100D1Duo\",\"suppliercode\":\"O=SupplierA,L=HKSAR,C=CN\",\"totalweight\":1}";
-//			PackageInfo bk = JSON.parseObject(pkgStr, PackageInfo.class);
-			PackageState pkg = new PackageState();
-			List<StateAndRef<PackageState>> list = api.getPackageStateById("bsk1001");
-			pkg = list.get(0).getState().getData();
-			logger.debug(" packageState: {}",JSON.toJSON(pkg));
-//			BeanUtils.copyProperties(bk, pkg);
-			
+			 String pkgStr =
+			 "{\"aoc\":\"O=AOC,L=HKSAR,C=CN\",\"basketno\":\"bsk1001\",\"diamondsnumber\":1,\"mimweight\":1,\"productcode\":\"100D1Duo\",\"suppliercode\":\"O=SupplierA,L=HKSAR,C=CN\",\"totalweight\":1}";
+			 PackageInfo bk = JSON.parseObject(pkgStr, PackageInfo.class);
+			 PackageState pkg = new PackageState();
+			// List<StateAndRef<PackageState>> list =
+			// api.getPackageStateById("bsk1001");
+			// pkg = list.get(0).getState().getData();
+			// logger.debug(" packageState: {}",JSON.toJSON(pkg));
+			 BeanUtils.copyProperties(bk, pkg);
+			//
 //			String pkgIssue = PackageState.PKG_CREATE;
-			String pkgIssue = PackageState.PKG_ISSUE;
-			String is = api.createPackage("O=SupplierA,L=HKSAR,C=CN", pkg, pkgIssue);
-			System.out.println(is);
-			List<StateAndRef<PackageState>> rs = api.getPackageStateByStatus(pkgIssue);
-			for( StateAndRef<PackageState> state :rs) {
+			 String pkgIssue = PackageState.PKG_ISSUE;
+			 String is = api.createPackage("O=SupplierA,L=HKSAR,C=CN", pkg,
+			 pkgIssue);
+			 System.out.println("##############"+is);
+//			List<StateAndRef<PackageState>> rs = api.getPackageStateByStatus(pkgIssue);
+//			for (StateAndRef<PackageState> state : rs) {
+//				PackageState data = state.getState().getData();
+//				PackageInfo i = new PackageInfo();
+//				BeanUtils.copyProperties(data, i);
+//				logger.debug(" packageState: {}", JSON.toJSON(i));
+//			}
+			
+			String basketNo = "bsk1001";
+			List<StateAndRef<PackageState>> rs2 = api.getPackageStateByStatus(pkgIssue);
+//			List<StateAndRef<PackageState>> rs2 = api.getPackageStateById(basketNo);
+			for (StateAndRef<PackageState> state : rs2) {
 				PackageState data = state.getState().getData();
 				PackageInfo i = new PackageInfo();
 				BeanUtils.copyProperties(data, i);
-				logger.debug(" packageState: {}",JSON.toJSON(i));
+				logger.debug("{} packageState: {}", basketNo,JSON.toJSON(i));
 			}
-			
-			System.out.println("PackageState size:" + rs.size());
+
+			System.out.println(basketNo+ " PackageState size:" + rs2.size());
 			// 7694f67697924b08b3485e85cea86e5c
 
 		} catch (Exception ex) {

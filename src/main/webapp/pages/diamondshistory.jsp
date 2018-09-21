@@ -35,8 +35,8 @@ function DiamondsHistoryInit() {
             search: false, //显示搜索框
             sidePagination: "client", //服务端处理分页server
             pageNumber: 1,                       //初始化加载第一页，默认第一页
-            pageSize: 5,                       //每页的记录行数（*）
-            pageList: [5,10, 25],//每页的记录行数（*）
+            pageSize: 10,                       //每页的记录行数（*）
+            pageList: [5, 10, 25, 50],          //每页的记录行数（*）
             queryParams: queryParamsHistory, //传递参数（*）
             showColumns: false,                  //是否显示所有的列
             showRefresh: false,                  //是否显示刷新按钮
