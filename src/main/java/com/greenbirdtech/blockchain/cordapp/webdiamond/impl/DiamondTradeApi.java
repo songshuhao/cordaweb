@@ -31,7 +31,7 @@ import com.greenbirdtech.blockchain.cordapp.diamond.flow.DiamondTransferRespFlow
 import com.greenbirdtech.blockchain.cordapp.webdiamond.DiamondWebException;
 import com.greenbirdtech.blockchain.cordapp.webdiamond.util.StringUtil;
 
-import ats.blockchain.cordapp.diamond.data.DiamondsInfo1;
+import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.cordapp.diamond.flow.PackageCreateFlow;
 import ats.blockchain.cordapp.diamond.util.ClassMethodFactory;
@@ -199,7 +199,7 @@ public class DiamondTradeApi {
 		}
 	}
 
-	public String issueDiamond(String aoc, String externalid, List<DiamondsInfo1> diamondinfolist)
+	public String issueDiamond(String aoc, String externalid, List<DiamondsInfo> diamondinfolist)
 			throws DiamondWebException {
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);

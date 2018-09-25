@@ -8,7 +8,7 @@
 %>
   <div id="menu_div" class="sidebar-collapse">
     <ul class="nav" id="main-menu">
-	<c:if test="${userInfo.role=='aoc'}">
+	<c:if test="${userInfo.role=='AOC'}">
          <li>
              <a href="<%=basePath %>/basket/findBasketList"><i class="fa fa-dashboard"></i> Create Package List</a>
          </li>
@@ -55,18 +55,18 @@
              </ul>
          </li> -->
        </c:if>
-      <c:if test="${userInfo.role=='supplier'}">
+      <c:if test="${userInfo.role=='Supplier'}">
         <li>
             <a href="<%=basePath %>/diamond/findDiamondList"><i class="fa fa-fw fa-file"></i> Create Diamonds List</a>
         </li>
       </c:if>
       
-       <c:if test="${userInfo.role=='gia'}">
+       <c:if test="${userInfo.role=='Lab'}">
         <li>
             <a href="<%=basePath %>/confirm/confirmgiaList" ><i class="fa fa-fw fa-file"></i> Confirm Diamonds List</a>
         </li>
       </c:if>
-        <c:if test="${userInfo.role=='vault'}">
+        <c:if test="${userInfo.role=='Vault'}">
         <li>
             <a href="<%=basePath %>/move/movevaultList" ><i class="fa fa-fw fa-file"></i> Move Diamonds List</a>
         </li>
@@ -74,7 +74,7 @@
             <a href="<%=basePath %>/transfer/transfervaultList" ><i class="fa fa-fw fa-file"></i> Transfer Diamonds List</a>
         </li>
       </c:if>
-      <c:if test="${userInfo.role=='audit'}">
+      <c:if test="${userInfo.role=='Auditor'}">
         <li>
             <a href="<%=basePath %>/audit/auditauditerList" ><i class="fa fa-fw fa-file"></i> Audit Diamonds List</a>
         </li>

@@ -42,9 +42,14 @@
 							<div class="form-group">
 								<label for="inputName" class="col-sm-2 control-label">Lab:</label>
 								<div class="col-sm-7">
-									<select id="supplierCode" class="form-control" name="gradlab">
-								      <option value="GIA-HongKong">GIA-HongKong</option>
-								      <option value="GIA-China">GIA-China</option>
+									<select id="gradlab" class="form-control" name="gradlab">
+									 <c:forEach items="${giaMap }" var="gia">
+											<option value="${gia.key }">
+												${gia.key }
+											</option>
+									</c:forEach>
+								     <!--  <option value="GIA-HongKong">GIA-HongKong</option>
+								      <option value="GIA-China">GIA-China</option> -->
 								      </select>
 								</div>
 								<label id="errorName" for="inputName" class="col-sm-3 control-label"></label>

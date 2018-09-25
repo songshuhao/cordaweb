@@ -50,9 +50,12 @@
 								<label for="vault" class="col-sm-2 control-label">Valut:</label>
 								<div class="col-sm-7">
 									<select id="vault" class="form-control" name="vault">
-								      <option value="HK001">HK001</option>
-								      <option value="HK002">HK002</option>
-								      </select>
+									      <c:forEach items="${vaultMap }" var="vault">
+											<option value="${vault.key }">
+												${vault.key }
+											</option>
+										</c:forEach>
+								    </select>
 								</div>
 								<label id="errorvault" for="vault" class="col-sm-3 control-label"></label>
 							</div>

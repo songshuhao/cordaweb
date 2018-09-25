@@ -31,10 +31,10 @@ public class Constants {
 	public static final String status_basket_transfer_submit="16";
 	public static final String status_basket_transfer_vault_submit="17";
 	
-	public static final String ROLE_AOC="aoc";
-	public static final String ROLE_SUPPLIER="supplier";
-	public static final String ROLE_LAB="gia";
-	public static final String ROLE_VAULT="vault";
-	public static final String ROLE_AUDIT="audit";
+	public static final String ROLE_AOC="OU=AOC";
+	public static final String ROLE_SUPPLIER="OU=Supplier";
+	public static final String ROLE_LAB="OU=Lab";
+	public static final String ROLE_VAULT="OU=Vault";
+	public static final String ROLE_AUDIT="OU=Auditor";
 	
 }

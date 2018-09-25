@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -83,7 +82,7 @@ public class BasketInfoController2 extends BaseController {
 
 	@RequestMapping("/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(HttpServletRequest request) throws JSONException {
+	public String submitBasketList(HttpServletRequest request)  {
 		List<PackageInfo> rs = basketInfoServcie.submitPackageByStatus(PackageState.PKG_CREATE);
 		String rsStr="";
 		if(rs.isEmpty()) {

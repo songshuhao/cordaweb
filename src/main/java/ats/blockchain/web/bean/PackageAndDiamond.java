@@ -2,14 +2,11 @@ package ats.blockchain.web.bean;
 
 import java.util.List;
 
-import ats.blockchain.cordapp.diamond.data.DiamondsInfo1;
-import ats.blockchain.web.model.Diamondsinfo;
-
 public class PackageAndDiamond {
 
 	private PackageInfo pkgInfo;
 
-	private List<Diamondsinfo> diamondList;
+	private List<DiamondInfoData> diamondList;
 
 	public PackageInfo getPkgInfo() {
 		return pkgInfo;
@@ -19,11 +16,11 @@ public class PackageAndDiamond {
 		this.pkgInfo = pkgInfo;
 	}
 
-	public List<Diamondsinfo> getDiamondList() {
+	public List<DiamondInfoData> getDiamondList() {
 		return diamondList;
 	}
 
-	public void setDiamondList(List<Diamondsinfo> diamondList) {
+	public void setDiamondList(List<DiamondInfoData> diamondList) {
 		this.diamondList = diamondList;
 	}
 

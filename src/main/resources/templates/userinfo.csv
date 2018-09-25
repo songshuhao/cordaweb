@@ -1,6 +1,6 @@
-userId,userName,password,role,myLegalName
-aoc,aoc,aoc,aoc,"O=AOC,L=HKSAR,C=CN"
-supplier,supplier,supplier,supplier,"O=SupplierA,L=HKSAR,C=CN"
-gia,gia,gia,gia,"O=GIA,L=HKSAR,C=CN"
-vault,vault,vault,vault,"O=VaultA,L=HKSAR,C=CN"
-audit,audit,audit,audit,"O=AuditorA,L=HKSAR,C=CN"
+userId,userName,password
+aoc,aoc,aoc
+supplier,supplier,supplier
+gia,gia,gia
+vault,vault,vault
+audit,audit,audit

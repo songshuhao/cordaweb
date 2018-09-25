@@ -37,8 +37,9 @@ import com.csvreader.CsvReader;
 import com.google.common.collect.Lists;
 import com.greenbirdtech.blockchain.cordapp.diamond.data.DiamondInfo;
 
-import ats.blockchain.cordapp.diamond.data.DiamondsInfo1;
+import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.model.Diamondsinfo;
@@ -362,18 +363,19 @@ public class AOCBeanUtils {
 		pkgInf.setOwner(data.getOwner());
 		pkgInf.setVault(data.getVault()!=null?data.getVault().getName().toString():"");
 		pkgInf.setGradlab(data.getGradlab()!=null? data.getGradlab().getName().toString():"");
+		pkgInf.setUuid(String.format("%1$x_%2$x",data.getLinearId().getId().getMostSignificantBits(),data.getLinearId().getId().getLeastSignificantBits()));
+		
 		pad.setPkgInfo(pkgInf);
-		List<DiamondsInfo1> list = data.getDiamondinfolist();
-		List<Diamondsinfo> diList = Lists.newArrayList();
+		List<DiamondsInfo> list = data.getDiamondinfolist();
+		List<DiamondInfoData> diList = Lists.newArrayList();
 		if(list !=null ) {
-			for(DiamondsInfo1 li :list) {
-				Diamondsinfo di = new Diamondsinfo();
+			for(DiamondsInfo li :list) {
+				DiamondInfoData di = new DiamondInfoData();
 				BeanUtils.copyProperties(li, di);
 				diList.add(di);
 			}
 			pad.setDiamondList(diList);
 		}
-		
 		return pad;
 	}
 	

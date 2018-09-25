@@ -59,6 +59,11 @@ public class LoginController extends BaseController {
 		session.invalidate();
 		session = request.getSession(true);
 		if (checkLogin(userid,password)) {
+			getNodeInfoList();
+			session.setAttribute("supplierMap", this.getSupplierMap());
+			session.setAttribute("giaMap", this.getGiaLMap());
+			session.setAttribute("vaultMap", this.getVaultMap());
+			
 			session.setAttribute("userInfo", this.getCurrentUserInfo());
 			session.setAttribute("productMap", this.getProductMap());
 			session.setAttribute("productMapJson", JSON.toJSON(this.getProductMap()));

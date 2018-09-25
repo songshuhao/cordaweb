@@ -1,11 +1,13 @@
 package ats.blockchain.web.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
@@ -36,53 +39,42 @@ import ats.blockchain.web.model.Basketinfo;
 import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.model.DiamondsinfoExample;
 import ats.blockchain.web.model.PagedObjectDTO;
+import ats.blockchain.web.servcie.DiamondsInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.DateFormatUtils;
 import ats.blockchain.web.utils.FileUtils;
+import ats.blockchain.web.utils.ResultUtil;
 import net.corda.core.contracts.StateAndRef;
 
 @Controller
 @RequestMapping("/diamond")
-public class DiamondsInfoController extends BaseController {
+public class DiamondsInfoController2 extends BaseController {
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private DiamondsinfoMapper diamondsinfoMapper;
 	@Autowired
 	private BasketinfoMapper basketinfoMapper;
+	@Resource(name="diamondsInfoServiceCordaImpl")
+	private DiamondsInfoService diSvc;
+	
 	@Autowired
 	private CordaApi cordaApi;
 	private String aoc = "O=AOC,L=HKSAR,C=CN";
 
 	@RequestMapping("/addDiamondInfo")
 	@ResponseBody
-	public String addDiamondInfo(Diamondsinfo diamondsinfo) throws JSONException {
+	public String addDiamondInfo(DiamondInfoData diamondsinfo) {
 		logger.debug("DiamondsInfoController:diamondsinfo---->" + diamondsinfo.toString());
 
-		JSONObject result = new JSONObject();
-		String format = "-";
-		try {
-			// statusId=2,DiamondInfo add
-			diamondsinfo.setDealerdate(DateFormatUtils.format(diamondsinfo.getDealerdate(),format));
-			diamondsinfo.setMinedate(DateFormatUtils.format(diamondsinfo.getMinedate(), format));
-			diamondsinfo.setCraftsmandate(DateFormatUtils.format(diamondsinfo.getCraftsmandate(), format));
-			diamondsinfo.setStatus(Constants.status_diamonds_into);
-			diamondsinfoMapper.updateByPrimaryKey(diamondsinfo);
-			result.put("state", "success");
-		} catch (Exception e) {
-			logger.error("DiamondsInfoController--->addDiamondInfo：" + e.getMessage());
-			result.put("state", "fail");
-			result.put("message", e.getMessage().toString());
-			e.printStackTrace();
-		}
-		return result.toString();
-
+		boolean rs  = diSvc.addDiamondInfo(diamondsinfo);
+		return ResultUtil.msg(rs, "add diamond success.");
 	}
 
 	@RequestMapping("/findDiamondList")
 	public ModelAndView findDiamondList() {
 		ModelAndView mac = new ModelAndView();
-		basketMap = this.getBasketMap();
+		Map<String, Object> basketMap = this.getBasketMap();
 		mac.addObject("basketMap", basketMap);
 		mac.setViewName("diamondsList");
 		return mac;
@@ -91,17 +83,11 @@ public class DiamondsInfoController extends BaseController {
 	@RequestMapping("/getDiamondList")
 	@ResponseBody
 	public PagedObjectDTO getDiamondListClient(@RequestParam int pageNumber, int pageSize, HttpServletRequest request) {
-		DiamondsinfoExample example = new DiamondsinfoExample();
-		List<String> statusList = new ArrayList<String>();
-		statusList.add(Constants.status_basket_submit);
-		statusList.add(Constants.status_diamonds_into);
-		example.createCriteria().andStatusIn(statusList);
-		List<Diamondsinfo> diamondsinfos = diamondsinfoMapper.selectByExample(example);
-		PagedObjectDTO pagedObjectDTO = new PagedObjectDTO();
-		pagedObjectDTO.setRows(diamondsinfos);
-		pagedObjectDTO.setTotal(Long.valueOf(diamondsinfos.size()));
-		return pagedObjectDTO;
-
+		List<DiamondInfoData> list = diSvc.getDiamondInfoByStatus(PackageState.DMD_CREATE,PackageState.DMD_ISSUE);
+		PagedObjectDTO dto = new PagedObjectDTO();
+		dto.setRows(list);
+		dto.setTotal((long)list.size());
+		return dto;
 	}
 
 	// @RequestMapping("/getDiamondList")
@@ -212,15 +198,9 @@ public class DiamondsInfoController extends BaseController {
 						}
 						
 					}
-					result.put("state", "success");
-					result.put("message", "success");
-				}else
-				{
-					logger.debug("update  db and corda end");
-					result.put("state", "fail");
-					result.put("message", "There is no data to submit");
 				}
-				
+				logger.debug("update  db and corda end");
+				result.put("state", "success");
 			} catch (Exception e) {
 				logger.error("DiamondsInfoController:error：", e);
 				result.put("state", "fail");
@@ -284,18 +264,22 @@ public class DiamondsInfoController extends BaseController {
 		return result.toString();
 	}
 	
-	private Map<String, Object> basketMap;
 
 	public Map<String, Object> getBasketMap() {
-		basketMap = new HashMap<>();
-		DiamondsinfoExample example = new DiamondsinfoExample();
-		example.createCriteria().andStatusEqualTo(Constants.status_basket_submit);
-		List<Diamondsinfo> diamondsinfos = diamondsinfoMapper.selectByExample(example);
-		for (Diamondsinfo diamondsinfo : diamondsinfos) {
-			if (!basketMap.containsKey(diamondsinfo.getBasketno())) {
-				basketMap.put(diamondsinfo.getBasketno(), diamondsinfo.getBasketno());
+		 Map<String, Object>  basketMap = null;
+		List<DiamondInfoData> list = diSvc.getDiamondInfoByStatus(PackageState.PKG_ISSUE);
+		if(list!=null) {
+//			basketMap = list.stream().collect(Collectors.toMap(Diamondsinfo::getBasketno,Diamondsinfo::getBasketno,(key1,key2)->key2));
+			basketMap = new HashMap<String,Object>();
+			for(DiamondInfoData l:list) {
+				basketMap.put(l.getBasketno(), l.getBasketno());
 			}
+			logger.debug("getBasketMap :{}",basketMap);
+		}else {
+			logger.debug("basket is null");
+			basketMap = Collections.emptyMap();
 		}
+			
 		return basketMap;
 	}
 

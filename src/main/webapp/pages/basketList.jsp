@@ -55,11 +55,16 @@
 								<label for="inputName" class="col-sm-5 control-label">Supplier:</label>
 								<div class="col-sm-5">
 									<select id="supplierCode" class="form-control" name="suppliercode">
-								      <option value="S0001">S0001</option>
+									  <c:forEach items="${supplierMap }" var="supplier">
+											<option value="${supplier.key }">
+												${supplier.key }
+											</option>
+										</c:forEach>
+								      <!-- <option value="S0001">S0001</option>
 								      <option value="S0002">S0002</option>
 								      <option value="S0003">S0003</option>
 								      <option value="S0004">S0004</option>
-								      <option value="S0005">S0005</option>
+								      <option value="S0005">S0005</option> -->
 								      </select>
 								</div>
 							</div>

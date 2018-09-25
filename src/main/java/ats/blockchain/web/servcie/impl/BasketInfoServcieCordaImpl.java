@@ -83,6 +83,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		
 		for(StateAndRef<PackageState> state :list) {
 			PackageState pkgState = state.getState().getData();
+			logger.debug("submitPackage {}",pkgState.getBasketno());
 			try {
 				diamondApi.createPackage(pkgState.getSuppliercode().getName().toString(), pkgState, PackageState.PKG_ISSUE);
 			} catch (DiamondWebException e) {

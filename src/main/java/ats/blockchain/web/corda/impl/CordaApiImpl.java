@@ -22,6 +22,7 @@ public class CordaApiImpl implements CordaApi {
 	private String nodeuser=null;
 	private String username=null;
 	private String password=null;
+	private List<NodeInfo> nodeInfos = null;
 	private final static String LOCALHOSTADDR="127.0.0.1";
 	@Override
 	public DiamondTradeApi getTradediamondinf() {
