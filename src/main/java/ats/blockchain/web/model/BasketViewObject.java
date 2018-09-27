@@ -2,20 +2,22 @@ package ats.blockchain.web.model;
 
 import java.util.List;
 
+import ats.blockchain.web.bean.PackageInfo;
+
 public class BasketViewObject
 {
-	private List<Basketinfo> basketinfos;
+	private List<PackageInfo> packageInfos;
 	
 	private String step;
-
-	public List<Basketinfo> getBasketinfos()
+	
+	public List<PackageInfo> getPackageInfos()
 	{
-		return basketinfos;
+		return packageInfos;
 	}
 
-	public void setBasketinfos(List<Basketinfo> basketinfos)
+	public void setPackageInfos(List<PackageInfo> packageInfos)
 	{
-		this.basketinfos = basketinfos;
+		this.packageInfos = packageInfos;
 	}
 
 	public String getStep()

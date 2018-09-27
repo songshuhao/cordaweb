@@ -33,42 +33,37 @@
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
 							<div class="form-group">
-								<label for="gradlab" class="col-sm-2 control-label">Lab:</label>
-								<div class="col-sm-7">
+								<label for="gradlab" class="col-sm-4 control-label">Lab:</label>
+								<div class="col-sm-6">
 									<input type="text" name="gradlab" class="form-control" id="gradlab" placeholder="" data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorlab" for="gradlab" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
-								<div class="col-sm-7">
+								<label for="inputBasketNo" class="col-sm-4 control-label">Package Code:</label>
+								<div class="col-sm-6">
 									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorBasketNo" for="basketno" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="result" class="col-sm-2 control-label">Result:</label>
-								<div class="col-sm-7">
+								<label for="result" class="col-sm-4 control-label">Result:</label>
+								<div class="col-sm-6">
 									<select id="result" class="form-control" name="result">
-								      <option value="gia-verified">gia-verified</option>
-								      <option value="gia-failure">gia-failure</option>
+								      <option value="verified">gia-verified</option>
+								      <option value="failure">gia-failure</option>
 								      </select>
 								</div>
-								<label id="errorresult" for="result" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="reverification" class="col-sm-2 control-label">Re-verfication ID:</label>
-								<div class="col-sm-7">
+								<label for="reverification" class="col-sm-4 control-label">Re-verfication ID:</label>
+								<div class="col-sm-6">
 									<input type="text" name="reverification" class="form-control" id="reverification" placeholder="Re-verfication ID" data-bv-notempty/>
 								</div>
-								<label id="errorreverification" for="reverification" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="giaapproveddate" class="col-sm-2 control-label">Approved Date:</label>
-								<div class="col-sm-7">
+								<label for="giaapproveddate" class="col-sm-4 control-label">Approved Date:</label>
+								<div class="col-sm-6">
 									<input type="text" name="giaapproveddate" class="form-control" id="giaapproveddate" placeholder="Approved Date" data-bv-notempty/>
 								</div>
-								<label id="errorrgiaapproveddate" for="giaapproveddate" class="col-sm-3 control-label"></label>
 							</div>
 							
 						</form>

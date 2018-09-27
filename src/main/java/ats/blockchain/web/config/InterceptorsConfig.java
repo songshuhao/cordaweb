@@ -6,6 +6,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import ats.blockchain.web.interceptor.TimeOutIntercepter;
 
+/**
+ * add by shuhao.song
+ * interceptor Config
+ * @author Administrator
+ *
+ */
 @Configuration
 public class InterceptorsConfig implements WebMvcConfigurer
 {

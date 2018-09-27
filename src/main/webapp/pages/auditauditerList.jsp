@@ -44,8 +44,8 @@
 								<label for="result" class="col-sm-2 control-label">Result:</label>
 								<div class="col-sm-7">
 									<select id="result" class="form-control" name="result">
-								      <option value="audit-verified">audit-verified</option>
-								      <option value="audit-failure">audit-failure</option>
+								      <option value="verified">audit-verified</option>
+								      <option value="failure">audit-failure</option>
 								      </select>
 								</div>
 								<label id="errorresult" for="result" class="col-sm-3 control-label"></label>
@@ -218,7 +218,7 @@
    	   {
     	   
     	   var index = layer.load();
-    	   var param = {"basketinfos":selectLsit,"step":step};
+    	   var param = {"packageInfos":selectLsit,"step":step};
     	   param = JSON.stringify(param);
     	   var url = "<%=basePath %>/audit/submitBasketList";
 	       	$.ajax({

@@ -33,8 +33,7 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="<%=basePath %>/diamonds/addDiamondsInfo" method="post" class="form-horizontal required-validate">
-								<input type="hidden" id="supcode" name="supcode" />
-								<input type="hidden" name="tradeid" id="tradeid" />
+								<input type="hidden" id="suppliercode" name="suppliercode" />
 							<table class="table">
 								<tr>
 									<td>Package Code:</td>
@@ -235,7 +234,7 @@
                         field: 'tradeid',
                         align: 'center',
                         valign: 'middle',
-                        visible: true,
+                        visible: false,
                     },
                     
                     {
@@ -340,8 +339,8 @@
  //binding event shuhao.song
  window.operateEvents = {
  			'click #addBtn': function(e, value, row, index) {
-			$("#tradeid").val(row.tradeid);
-			$("#supcode").val(row.supcode);
+			//$("#tradeid").val(row.tradeid);
+			$("#suppliercode").val(row.suppliercode);
 			$("#basketno").val(row.basketno);
 			$("#productcode").val(row.productcode);
 			//钻石信息赋值

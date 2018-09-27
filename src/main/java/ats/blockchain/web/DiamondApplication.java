@@ -13,7 +13,7 @@ public class DiamondApplication
 {
 	public static void main(String[] args)
 	{
-		System.out.println("111spring boot running ...");
+		System.out.println("spring boot running ...");
 		SpringApplication.run(DiamondApplication.class, args);
 //		SpringApplication app = new SpringApplication(new Class[] {DiamondApplication.class});
 //		app.setWebApplicationType(WebApplicationType.SERVLET);

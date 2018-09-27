@@ -12,20 +12,26 @@ import javax.annotation.Nonnull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.BeanUtils;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.greenbirdtech.blockchain.cordapp.diamond.data.DiamondState;
 
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.cordapp.diamond.flow.DiamondAuditRespFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondChangeOwnerRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondCollectFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondCreateFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondLabRespFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondRedeemFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondRedeemRespFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondReqAuditFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondReqChangeOwnerFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondReqLabVerifyFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondReqVaultVerifyFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondSubmitChangeOwnerFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondVaultRespFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageCreateFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageRemoveFlow;
@@ -34,9 +40,6 @@ import ats.blockchain.cordapp.diamond.util.ClassMethodFactory;
 import ats.blockchain.cordapp.diamond.util.Constants;
 import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.bean.PackageInfo;
-import net.corda.client.rpc.CordaRPCClient;
-import net.corda.client.rpc.CordaRPCClientConfiguration;
-import net.corda.client.rpc.CordaRPCConnection;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
@@ -50,7 +53,6 @@ import net.corda.core.node.services.vault.Builder;
 import net.corda.core.node.services.vault.CriteriaExpression;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
-import net.corda.core.utilities.NetworkHostAndPort;
 
 public class DiamondTradeApi {
 	public final static String CURRUSER = "CURRUSER";
@@ -73,7 +75,7 @@ public class DiamondTradeApi {
 		logger.debug("getNodeInfos :{}", nodeInfos.toString());
 		return nodeInfos;
 	}
-	
+
 	public String getCurrUser() {
 		return (party.getName().toString());
 	}
@@ -89,16 +91,24 @@ public class DiamondTradeApi {
 		return (mapOtheruser);
 	}
 
-	public List<StateAndRef<DiamondState>> getAllDiamond() {
-		return (rpcops.vaultQuery(DiamondState.class).getStates());
-	}
-
+	/**
+	 * 根据uuid 查询所有状态的package信息
+	 * 
+	 * @param linearid
+	 * @return
+	 */
 	public List<StateAndRef<PackageState>> getAllPackageState(UniqueIdentifier linearid) {
 		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, ImmutableList.of(linearid),
 				Vault.StateStatus.ALL, null);
 		return (rpcops.vaultQueryByCriteria(criteria, PackageState.class).getStates());
 	}
 
+	/**
+	 * 根据状态查询符合条件的状态为未消费的package
+	 * 
+	 * @param status
+	 * @return
+	 */
 	public List<StateAndRef<PackageState>> getPackageStateByStatus(@Nonnull String... status) {
 		List<String> asList = Arrays.asList(status);
 		logger.debug("getPackageStateByStatus :{}", asList);
@@ -106,25 +116,83 @@ public class DiamondTradeApi {
 		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "status");
 		CriteriaExpression exp = Builder.in(statusField, asList);
 		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
-		QueryCriteria cc =generalCriteria.and(crit);
+		QueryCriteria cc = generalCriteria.and(crit);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
-		
+
 		List<StateAndRef<PackageState>> list = result.getStates();
-		logger.debug("getPackageStateByStatus {} query result size:{} ",asList, list.size());
+		logger.debug("getPackageStateByStatus {} query result size:{} ", asList, list.size());
 		return list;
 	}
 
+	/**
+	 * 根据状态查询符合条件的状态为consumedStatus的package
+	 * 
+	 * @param status
+	 * @return
+	 */
+	public List<StateAndRef<PackageState>> getPackageStateByStatus(Vault.StateStatus consumedStatus,
+			@Nonnull String... status) {
+		List<String> asList = Arrays.asList(status);
+		logger.debug("getPackageStateByStatus,consumedStatus:{} ,status:{}", asList);
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(consumedStatus);
+		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "status");
+		CriteriaExpression exp = Builder.in(statusField, asList);
+		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
+		QueryCriteria cc = generalCriteria.and(crit);
+		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
+
+		List<StateAndRef<PackageState>> list = result.getStates();
+		logger.debug("getPackageStateByStatus {} query result size:{} ", asList, list.size());
+		return list;
+	}
+
+	/**
+	 * 根据篮子id查询符合条件的状态为consumedStatus的package
+	 * 
+	 * @param status
+	 * @return
+	 */
+	public List<StateAndRef<PackageState>> getPackageStateById(Vault.StateStatus consumedStatus,@Nonnull String... basketNo) {
+		List<String> asList = Arrays.asList(basketNo);
+		logger.debug("getPackageStateById :{}", asList);
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(consumedStatus);
+		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "basketno");
+		CriteriaExpression exp = Builder.in(statusField, asList);
+		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
+		QueryCriteria cc = generalCriteria.and(crit);
+		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
+		List<StateAndRef<PackageState>> list = result.getStates();
+		logger.debug("getPackageStateById {} query result size:{} ", asList, list.size());
+		return list;
+	}
+	/**
+	 * 查询所有钻石
+	 * @return
+	 */
+	public List<StateAndRef<PackageState>> getAllPackageState(){
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
+		Page<PackageState> result = rpcops.vaultQueryByCriteria(generalCriteria, PackageState.class);
+		List<StateAndRef<PackageState>> list = result.getStates();
+		logger.debug("getAllPackageState query result size:{} ", list.size());
+		return list;
+	}
+	/**
+	 * 根据篮子id查询符合条件的状态为UNCONSUMED的package
+	 * 
+	 * @param status
+	 * @return
+	 */
 	public List<StateAndRef<PackageState>> getPackageStateById(@Nonnull String... basketNo) {
 		List<String> asList = Arrays.asList(basketNo);
 		logger.debug("getPackageStateById :{}", asList);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
 		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "basketno");
-		CriteriaExpression exp = Builder.equal(statusField, asList);
+		CriteriaExpression exp = Builder.in(statusField, asList);
 		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
 		QueryCriteria cc = generalCriteria.and(crit);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
 		List<StateAndRef<PackageState>> list = result.getStates();
-		logger.debug("getPackageStateById {} query result size:{} ", asList,list.size());
+		logger.debug("getPackageStateById {} query result size:{} ", asList, list.size());
 		return list;
 	}
 
@@ -132,16 +200,15 @@ public class DiamondTradeApi {
 		return ClassMethodFactory.Instance.getClassMethods(clazz).getField(filedName);
 	}
 
-	public List<StateAndRef<DiamondState>> getIssuedDiamond() {
-		List<StateAndRef<DiamondState>> diamondlist = rpcops.vaultQuery(DiamondState.class).getStates().stream()
-				.filter(it -> it.getState().getData().getSupplier().equals(party)).collect(toList());
-		if (diamondlist != null)
-			logger.info(String.format("Diamond issued by %1$s:%2$d", party.getName().getOrganisation(),
-					diamondlist.size()));
-		return (diamondlist);
-	}
-
-	public PackageState getCounterPartyDiamond(String counterparty, String externalid) throws DiamondWebException {
+	/**
+	 * 获得指定节点，指定baksetno的package信息
+	 * 
+	 * @param counterparty
+	 * @param basketno
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public PackageState getCounterPartyDiamond(String counterparty, String basketno) throws DiamondWebException {
 		PackageState diamondstate = null;
 		CordaX500Name x500Name = CordaX500Name.parse(counterparty);
 		final Party counterIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
@@ -149,7 +216,7 @@ public class DiamondTradeApi {
 			throw new DiamondWebException("Counterparty not found");
 		try {
 			FlowHandle<PackageState> flowhandle = rpcops.startFlowDynamic(DiamondCollectFlow.Initiator.class,
-					counterIdentity, externalid);
+					counterIdentity, basketno);
 			diamondstate = flowhandle.getReturnValue().get();
 		} catch (ExecutionException ee) {
 			logger.warn("Failure to get diamond:{}", ee);
@@ -162,11 +229,14 @@ public class DiamondTradeApi {
 	}
 
 	/**
+	 * package 相关的操作
 	 * 
 	 * @param supplier
+	 *            供应商
 	 * @param pkgInfo
+	 *            package 信息
 	 * @param state
-	 *            enum in PackageState
+	 *            create|submit|remove
 	 * @return
 	 * @throws DiamondWebException
 	 */
@@ -174,9 +244,9 @@ public class DiamondTradeApi {
 		if (pkgInfo == null) {
 			return null;
 		}
-		String externalid = pkgInfo.getBasketno();
+		String basketno = pkgInfo.getBasketno();
 		String stateStr = Constants.PKG_STATE_MAP.get(state);
-		logger.debug("{} :aoc {}, externalId:{} ,pkgInfo: {} ", stateStr, supplier, externalid, pkgInfo);
+		logger.debug("{} :aoc {}, basketno:{} ,pkgInfo: {} ", stateStr, supplier, basketno, pkgInfo);
 		CordaX500Name x500Name = CordaX500Name.parse(supplier);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null) {
@@ -185,8 +255,8 @@ public class DiamondTradeApi {
 		}
 		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
 		if ((supplierlist == null) || (supplierlist.size() == 0)) {
-			logger.error("{} Unknown supplier ", stateStr);
-			throw new DiamondWebException("Unknown supplier");
+			logger.error("{} can't find supplier ", stateStr);
+			throw new DiamondWebException("can't find supplier");
 		}
 		logger.debug("getLegalIdentities {} ", supplierlist.toString());
 		try {
@@ -217,25 +287,36 @@ public class DiamondTradeApi {
 		}
 	}
 
-	public String createDiamond(String aoc, String externalid, List<DiamondsInfo> diamondinfolist)
+	/**
+	 * 向篮子中添加钻石
+	 * 
+	 * @param aoc
+	 * @param basketno
+	 *            篮子id
+	 * @param diamondinfolist
+	 *            钻石列表
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String createDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist)
 			throws DiamondWebException {
-		logger.debug("createDiamond aoc: {} ,basketno : {}",aoc,externalid);
+		logger.debug("createDiamond aoc: {} ,basketno : {}", aoc, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
 		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
 		if ((supplierlist == null) || (supplierlist.size() == 0))
-			throw new DiamondWebException("Unknown supplier");
+			throw new DiamondWebException("can't find supplier");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondCreateFlow.Initiator.class,
-					aocIdentity, externalid,diamondinfolist);
+					aocIdentity, basketno, diamondinfolist);
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName()).append(" externalid ").append(externalid);
+			strbuf.append(supplierlist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
 		} catch (ExecutionException ee) {
 			logger.warn("Failure to create diamond:", ee);
@@ -245,25 +326,33 @@ public class DiamondTradeApi {
 			throw new DiamondWebException("Diamond create failure");
 		}
 	}
-	public String issueDiamond(String aoc, String externalid)
-			throws DiamondWebException {
-		logger.debug("issueDiamond aoc: {} ,basketno : {}",aoc,externalid);
+
+	/**
+	 * 提交钻石
+	 * 
+	 * @param aoc
+	 * @param basketno
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String issueDiamond(String aoc, String basketno) throws DiamondWebException {
+		logger.debug("issueDiamond aoc: {} ,basketno : {}", aoc, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
 		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
 		if ((supplierlist == null) || (supplierlist.size() == 0))
-			throw new DiamondWebException("Unknown supplier");
+			throw new DiamondWebException("can't find supplier");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondIssueFlow.Initiator.class,
-					aocIdentity, externalid);
+					aocIdentity, basketno);
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName()).append(" externalid ").append(externalid);
+			strbuf.append(supplierlist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
 		} catch (ExecutionException ee) {
 			logger.warn("Failure to issue diamond:", ee);
@@ -273,26 +362,36 @@ public class DiamondTradeApi {
 			throw new DiamondWebException("Diamond issue failure");
 		}
 	}
-	
-	public String reqLabVerifyDiamond( String externalid,String status,String lab)
-			throws DiamondWebException {
-		logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {}",lab,externalid);
+
+	/**
+	 * aoc请求Lab认证钻石
+	 * 
+	 * @param basketno
+	 *            待认证basketno
+	 * @param status
+	 *            PackageState.AOC_REQ_LAB_VERIFY |AOC_SUBMIT_LAB_VERIFY
+	 * @param lab
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException {
+		logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {}", lab, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(lab);
 		final Party labIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (labIdentity == null)
 			throw new DiamondWebException("lab not found");
-		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((supplierlist == null) || (supplierlist.size() == 0))
-			throw new DiamondWebException("Unknown aoc");
+		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		if ((aoclist == null) || (aoclist.size() == 0))
+			throw new DiamondWebException("can't find aoc");
 		try {
-			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondReqLabVerifyFlow.Initiator.class,
-					 externalid,status,labIdentity);
+			final FlowHandle<SignedTransaction> flowhandle = rpcops
+					.startFlowDynamic(DiamondReqLabVerifyFlow.Initiator.class, basketno, status, labIdentity);
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
-			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName()).append(" externalid ").append(externalid);
+			strbuf.append(" verify by ");
+			strbuf.append(labIdentity).append(" basketno ").append(basketno);
 			return (strbuf.toString());
 		} catch (ExecutionException ee) {
 			logger.warn("Failure to reqLabVerify diamond:", ee);
@@ -302,262 +401,370 @@ public class DiamondTradeApi {
 			throw new DiamondWebException("Diamond reqLabVerify failure");
 		}
 	}
-//	public String transferDiamond(String owner, UniqueIdentifier linearid, Amount<Currency> amount, String ownmgr)
-//			throws DiamondWebException {
-//		CordaX500Name x500Name = CordaX500Name.parse(ownmgr);
-//		final Party ownmgrIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-//		if (ownmgrIdentity == null)
-//			throw new DiamondWebException("Ownmgr not found");
-//		logger.info(String.format("Diamond %1$s is transferred to %2$s with price %3$s to be verified by %4$s",
-//				linearid.getExternalId(), owner, StringUtil.formTxnprice(amount), ownmgr));
-//		try {
-//			final FlowHandle<SignedTransaction> flowhandle = rpcops
-//					.startFlowDynamic(DiamondTransferFlow.Initiator.class, linearid, ownmgrIdentity, owner, amount);
-//			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-//			StringBuilder strbuf = new StringBuilder();
-//			strbuf.append("Transaction completed with id ");
-//			strbuf.append(stxn.getId());
-//			strbuf.append(" for diamond ");
-//			strbuf.append(linearid.getExternalId());
-//			strbuf.append(" with price ");
-//			strbuf.append(StringUtil.formTxnprice(amount));
-//			strbuf.append(" to owner ");
-//			strbuf.append(owner);
-//			strbuf.append(" to be confirmed by ");
-//			strbuf.append(ownmgr);
-//			return (strbuf.toString());
-//		} catch (Exception ex) {
-//			logger.warn("Failure to transfer diamond:{}", ex);
-//			throw new DiamondWebException("Diamond transfer failure");
-//		}
-//	}
 
-//	public String transferrespDiamond(UniqueIdentifier linearid, String aoc) throws DiamondWebException {
-//		CordaX500Name x500Name = CordaX500Name.parse(aoc);
-//		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-//		if (aocIdentity == null)
-//			throw new DiamondWebException("AOC not found");
-//		logger.info(String.format("Diamond %1$s having transferred is to be delivered to %2$s",
-//				linearid.getExternalId(), aoc));
-//		try {
-//			SimpleDateFormat dataDF = new SimpleDateFormat("yyyy-MM-dd");
-//			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
-//					DiamondTransferRespFlow.Initiator.class, linearid, aocIdentity,
-//					dataDF.format(new Date(System.currentTimeMillis())));
-//			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-//			StringBuilder strbuf = new StringBuilder();
-//			strbuf.append("Transaction completed with id ");
-//			strbuf.append(stxn.getId());
-//			strbuf.append(" for diamond ");
-//			strbuf.append(linearid.getExternalId());
-//			strbuf.append(" having moved and sent to ");
-//			strbuf.append(aoc);
-//			return (strbuf.toString());
-//		} catch (Exception ex) {
-//			logger.warn("Failure to confirm diamond transfer:{}", ex);
-//			throw new DiamondWebException("Diamond transfer response failure");
-//		}
-//	}
-//
-//	public String moveDiamond(UniqueIdentifier linearid, String vault, String location) throws DiamondWebException {
-//		CordaX500Name x500Name = CordaX500Name.parse(vault);
-//		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-//		if (vaultIdentity == null)
-//			throw new DiamondWebException("Vault not found");
-//		logger.info(String.format("Diamond $1$s is moved to location %2$s to be verified by %3$s",
-//				linearid.getExternalId(), location, vault));
-//		try {
-//			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondMoveFlow.Initiator.class,
-//					linearid, vaultIdentity, location);
-//			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-//			StringBuilder strbuf = new StringBuilder();
-//			strbuf.append("Transaction completed with id ");
-//			strbuf.append(stxn.getId());
-//			strbuf.append(" for diamond ");
-//			strbuf.append(linearid.getExternalId());
-//			strbuf.append(" to move to ");
-//			strbuf.append(location);
-//			strbuf.append(" verified by ");
-//			strbuf.append(vault);
-//			return (strbuf.toString());
-//		} catch (Exception ex) {
-//			logger.warn("Failure to move diamond to another location:{}", ex);
-//			throw new DiamondWebException("Diamond move failure");
-//		}
-//	}
-//
-//	public String moverespDiamond(UniqueIdentifier linearid, String aoc) throws DiamondWebException {
-//		CordaX500Name x500Name = CordaX500Name.parse(aoc);
-//		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-//		if (aocIdentity == null)
-//			throw new DiamondWebException("AOC not found");
-//		logger.info(
-//				String.format("Diamond %1$s having moved is to be verified by %2$s", linearid.getExternalId(), aoc));
-//		try {
-//			SimpleDateFormat dataDF = new SimpleDateFormat("yyyy-MM-dd");
-//			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
-//					DiamondMoveRespFlow.Initiator.class, linearid, aocIdentity,
-//					dataDF.format(new Date(System.currentTimeMillis())));
-//			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-//			StringBuilder strbuf = new StringBuilder();
-//			strbuf.append("Transaction completed with id ");
-//			strbuf.append(stxn.getId());
-//			strbuf.append(" for diamond ");
-//			strbuf.append(linearid.getExternalId());
-//			strbuf.append(" having moved and sent to ");
-//			strbuf.append(aoc);
-//			return (strbuf.toString());
-//		} catch (Exception ex) {
-//			logger.warn("Failure to confirm diamond move:{}", ex);
-//			throw new DiamondWebException("Diamond move response failure");
-//		}
-//	}
-//
-	public String verifyDiamond(String basketno, String verifier,String status) throws DiamondWebException {
-		CordaX500Name x500Name = CordaX500Name.parse(verifier);
-		final Party verifyIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-		if (verifyIdentity == null)
-			throw new DiamondWebException("verifier not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("Unknown AOC");
-		logger.info(String.format("Diamond %1$s is verify by %2$s", basketno, verifier));
-		try {
-			Class clazz = null;
-			if(status.equals(PackageState.AOC_REQ_LAB_VERIFY)||status.equals(PackageState.AOC_SUBMIT_LAB_VERIFY)) {
-				clazz = DiamondReqLabVerifyFlow.class;
-			}
-			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(clazz,
-					basketno,status, verifyIdentity);
-			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-			StringBuilder strbuf = new StringBuilder();
-			strbuf.append("Transaction completed with id ");
-			strbuf.append(stxn.getId());
-			strbuf.append(" for diamond ");
-			strbuf.append(basketno);
-			strbuf.append(" to be ").append(Constants.PKG_STATE_MAP.get(status)).append(" by ");
-			strbuf.append(verifier);
-			return (strbuf.toString());
-		} catch (Exception ex) {
-			logger.warn("Failure to audit diamond:", ex);
-			throw new DiamondWebException("Diamond audit failure",ex);
-		}
-	}
-
+	/**
+	 * Lab响应认证请求
+	 * @param pkgInfo
+	 * @return
+	 * @throws DiamondWebException
+	 */
 	public String labVerifyResp(PackageInfo pkgInfo) throws DiamondWebException {
+		logger.debug("labVerifyResp {}", pkgInfo.toString());
 		String aoc = pkgInfo.getAoc();
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> auditorlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((auditorlist == null) || (auditorlist.size() == 0))
-			throw new DiamondWebException("Unkown auditor");
-		logger.info(String.format("Diamond %1$s is audited completely by %2$s", pkgInfo.getBasketno(),
-				auditorlist.get(0).getName().toString()));
+		List<Party> lablist = rpcops.nodeInfo().getLegalIdentities();
+		if ((lablist == null) || (lablist.size() == 0))
+			throw new DiamondWebException("can't find Lab");
+		logger.info(String.format("Diamond %1$s is verify completely by %2$s", pkgInfo.getBasketno(),
+				lablist.get(0).getName().toString()));
 		try {
-			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
-					DiamondLabRespFlow.Initiator.class,pkgInfo.getBasketno(),aoc,pkgInfo.getGiaapproveddate(),pkgInfo.getStatus(),pkgInfo.getResult(),pkgInfo.getReverification());
+			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondLabRespFlow.Initiator.class,
+					pkgInfo.getBasketno(), aocIdentity, pkgInfo.getGiaapproveddate(), pkgInfo.getStatus(),
+					pkgInfo.getResult(), pkgInfo.getReverification(), pkgInfo.getGiacontrolno());
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" for diamond ");
 			strbuf.append(pkgInfo.getBasketno());
-			strbuf.append(" having audited and sent to ");
+			strbuf.append(" having verified and sent to ");
 			strbuf.append(aoc);
 			return (strbuf.toString());
 		} catch (Exception ex) {
-			logger.warn("Failure to confirm diamond audit:{}", ex);
-			throw new DiamondWebException("Diamond audit response failure");
+			logger.warn("Failure to confirm diamond lab verify:{}", ex);
+			throw new DiamondWebException("Diamond lab verify response failure",ex);
 		}
 	}
-//
-//	public String redeemDiamond(UniqueIdentifier linearid) throws DiamondWebException {
-//		logger.info(String.format("Diamond %1$s is redeemed", linearid));
-//		try {
-//			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondRedeemFlow.Initiator.class,
-//					linearid);
-//			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-//			StringBuilder strbuf = new StringBuilder();
-//			strbuf.append("Transaction completed with id ");
-//			strbuf.append(stxn.getId());
-//			strbuf.append(" for diamond ");
-//			strbuf.append(linearid.getExternalId());
-//			strbuf.append(" is redeemed");
-//			return (strbuf.toString());
-//		} catch (Exception ex) {
-//			logger.warn("Failure to redeem diamond:{}", ex);
-//			throw new DiamondWebException("Diamond redeem failure");
-//		}
-//	}
-
-	public static void main(String[] args) {
-		CordaRPCConnection cordarpcconn = null;
-		CordaRPCOps cordarpcops = null;
-		String username = "AOC";
-		String password = "AOC";
-		CordaRPCClient cordaclient = new CordaRPCClient(new NetworkHostAndPort("127.0.0.1", 10008),
-				CordaRPCClientConfiguration.DEFAULT);
+	
+	/**
+	 * aoc请求vault确认钻石信息 
+	 * @param basketno 待确认钻石
+	 * @param status AOC_REQ_VAULT_VERIFY|AOC_SUBMIT_VAULT_VERIFY
+	 * @param vault 请求vault
+	 * @param owner 钻石拥有者
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String reqVaultVerifyDiamond(String basketno, String status, String vault, String owner)
+			throws DiamondWebException {
+		logger.debug("reqVaultVerifyDiamond vault: {} ,basketno : {},status :{},owner: {}", vault, basketno, status,
+				owner);
+		CordaX500Name x500Name = CordaX500Name.parse(vault);
+		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (vaultIdentity == null)
+			throw new DiamondWebException("vault " + vault + " not found");
+		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		if ((aoclist == null) || (aoclist.size() == 0))
+			throw new DiamondWebException("can't find aoc");
 		try {
-			System.out.println("Start cordarpcclient with user:" + username);
-			cordarpcconn = cordaclient.start(username, password);
-			cordarpcops = cordarpcconn.getProxy();
-			System.out.println("Corda RPC protocol version:" + cordarpcconn.getServerProtocolVersion());
-			if (cordarpcops == null) {
-				System.out.println("CordaRPCOps is null");
-			} else {
-				NodeInfo nInfo = cordarpcops.nodeInfo();
-				if (nInfo != null) {
-					System.out.println("********************");
-					List<Party> pList = nInfo.getLegalIdentities();
-					for (Party p : pList) {
-						System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-						System.out.println("getLegalIdentities:" + p.toString());
-					}
-				}
-			}
-			DiamondTradeApi api = new DiamondTradeApi(cordarpcops);
-			String pkgStr = "{\"aoc\":\"O=AOC,L=HKSAR,C=CN\",\"basketno\":\"bsk1001\",\"diamondsnumber\":1,\"mimweight\":1,\"productcode\":\"100D1Duo\",\"suppliercode\":\"O=SupplierA,L=HKSAR,C=CN\",\"totalweight\":1}";
-			PackageInfo bk = JSON.parseObject(pkgStr, PackageInfo.class);
-			PackageState pkg = new PackageState();
-			// List<StateAndRef<PackageState>> list =
-			// api.getPackageStateById("bsk1001");
-			// pkg = list.get(0).getState().getData();
-			// logger.debug(" packageState: {}",JSON.toJSON(pkg));
-			BeanUtils.copyProperties(bk, pkg);
-			//
-//			 String pkgIssue = PackageState.PKG_CREATE;
-			String pkgIssue = PackageState.PKG_ISSUE;
-			String is = api.createPackage("O=SupplierA,L=HKSAR,C=CN", pkg, pkgIssue);
-			System.out.println("##############" + is);
-			// List<StateAndRef<PackageState>> rs =
-			// api.getPackageStateByStatus(pkgIssue);
-			// for (StateAndRef<PackageState> state : rs) {
-			// PackageState data = state.getState().getData();
-			// PackageInfo i = new PackageInfo();
-			// BeanUtils.copyProperties(data, i);
-			// logger.debug(" packageState: {}", JSON.toJSON(i));
-			// }
-
-			String basketNo = "bsk1001";
-//			List<StateAndRef<PackageState>> rs2 = api.getPackageStateByStatus(pkgIssue);
-//			 List<StateAndRef<PackageState>> rs2 =
-//			 api.getPackageStateById(basketNo);
-//			for (StateAndRef<PackageState> state : rs2) {
-//				PackageState data = state.getState().getData();
-//				PackageInfo i = new PackageInfo();
-//				basketNo = data.getBasketno();
-//				List<DiamondsInfo> ll = data.getDiamondinfolist();
-//				BeanUtils.copyProperties(data, i);
-//				logger.debug("{} packageState: {}", basketNo, JSON.toJSON(i));
-//			}
-//
-//			System.out.println(basketNo + " PackageState size:" + rs2.size());
-			// 7694f67697924b08b3485e85cea86e5c
-
+			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
+					DiamondReqVaultVerifyFlow.Initiator.class, basketno, status, vaultIdentity, owner);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" supplied by ");
+			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
+			return (strbuf.toString());
+		} catch (ExecutionException ee) {
+			logger.warn("Failure to reqVaultVerify diamond:", ee);
+			throw new DiamondWebException("Diamond reqVaultVerify error",ee);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.warn("Failure to reqVaultVerify diamond:", ex);
+			throw new DiamondWebException("Diamond reqVaultVerify failure",ex);
+		}
+	}
+	
+	/**
+	 * vault 响应aoc确认请求
+	 * @param pkgInfo
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String vaultVerifyResp(PackageInfo pkgInfo) throws DiamondWebException {
+		logger.debug("vaultVerifyResp {}", pkgInfo.toString());
+		String aoc = pkgInfo.getAoc();
+		CordaX500Name x500Name = CordaX500Name.parse(aoc);
+		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (aocIdentity == null)
+			throw new DiamondWebException("AOC not found");
+		List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
+		if ((vaultlist == null) || (vaultlist.size() == 0))
+			throw new DiamondWebException("can't find vaultor");
+		logger.info(String.format("Diamond %1$s is verify completely by %2$s", pkgInfo.getBasketno(),
+				vaultlist.get(0).getName().toString()));
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
+					DiamondVaultRespFlow.Initiator.class, pkgInfo.getBasketno(), aocIdentity, pkgInfo.getStatus(),
+					pkgInfo.getInvtymgr(), pkgInfo.getSealedbagno());
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" for diamond ");
+			strbuf.append(pkgInfo.getBasketno());
+			strbuf.append(" having verified and sent to ");
+			strbuf.append(aoc);
+			return (strbuf.toString());
+		} catch (Exception ex) {
+			logger.warn("Failure to confirm diamond vault:{}", ex);
+			throw new DiamondWebException("Diamond vault response failure");
+		}
+	}
+
+	/**
+	 * aoc向vault发起钻石拥有者更改确认请求
+	 * @param basketno
+	 * @param vault
+	 * @param owner 新拥有者
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String reqChangeOwnerDiamond(String basketno, String vault, String owner) throws DiamondWebException {
+		logger.debug("reqChangeOwnerDiamond vault: {} ,basketno : {},owner : {}", vault, basketno, owner);
+		CordaX500Name x500Name = CordaX500Name.parse(vault);
+		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (vaultIdentity == null)
+			throw new DiamondWebException("vault " + vault + " not found");
+		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		if ((aoclist == null) || (aoclist.size() == 0))
+			throw new DiamondWebException("can't find aoc");
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops
+					.startFlowDynamic(DiamondReqChangeOwnerFlow.Initiator.class, basketno, owner, vaultIdentity);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" supplied by ");
+			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
+			return (strbuf.toString());
+		} catch (ExecutionException ee) {
+			logger.warn("Failure to reqVaultVerify diamond:", ee);
+			throw new DiamondWebException("Diamond reqVaultVerify error");
+		} catch (Exception ex) {
+			logger.warn("Failure to reqVaultVerify diamond:", ex);
+			throw new DiamondWebException("Diamond reqVaultVerify failure");
+		}
+	}
+
+
+	/**
+	 * aoc提交钻石拥有者更改确认请求
+	 * @param basketno
+	 * @param vault
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String submitChangeOwnerDiamond(String basketno, String vault) throws DiamondWebException {
+		logger.debug("submitChangeOwnerDiamond vault: {} ,basketno : {}", vault, basketno);
+		CordaX500Name x500Name = CordaX500Name.parse(vault);
+		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (vaultIdentity == null)
+			throw new DiamondWebException("vault " + vault + " not found");
+		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		if ((aoclist == null) || (aoclist.size() == 0))
+			throw new DiamondWebException("can't find aoc");
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops
+					.startFlowDynamic(DiamondSubmitChangeOwnerFlow.Initiator.class, basketno, vaultIdentity);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" supplied by ");
+			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
+			return (strbuf.toString());
+		} catch (ExecutionException ee) {
+			logger.warn("Failure to reqVaultVerify diamond:", ee);
+			throw new DiamondWebException("Diamond reqVaultVerify error");
+		} catch (Exception ex) {
+			logger.warn("Failure to reqVaultVerify diamond:", ex);
+			throw new DiamondWebException("Diamond reqVaultVerify failure");
+		}
+	}
+
+	/**
+	 * vault 响应钻石拥有者更改请求
+	 * @param basketno
+	 * @param aoc
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String changeOwnerResp(String basketno, String aoc) throws DiamondWebException {
+		logger.debug("changeOwnerResp aoc: {} ,basketno : {}", aoc, basketno);
+		CordaX500Name x500Name = CordaX500Name.parse(aoc);
+		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (aocIdentity == null)
+			throw new DiamondWebException("AOC not found");
+		List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
+		if ((vaultlist == null) || (vaultlist.size() == 0))
+			throw new DiamondWebException("can't find vault");
+		logger.info(String.format("Diamond %1$s is verify completely by %2$s", basketno,
+				vaultlist.get(0).getName().toString()));
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops
+					.startFlowDynamic(DiamondChangeOwnerRespFlow.Initiator.class, basketno, aocIdentity);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" for diamond ");
+			strbuf.append(basketno);
+			strbuf.append(" having verified and sent to ");
+			strbuf.append(aoc);
+			return (strbuf.toString());
+		} catch (Exception ex) {
+			logger.warn("Failure to confirm diamond lab verify:{}", ex);
+			throw new DiamondWebException("Diamond lab verify response failure");
+		}
+	}
+
+	/**
+	 * aoc 请求auditor 审计
+	 * @param auditor
+	 * @param basketno
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String auditDiamond(String auditor, String basketno) throws DiamondWebException {
+		logger.debug("auditDiamond auditor: {} ,basketno : {}", auditor, basketno);
+		CordaX500Name x500Name = CordaX500Name.parse(auditor);
+		final Party auditorIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (auditorIdentity == null)
+			throw new DiamondWebException("auditor not found");
+		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		if ((aoclist == null) || (aoclist.size() == 0))
+			throw new DiamondWebException("can't find aoc");
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops
+					.startFlowDynamic(DiamondReqAuditFlow.Initiator.class, basketno, auditorIdentity);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" supplied by ");
+			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
+			return (strbuf.toString());
+		} catch (ExecutionException ee) {
+			logger.warn("Failure to audit diamond:", ee);
+			throw new DiamondWebException("Diamond audit error");
+		} catch (Exception ex) {
+			logger.warn("Failure to audit diamond:", ex);
+			throw new DiamondWebException("Diamond audit failure");
+		}
+	}
+	/**
+	 * auditor 响应审计请求
+	 * @param basketno
+	 * @param aoc
+	 * @param auditdate
+	 * @param status
+	 * @param result
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String auditDiamondResp(String basketno, String aoc, String auditdate, String status, String result)
+			throws DiamondWebException {
+		logger.debug("auditDiamondResp aoc: {} ,basketno : {},status: {} , result: {}", aoc, basketno, status, result);
+		CordaX500Name x500Name = CordaX500Name.parse(aoc);
+		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (aocIdentity == null)
+			throw new DiamondWebException("AOC not found");
+		List<Party> auditlist = rpcops.nodeInfo().getLegalIdentities();
+		if ((auditlist == null) || (auditlist.size() == 0))
+			throw new DiamondWebException("Unkown Lab");
+		logger.info(String.format("Diamond %1$s is verify completely by %2$s", basketno,
+				auditlist.get(0).getName().toString()));
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
+					DiamondAuditRespFlow.Initiator.class, basketno, aocIdentity, auditdate, status, result);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" for diamond ");
+			strbuf.append(basketno);
+			strbuf.append(" having verified and sent to ");
+			strbuf.append(aoc);
+			return (strbuf.toString());
+		} catch (Exception ex) {
+			logger.warn("Failure to confirm diamond lab verify:{}", ex);
+			throw new DiamondWebException("Diamond lab verify response failure");
+		}
+	}
+
+	/**
+	 * 钻石提取请求
+	 * @param vault
+	 * @param basketno
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String redeemDiamond( String basketno,String vault) throws DiamondWebException {
+		logger.debug("redeemDiamond vault: {} ,basketno : {}", vault, basketno);
+		CordaX500Name x500Name = CordaX500Name.parse(vault);
+		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (vaultIdentity == null)
+			throw new DiamondWebException("vault not found");
+		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		if ((aoclist == null) || (aoclist.size() == 0))
+			throw new DiamondWebException("can't find aoc");
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondRedeemFlow.Initiator.class,
+					vaultIdentity, basketno);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" supplied by ");
+			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
+			return (strbuf.toString());
+		} catch (ExecutionException ee) {
+			logger.warn("Failure to redeem diamond:", ee);
+			throw new DiamondWebException("Diamond redeem error");
+		} catch (Exception ex) {
+			logger.warn("Failure to redeem diamond:", ex);
+			throw new DiamondWebException("Diamond redeem failure");
+		}
+	}
+
+	/**
+	 * 响应钻石提取
+	 * @param basketno
+	 * @param aoc
+	 * @return
+	 * @throws DiamondWebException
+	 */
+	public String redeemDiamondResp(String basketno, String aoc) throws DiamondWebException {
+		logger.debug("redeemDiamondResp aoc: {} ,basketno : {}", aoc, basketno);
+		CordaX500Name x500Name = CordaX500Name.parse(aoc);
+		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
+		if (aocIdentity == null)
+			throw new DiamondWebException("AOC not found");
+		List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
+		if ((vaultlist == null) || (vaultlist.size() == 0))
+			throw new DiamondWebException("can't find vault");
+		logger.info(String.format("Diamond %1$s is verify completely by %2$s", basketno,
+				vaultlist.get(0).getName().toString()));
+		try {
+			final FlowHandle<SignedTransaction> flowhandle = rpcops
+					.startFlowDynamic(DiamondRedeemRespFlow.Initiator.class, basketno, aocIdentity);
+			final SignedTransaction stxn = flowhandle.getReturnValue().get();
+			StringBuilder strbuf = new StringBuilder();
+			strbuf.append("Transaction completed with id ");
+			strbuf.append(stxn.getId());
+			strbuf.append(" for diamond ");
+			strbuf.append(basketno);
+			strbuf.append(" having verified and sent to ");
+			strbuf.append(aoc);
+			return (strbuf.toString());
+		} catch (Exception ex) {
+			logger.warn("Failure to redeem diamond:{}", ex);
+			throw new DiamondWebException("Diamond redeem response failure");
 		}
 	}
 }

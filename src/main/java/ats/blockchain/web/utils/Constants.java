@@ -37,4 +37,17 @@ public class Constants {
 	public static final String ROLE_VAULT="OU=Vault";
 	public static final String ROLE_AUDIT="OU=Auditor";
 	
+	//flowStep
+	public static final String AOC_TO_GIA="atg";
+	public static final String GIA_TO_AOC="gta";
+	
+	public static final String AOC_TO_VAULT="atv";
+	public static final String VAULT_TO_AOC="vta";
+	
+	public static final String AOC_TO_VAULT_OWNER="atvo";
+	public static final String VAULT_OWNER_TO_AOC="vota";
+	
+	public static final String AOC_TO_AUDIT="atau";
+	public static final String AUDIT_TO_AOC="auta";
+	
 }

@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
@@ -33,18 +34,18 @@
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
-								<div class="col-sm-7">
+								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
+								<div class="col-sm-5">
 									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
 								</div>
 								<label id="errorBasketNo" for="basketno" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="inputName" class="col-sm-2 control-label">Lab:</label>
-								<div class="col-sm-7">
+								<label for="inputName" class="col-sm-5 control-label">Lab:</label>
+								<div class="col-sm-5">
 									<select id="gradlab" class="form-control" name="gradlab">
 									 <c:forEach items="${giaMap }" var="gia">
-											<option value="${gia.key }">
+											<option value="${gia.value }">
 												${gia.key }
 											</option>
 									</c:forEach>

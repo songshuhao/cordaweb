@@ -7,6 +7,8 @@ import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,31 +23,23 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
-import javax.json.Json;
-import javax.json.JsonObject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.boot.autoconfigure.web.ServerProperties.Tomcat.Resource;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ResourceUtils;
 
 import com.csvreader.CsvReader;
 import com.google.common.collect.Lists;
-import com.greenbirdtech.blockchain.cordapp.diamond.data.DiamondInfo;
 
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
-import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.model.UserInfo;
 import net.corda.core.contracts.StateAndRef;
-import net.corda.core.identity.AbstractParty;
 
 /**
  * Object转换类
@@ -269,7 +263,7 @@ public class AOCBeanUtils {
 				logger.warn("no field {} in class: {}. {}", fieldName, clazzName, AOCBeanUtils.ObjectToStringMap(src));
 			} catch (Exception e) {
 				logger.error("getField {} error:{}", fieldName, e.getMessage());
-			} 
+			}
 			return null;
 		}
 		try {
@@ -306,7 +300,7 @@ public class AOCBeanUtils {
 		reader.readHeaders();
 		String[] header = reader.getHeaders();
 		int count = reader.getHeaderCount();
-		if(count==0) {
+		if (count == 0) {
 			logger.warn("csv file is invaild: no headers.");
 			return Collections.emptyList();
 		}
@@ -317,32 +311,66 @@ public class AOCBeanUtils {
 				String filedName = header[i];
 				String value = row[i];
 				Field f = clazzMethod.getField(filedName);
-				Object objVal = convertType(value,f.getType());
+				Object objVal = convertType(value, f.getType());
 				f.set(t, objVal);
 			}
 			list.add(t);
 		}
 		return list;
 	}
-	
-	private static Object convertType(String value ,Class<?> type) {
+
+	public static <T> List<T> getObjectFromCsv(InputStream inputStream, Class<T> clazz)
+			throws IOException, InstantiationException, IllegalAccessException {
+		if (inputStream == null) {
+			logger.warn("Can not get csv file");
+			return Collections.emptyList();
+		}
+
+		InputStreamReader isReader = new InputStreamReader(inputStream);
+		ClassMethods clazzMethod = ClassMethodFactory.Instance.getClassMethods(clazz);
+		List<T> list = new ArrayList<T>();
+		CsvReader reader = new CsvReader(isReader, ',');
+		reader.readHeaders();
+		String[] header = reader.getHeaders();
+		int count = reader.getHeaderCount();
+		if (count == 0) {
+			logger.warn("csv file is invaild: no headers.");
+			return Collections.emptyList();
+		}
+		while (reader.readRecord()) {
+			String[] row = reader.getValues();
+			T t = clazz.newInstance();
+			for (int i = 0; i < count; i++) {
+				String filedName = header[i];
+				String value = row[i];
+				Field f = clazzMethod.getField(filedName);
+				Object objVal = convertType(value, f.getType());
+				f.set(t, objVal);
+			}
+			list.add(t);
+		}
+		return list;
+	}
+
+	private static Object convertType(String value, Class<?> type) {
 		Object obj = null;
-		if(value ==null) {
+		if (value == null) {
 			return null;
 		}
-		if(BigDecimal.class.equals(type)) {
+		if (BigDecimal.class.equals(type)) {
 			obj = new BigDecimal(value);
-		}else 	if(Long.class.equals(type)) {
-			obj =Long.valueOf(value);
-		}else {
+		} else if (Long.class.equals(type)) {
+			obj = Long.valueOf(value);
+		} else {
 			obj = value;
 		}
 		return obj;
 	}
-	
-	public static List<PackageAndDiamond> convertPakageState2PackageInfo(@Nonnull List<StateAndRef<PackageState>> stateList){
-		List<PackageAndDiamond> pkgList= new ArrayList<>(stateList.size());
-		for(StateAndRef<PackageState> state :stateList) {
+
+	public static List<PackageAndDiamond> convertPakageState2PackageInfo(
+			@Nonnull List<StateAndRef<PackageState>> stateList) {
+		List<PackageAndDiamond> pkgList = new ArrayList<>(stateList.size());
+		for (StateAndRef<PackageState> state : stateList) {
 			PackageAndDiamond pad = convertSinglePkgState2PkgInfo(state);
 			pkgList.add(pad);
 		}
@@ -353,23 +381,24 @@ public class AOCBeanUtils {
 		PackageAndDiamond pad = new PackageAndDiamond();
 		PackageInfo pkgInf = new PackageInfo();
 		PackageState data = state.getState().getData();
-		
+
 		BeanUtils.copyProperties(data, pkgInf);
-		
-		pkgInf.setAoc(data.getAoc()!=null?data.getAoc().getName().toString():"");
-		pkgInf.setSuppliercode(data.getSuppliercode()!=null?data.getSuppliercode().getName().toString():"");
-		pkgInf.setAuditor(data.getAuditor()!=null?data.getAuditor().getName().toString():"");
+
+		pkgInf.setAoc(data.getAoc() != null ? data.getAoc().getName().toString() : "");
+		pkgInf.setSuppliercode(data.getSuppliercode() != null ? data.getSuppliercode().getName().toString() : "");
+		pkgInf.setAuditor(data.getAuditor() != null ? data.getAuditor().getName().toString() : "");
 //			pkgInf.setOwner(data.getOwner()!=null?data.getOwner().getName().toString():"");
 		pkgInf.setOwner(data.getOwner());
-		pkgInf.setVault(data.getVault()!=null?data.getVault().getName().toString():"");
-		pkgInf.setGradlab(data.getGradlab()!=null? data.getGradlab().getName().toString():"");
-		pkgInf.setUuid(String.format("%1$x_%2$x",data.getLinearId().getId().getMostSignificantBits(),data.getLinearId().getId().getLeastSignificantBits()));
-		
+		pkgInf.setVault(data.getVault() != null ? data.getVault().getName().toString() : "");
+		pkgInf.setGradlab(data.getGradlab() != null ? data.getGradlab().getName().toString() : "");
+		pkgInf.setUuid(String.format("%1$x_%2$x", data.getLinearId().getId().getMostSignificantBits(),
+				data.getLinearId().getId().getLeastSignificantBits()));
+
 		pad.setPkgInfo(pkgInf);
 		List<DiamondsInfo> list = data.getDiamondinfolist();
 		List<DiamondInfoData> diList = Lists.newArrayList();
-		if(list !=null ) {
-			for(DiamondsInfo li :list) {
+		if (list != null) {
+			for (DiamondsInfo li : list) {
 				DiamondInfoData di = new DiamondInfoData();
 				BeanUtils.copyProperties(li, di);
 				diList.add(di);
@@ -378,28 +407,39 @@ public class AOCBeanUtils {
 		}
 		return pad;
 	}
-	
-	public static void main(String[] args)
-	{
-		try
-		{
+
+	public static <T> boolean isEmpty(List<T> list) {
+		boolean isEmpty = true;
+		if (null != list && !list.isEmpty()) {
+			isEmpty = false;
+		}
+		return isEmpty;
+	}
+
+	public static <T> boolean isNotEmpty(List<T> list) {
+		boolean isEmpty = true;
+		if (null != list && !list.isEmpty()) {
+			isEmpty = false;
+		}
+		return !isEmpty;
+	}
+
+	public static void main(String[] args) {
+		try {
 			File file = ResourceUtils.getFile("classpath:templates/userinfo.csv");
 			System.out.println(file.getPath());
 			List<UserInfo> list = AOCBeanUtils.getObjectFromCsv(file.getPath(), UserInfo.class);
 			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(list));
-		} catch (InstantiationException e)
-		{
+		} catch (InstantiationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IllegalAccessException e)
-		{
+		} catch (IllegalAccessException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e)
-		{
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 }

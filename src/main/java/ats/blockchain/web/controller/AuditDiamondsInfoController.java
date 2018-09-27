@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
+import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.dao.BasketinfoMapper;
 import ats.blockchain.web.dao.DiamondsinfoMapper;
 import ats.blockchain.web.model.BasketViewObject;
@@ -30,19 +32,18 @@ import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.model.DiamondsinfoExample;
 import ats.blockchain.web.model.PagedObjectDTO;
 import ats.blockchain.web.servcie.BasketInfoServcie;
+import ats.blockchain.web.servcie.PackageInfoService;
+import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.DateFormatUtils;
+import ats.blockchain.web.utils.ResultUtil;
 
 @Controller
 public class AuditDiamondsInfoController extends BaseController
 {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
-	@Resource(name="basketInfoServcieImpl")
-	private BasketInfoServcie basketInfoServcie;
-	@Autowired
-	private BasketinfoMapper basketinfoMapper;
-	@Autowired
-	private DiamondsinfoMapper diamondsinfoMapper;
+	@Resource
+	private PackageInfoService packageInfoServcie;
 	
 	@RequestMapping("/audit/auditList")
 	public String findBasketList()
@@ -59,81 +60,52 @@ public class AuditDiamondsInfoController extends BaseController
 	
 	@RequestMapping("/audit/updateBasketInfo")
 	@ResponseBody
-	public String updateBasketInfo(Basketinfo basketinfo,String step) throws JSONException
+	public String updateBasketInfo(PackageInfo packageInfo,String step) throws JSONException
 	{
-		logger.debug("BasketInfoController:basketinfo---->" + basketinfo.toString());
-		
-		JSONObject result = new JSONObject();
+		logger.debug("BasketInfoController:basketinfo---->" + packageInfo.toString());
 		String status = "";
-		try
+		if(StringUtils.isNotBlank(step))
 		{
-			if(StringUtils.isNotBlank(step))
+			if(step.equals(Constants.AOC_TO_AUDIT))
 			{
-				if(step.equals("atau"))
-				{
-					//status = Constants.status;
-				}else if(step.equals("auta"))
-				{
-					status = Constants.status_basket_audit_auditer_into;
-				}
+				
+			}else if(step.equals(Constants.AUDIT_TO_AOC))
+			{
+				status = PackageState.AUDIT_ADD_VERIFY;
 			}
-			basketinfo.setStatus(status);
-			basketinfo.setAuditdate((DateFormatUtils.format(basketinfo.getAuditdate(), "-")));
-			basketInfoServcie.updateBasketInfo(basketinfo);
-			result.put("state", "success");
-		} catch (Exception e)
+		}
+		packageInfo.setStatus(status);
+		boolean result = packageInfoServcie.auditPackageInfo(packageInfo);
+		String msg = "Add Success!";
+		if(!result)
 		{
-			logger.error("BasketInfoController--->updateBasketInfo：" + e.getMessage());
-			result.put("state", "fail");
-			result.put("message",e.getMessage().toString());
-			e.printStackTrace();
+			msg = "Add Failed";
 		}
-		return result.toString();
+		return ResultUtil.msg(result, msg);
 
-	}
-	
-	//@RequestMapping("/getBasketList")后台分页
-	//@ResponseBody
-	public PagedObjectDTO getBasketListServer(@RequestParam int pageNumber,int pageSize,HttpServletRequest request)
-	{
-		BasketinfoExample example = new BasketinfoExample();
-		PageHelper.startPage(pageNumber,pageSize);
-		List<Basketinfo> list =basketInfoServcie.getBasketList(example);
-		PagedObjectDTO pagedObjectDTO = new PagedObjectDTO();
-		PageInfo<Basketinfo> pageInfo = new PageInfo<>(list);
-		if (list != null && !list.isEmpty()) {
-			pagedObjectDTO.setRows(list);
-			pagedObjectDTO.setTotal(Long.valueOf(pageInfo.getTotal()));
-			return pagedObjectDTO;
-		}
-		return null;
-		
 	}
 	
 	@RequestMapping("/audit/getBasketList")
 	@ResponseBody
 	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpServletRequest request) throws JSONException
 	{
-		BasketinfoExample example = new BasketinfoExample();
 		List<String> statusList = new ArrayList<String>();
-
+		
 		if(StringUtils.isNotBlank(step))
 		{
-			if(step.equals("atau"))
+			if(step.equals(Constants.AOC_TO_AUDIT))
 			{
-				statusList.add(Constants.status_basket_move_valut_submit);
-				statusList.add(Constants.status_basket_transfer_vault_submit);
-			}else if(step.equals("auta"))
+				statusList.add(PackageState.VAULT_VERIFY_PASS);
+				statusList.add(PackageState.DMD_CHANGE_OWNER_PASS);
+			}else if(step.equals(Constants.AUDIT_TO_AOC))
 			{
-				statusList.add(Constants.status_basket_audit_submit);
-				statusList.add(Constants.status_basket_audit_auditer_into);
+				statusList.add(PackageState.AOC_REQ_AUDIT_VERIFY);
+				statusList.add(PackageState.AUDIT_ADD_VERIFY);
 			}
 		}
-		
-		example.createCriteria().andStatusIn(statusList);
-		List<Basketinfo> list =basketInfoServcie.getBasketList(example);
+		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
-		result.setRows(list = (list == null ? new ArrayList<Basketinfo>() : list));
+		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
 		return result;
 		
@@ -143,93 +115,27 @@ public class AuditDiamondsInfoController extends BaseController
 	@ResponseBody
 	public String submitBasketList(@RequestBody BasketViewObject basketViewObject) throws JSONException
 	{
-		//1，查询需要提交的basket信息
-		JSONObject result = new JSONObject();
 		String step = basketViewObject.getStep() == null ? "" : basketViewObject.getStep();
-		List<Basketinfo> baseinfoList = basketViewObject.getBasketinfos();
+		List<PackageInfo> baseinfoList = basketViewObject.getPackageInfos();
 		if(StringUtils.isNotBlank(step))
 		{
-			if(step.equals("atau"))
+			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step);
+			if(AOCBeanUtils.isNotEmpty(list))
 			{
-				if(null != baseinfoList && baseinfoList.size() >0)
+				String message = "these data shoud be check[";
+				for(int i=0; i<list.size(); i++)
 				{
-					//2，调用cordaAPI进行区块链存储
+					if(message.indexOf(list.get(i).getBasketno())==-1)
+					{
+						message = message+list.get(i).getBasketno()+":";
+					}
 					
-					//3，存储成功之后更新basket信息
-					Diamondsinfo diamondsinfo = new Diamondsinfo();
-					DiamondsinfoExample diamondsinfoExample = new DiamondsinfoExample();
-					for(Basketinfo basketinfo : baseinfoList)
-					{
-						basketinfo.setStatus(Constants.status_basket_audit_submit);
-						basketInfoServcie.updateBasketInfo(basketinfo);
-						//更新钻石状态
-						diamondsinfo.setBasketno(basketinfo.getBasketno());
-						diamondsinfo.setStatus(basketinfo.getStatus());
-						diamondsinfoExample.createCriteria().andBasketnoEqualTo(basketinfo.getBasketno());
-						diamondsinfoMapper.updateByExampleSelective(diamondsinfo, diamondsinfoExample);
-					}
-					result.put("state", "success");
-					result.put("message","These data had sent to audit");
-				}else
-				{
-					result.put("state", "fail");
-					result.put("message","There is no data to audit");
 				}
-			}else if(step.equals("auta"))
-			{
-				boolean checked = true;
-				if(null != baseinfoList && baseinfoList.size() >0)
-				{
-					String message = "these bakset shoud be added[";
-					Basketinfo basket = new Basketinfo();
-					for(int i=0; i<baseinfoList.size(); i++)
-					{
-						basket =basketinfoMapper.selectByPrimaryKey(baseinfoList.get(i).getBasketno());
-						if(basket.getStatus().equals(Constants.status_basket_audit_submit))
-						{
-							message = message+basket.getBasketno()+":";
-							checked = false;
-						}
-						
-					}
-					message = message+"]";
-					result.put("state", "fail");
-					result.put("message",message);
-					if(checked)
-					{
-						Diamondsinfo diamondsinfo = new Diamondsinfo();
-						DiamondsinfoExample diamondsinfoExample = new DiamondsinfoExample();
-						for(Basketinfo basketinfo : baseinfoList)
-						{
-							basketinfo.setStatus(Constants.status_basket_audit_auditer_submit);
-							basketInfoServcie.updateBasketInfo(basketinfo);
-							
-							//更新钻石状态
-							diamondsinfo.setBasketno(basketinfo.getBasketno());
-							diamondsinfo.setStatus(basketinfo.getStatus());
-							diamondsinfoExample.createCriteria().andBasketnoEqualTo(basketinfo.getBasketno());
-							diamondsinfoMapper.updateByExampleSelective(diamondsinfo, diamondsinfoExample);
-						}
-						result.put("state", "success");
-						result.put("message","Audit Success!");
-					}
-				}else
-				{
-					result.put("state", "fail");
-					result.put("message","There is no data to submit");
-				}
-			
-			}else
-			{
-				result.put("state", "fail");
-				result.put("message","The step is not right");
+				message = message+"]";
+				return ResultUtil.msg(false, message);
 			}
-			
-		}else
-		{
-			result.put("state", "fail");
-			result.put("message","The step is not right");
 		}
-		return result.toString();
+		logger.debug("submitBasketList end");
+		return ResultUtil.msg(true, "These diamonds sumbmit success");
 	}
 }

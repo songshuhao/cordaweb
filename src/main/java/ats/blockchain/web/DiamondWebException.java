@@ -3,7 +3,8 @@ package ats.blockchain.web;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.greenbirdtech.blockchain.cordapp.webdiamond.util.StringUtil;
+import ats.blockchain.cordapp.diamond.util.StringUtil;
+
 
 public class DiamondWebException extends Exception 
 {

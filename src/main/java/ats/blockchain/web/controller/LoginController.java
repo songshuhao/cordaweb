@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
 
+import ats.blockchain.web.config.DiamondApplicationRunner;
 import ats.blockchain.web.dao.DataMapper;
 import ats.blockchain.web.model.UserInfo;
 
@@ -59,10 +60,9 @@ public class LoginController extends BaseController {
 		session.invalidate();
 		session = request.getSession(true);
 		if (checkLogin(userid,password)) {
-			getNodeInfoList();
-			session.setAttribute("supplierMap", this.getSupplierMap());
-			session.setAttribute("giaMap", this.getGiaLMap());
-			session.setAttribute("vaultMap", this.getVaultMap());
+			session.setAttribute("supplierMap", DiamondApplicationRunner.getSupplierMap());
+			session.setAttribute("giaMap", DiamondApplicationRunner.getGiaLMap());
+			session.setAttribute("vaultMap", DiamondApplicationRunner.getVaultMap());
 			
 			session.setAttribute("userInfo", this.getCurrentUserInfo());
 			session.setAttribute("productMap", this.getProductMap());

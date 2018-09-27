@@ -53,10 +53,6 @@
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>
         </Logger>
-        <Logger name="com.zaxxer" level="error" additivity="false">
-            <AppenderRef ref="Console-Appender"/>
-            <AppenderRef ref="RollingFile-Appender"/>
-        </Logger>
         <Logger name="org.apache.commons" level="error" additivity="false">
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>

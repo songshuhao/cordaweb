@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ats.blockchain</groupId>
 	<artifactId>webdiamond</artifactId>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<version>1.0.0-SNAPSHOT</version>
 	<name>webdiamond Maven Webapp</name>
 	<url>http://maven.apache.org</url>
@@ -191,6 +191,13 @@
 					<executable>javac</executable>
 					<compilerVersion>1.8</compilerVersion>
 					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<fork>true</fork>
 				</configuration>
 			</plugin>
 		</plugins>

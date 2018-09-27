@@ -33,41 +33,36 @@
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
 							<div class="form-group">
-								<label for="vault" class="col-sm-2 control-label">Vault：</label>
-								<div class="col-sm-7">
-									<input type="text" name="vault" class="form-control" id="vault" placeholder="Owner ID:" data-bv-notempty/>
+								<label for="vault" class="col-sm-4 control-label">Vault：</label>
+								<div class="col-sm-6">
+									<input type="text" name="vault" class="form-control" id="vault"  data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorvault" for="vault" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="owner" class="col-sm-2 control-label">Owner ID:</label>
-								<div class="col-sm-7">
-									<input type="text" name="owner" class="form-control" id="owner" placeholder="Owner ID:" data-bv-notempty/>
+								<label for="owner" class="col-sm-4 control-label">Owner ID:</label>
+								<div class="col-sm-6">
+									<input type="text" name="owner" class="form-control" id="owner" data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorowner" for="owner" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
-								<div class="col-sm-7">
-									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
+								<label for="inputBasketNo" class="col-sm-4 control-label">Package Code:</label>
+								<div class="col-sm-6">
+									<input type="text" name="basketno" class="form-control" id="basketno"  data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorBasketNo" for="basketno" class="col-sm-3 control-label"></label>
 							</div>
 							
 							<div class="form-group">
-								<label for="invtymgr" class="col-sm-2 control-label">Inventory Box:</label>
-								<div class="col-sm-7">
+								<label for="invtymgr" class="col-sm-4 control-label">Inventory Box:</label>
+								<div class="col-sm-6">
 									<input type="text" name="invtymgr" class="form-control" id="invtymgr" placeholder="Inventory Box:" data-bv-notempty/>
 								</div>
-								<label id="errorowner" for="invtymgr" class="col-sm-3 control-label"></label>
 							</div>
 							
 							<div class="form-group">
-								<label for="sealedbagno" class="col-sm-2 control-label">Sealed Bag No:</label>
-								<div class="col-sm-7">
+								<label for="sealedbagno" class="col-sm-4 control-label">Sealed Bag No:</label>
+								<div class="col-sm-6">
 									<input type="text" name="sealedbagno" class="form-control" id="sealedbagno" placeholder="Sealed Bag No:" data-bv-notempty/>
 								</div>
-								<label id="errorowner" for="sealedbagno" class="col-sm-3 control-label"></label>
 							</div>
 							
 						</form>
@@ -266,8 +261,6 @@
         var index = layer.load();
 		var param = $("#addForm").serializeArray();
 		param.push({"name":"step","value":step});
-		//debugger;
-		$("#conf").attr("onclick","add()");
 		$.ajax({
 			url:"<%=basePath %>/move/updateBasketInfo",
 			method:"post",

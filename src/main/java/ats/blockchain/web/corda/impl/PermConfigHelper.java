@@ -1,15 +1,18 @@
 package ats.blockchain.web.corda.impl;
 
 import java.io.IOException;
-
-import javax.annotation.Resource;
+import java.io.InputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ResourceUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory;
@@ -39,6 +42,9 @@ public class PermConfigHelper implements PermConfigHelperInf
 	@Value("${corda.node}")
 	private String nodeconf;
 	
+	@Autowired
+	private ResourceLoader resourceLoader;
+	
 	public PermConfigHelper()
 	{
 	}
@@ -46,10 +52,15 @@ public class PermConfigHelper implements PermConfigHelperInf
 	public void init()
 	{
 		ObjectMapper objmap = new ObjectMapper(new HoconFactory());
+		objmap.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		InputStream nodeStream = null;
 		try
 		{
+			Resource nodeResource = resourceLoader.getResource(nodeconf);		
+			nodeStream = nodeResource.getInputStream();
+			objmap.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			logger.info("Reading node information:"+nodeconf);
-			nodestruct = objmap.readValue(ResourceUtils.getFile(nodeconf),NodeStruct.class);
+			nodestruct = objmap.readValue(nodeStream,NodeStruct.class);
 		}
 		catch (JsonMappingException jme)
 		{
@@ -62,6 +73,15 @@ public class PermConfigHelper implements PermConfigHelperInf
 		catch (IOException ioe)
 		{
 			logger.warn("Failure to parse node.conf:"+ioe.toString());
+		}
+		finally
+		{
+			if(nodeStream != null) {
+				try {
+					nodeStream.close();
+				} catch (IOException e) {
+				}
+			}
 		}
 	}
 	

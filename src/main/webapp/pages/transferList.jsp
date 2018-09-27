@@ -191,7 +191,7 @@
        }else
    	   {
     	   var index = layer.load();
-    	   var param = {"basketinfos":selectLsit,"step":step};
+    	   var param = {"packageInfos":selectLsit,"step":step};
     	   param = JSON.stringify(param);
     	   var url = "<%=basePath %>/transfer/submitBasketList";
 	       	$.ajax({

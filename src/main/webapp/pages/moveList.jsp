@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
@@ -33,38 +34,34 @@
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
-								<div class="col-sm-7">
+								<label for="inputBasketNo" class="col-sm-4 control-label">Package Code:</label>
+								<div class="col-sm-6">
 									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorBasketNo" for="basketno" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="result" class="col-sm-2 control-label">Re-verification Status:</label>
-								<div class="col-sm-7">
+								<label for="result" class="col-sm-4 control-label">Re-verification Status:</label>
+								<div class="col-sm-6">
 									<input type="text" name="result" class="form-control" id="result" placeholder="result" data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorresult" for="result" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="vault" class="col-sm-2 control-label">Valut:</label>
-								<div class="col-sm-7">
+								<label for="vault" class="col-sm-4 control-label">Vault:</label>
+								<div class="col-sm-6">
 									<select id="vault" class="form-control" name="vault">
 									      <c:forEach items="${vaultMap }" var="vault">
-											<option value="${vault.key }">
+											<option value="${vault.value }">
 												${vault.key }
 											</option>
 										</c:forEach>
 								    </select>
 								</div>
-								<label id="errorvault" for="vault" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="owner" class="col-sm-2 control-label">Owner ID:</label>
-								<div class="col-sm-7">
+								<label for="owner" class="col-sm-4 control-label">Owner ID:</label>
+								<div class="col-sm-6">
 									<input type="text" name="owner" class="form-control" id="owner" placeholder="Owner ID:" data-bv-notempty/>
 								</div>
-								<label id="errorowner" for="owner" class="col-sm-3 control-label"></label>
 							</div>
 							
 						</form>
@@ -186,7 +183,7 @@
    	 //console.log(status);
    	 if(status=='8'){
    		 return '';
-   	 }else if(status=='7' && result=='gia-verified'){
+   	 }else if(status=='7' && result=='verified'){
    		 return '<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	}
     }

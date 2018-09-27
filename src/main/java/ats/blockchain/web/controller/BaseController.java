@@ -1,8 +1,9 @@
 package ats.blockchain.web.controller;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,15 +12,16 @@ import ats.blockchain.web.config.DiamondApplicationRunner;
 import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.model.Product;
 import ats.blockchain.web.model.UserInfo;
-import ats.blockchain.web.utils.Constants;
-import net.corda.core.identity.Party;
-import net.corda.core.node.NodeInfo;
+import ats.blockchain.web.servcie.DiamondsInfoService;
 
 public class BaseController
 {
+	@Resource(name="diamondsInfoServiceCordaImpl")
+	public DiamondsInfoService diamondsInfoService;
 	
 	@Autowired
-	private CordaApi cordaApi;
+	public CordaApi cordaApi;
+	
 	private List<UserInfo> userList;
 	private UserInfo currentUserInfo;
 	
@@ -29,95 +31,6 @@ public class BaseController
 	
 	private Map<String,Product> productMap;
 	
-	private List<NodeInfo> nodeInfoList;
-	
-	private Map<String,String> supplierMap;
-	
-	private Map<String,String> giaLMap;
-	
-	private Map<String,String> vaultMap;
-	
-	public List<NodeInfo> getNodeInfoList()
-	{
-		nodeInfoList = cordaApi.getTradediamondinf().getNodeInfos();
-		supplierMap = new HashMap<String, String>();
-		giaLMap = new HashMap<String, String>();
-		vaultMap = new HashMap<String, String>();
-		
-		for(NodeInfo nodeInfo : nodeInfoList)
-		{
-			Party p = nodeInfo.getLegalIdentities().get(0);
-			if(null != p)
-			{
-				String user = p.toString();
-				if(user.contains(Constants.ROLE_SUPPLIER))
-				{
-					this.setUserIdMap(user,supplierMap);
-				}else if(user.contains(Constants.ROLE_LAB))
-				{
-					this.setUserIdMap(user,giaLMap);
-				}else if(user.contains(Constants.ROLE_VAULT))
-				{
-					this.setUserIdMap(user,vaultMap);
-				}
-			}
-		}
-		this.setSupplierMap(supplierMap);
-		this.setGiaLMap(giaLMap);
-		this.setVaultMap(vaultMap);
-		return nodeInfoList;
-	}
-	
-	private void setUserIdMap(String user, Map<String,String> map)
-	{
-		String[] userArray = user.split(",");
-		String userId = "";
-		for(String info : userArray)
-		{
-			if(info.contains("O="))
-			{
-				userId = info.split("[=]")[1];
-				map.put(userId, user);
-				break;
-			}
-		}
-	}
-	
-	public void setNodeInfoList(List<NodeInfo> nodeInfoList)
-	{
-		this.nodeInfoList = nodeInfoList;
-	}
-	
-	public Map<String, String> getSupplierMap()
-	{
-		return supplierMap;
-	}
-
-	public void setSupplierMap(Map<String, String> supplierMap)
-	{
-		this.supplierMap = supplierMap;
-	}
-
-	public Map<String, String> getGiaLMap()
-	{
-		return giaLMap;
-	}
-
-	public void setGiaLMap(Map<String, String> giaLMap)
-	{
-		this.giaLMap = giaLMap;
-	}
-
-	public Map<String, String> getVaultMap()
-	{
-		return vaultMap;
-	}
-
-	public void setVaultMap(Map<String, String> vaultMap)
-	{
-		this.vaultMap = vaultMap;
-	}
-
 	public Map<String, Product> getProductMap()
 	{
 		productMap = DiamondApplicationRunner.getProductMap();
@@ -162,6 +75,9 @@ public class BaseController
 			}
 			currentUserInfo.setRole(role);
 			currentUserInfo.setMyLegalName(user);
+		}else
+		{
+			throw new IllegalArgumentException("cordaApi userInfo is null:");
 		}
 		return currentUserInfo;
 	}
@@ -184,11 +100,11 @@ public class BaseController
 	}
 	
 	public String getUserLegalName(String userId) {
-		UserInfo user = DiamondApplicationRunner.getUserInfoMap().get(userId);
-		if(user==null) {
+		String userLegalName = DiamondApplicationRunner.getAllUserMap().get(userId);
+		if(StringUtils.isBlank(userLegalName)) {
 			throw new IllegalArgumentException("invaild userId:"+userId);
 		}
-		return user.getMyLegalName();
+		return userLegalName;
 		
 	}
 }

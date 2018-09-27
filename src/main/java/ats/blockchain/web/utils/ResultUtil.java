@@ -9,7 +9,7 @@ public class ResultUtil {
 
 	public static String msg(boolean state,String msg) {
 		Map<String, Object> result = new HashMap<String, Object>();
-		result.put("state", state?"success":"fail");
+		result.put("state", state ? "success" : "fail");
 		result.put("message", msg);
 		return JSON.toJSONString(result);
 	}

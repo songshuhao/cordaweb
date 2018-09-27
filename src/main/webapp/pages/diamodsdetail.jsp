@@ -107,13 +107,13 @@
                     },
                     {
                         title: 'Supplier Code',
-                        field: 'supcode',
+                        field: 'suppliercode',
                         align: 'center',
                         valign: 'middle',
                     },
                     {
                         title: 'Supplier Name',
-                        field: 'supname',
+                        field: 'suppliername',
                         align: 'center',
                         valign: 'middle',
                         visible: false,
