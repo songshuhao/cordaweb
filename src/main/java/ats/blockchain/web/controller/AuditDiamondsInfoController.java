@@ -9,33 +9,20 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
-
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.PackageInfo;
-import ats.blockchain.web.dao.BasketinfoMapper;
-import ats.blockchain.web.dao.DiamondsinfoMapper;
 import ats.blockchain.web.model.BasketViewObject;
-import ats.blockchain.web.model.Basketinfo;
-import ats.blockchain.web.model.BasketinfoExample;
-import ats.blockchain.web.model.Diamondsinfo;
-import ats.blockchain.web.model.DiamondsinfoExample;
 import ats.blockchain.web.model.PagedObjectDTO;
-import ats.blockchain.web.servcie.BasketInfoServcie;
 import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
-import ats.blockchain.web.utils.DateFormatUtils;
 import ats.blockchain.web.utils.ResultUtil;
 
 @Controller
@@ -97,13 +84,15 @@ public class AuditDiamondsInfoController extends BaseController
 			{
 				statusList.add(PackageState.VAULT_VERIFY_PASS);
 				statusList.add(PackageState.DMD_CHANGE_OWNER_PASS);
+				statusList.add(PackageState.AUDIT_VERIFY_PASS);
+				statusList.add(PackageState.AUDIT_VERIFY_NOPASS);
 			}else if(step.equals(Constants.AUDIT_TO_AOC))
 			{
 				statusList.add(PackageState.AOC_REQ_AUDIT_VERIFY);
 				statusList.add(PackageState.AUDIT_ADD_VERIFY);
 			}
 		}
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(statusList.toArray(new String[statusList.size()]));
+		List<PackageInfo> list = packageInfoServcie.getPackageStateWithoutRedeemByStatus(redeemOwnerId, statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));

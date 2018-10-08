@@ -108,6 +108,7 @@ public class TestUse {
 		addDiamond();
 		issueDiamond();
 		testReqLabVerify();
+		testReqVaultVerify();
 	}
 
 //	@Test
@@ -135,7 +136,7 @@ public class TestUse {
 		di.setBasketno(basketno);
 		di.setClarity("A");
 		di.setColor("F");
-		di.setSize("1");
+		//di.setSize("1");
 		di.setGiano("g11001");
 		di.setProductcode("100D1Duo");
 		di.setCraftsmandate("2018-10-01");
@@ -235,8 +236,8 @@ public class TestUse {
 		try {
 			String rs = api.reqVaultVerifyDiamond(basketno, PackageState.AOC_REQ_VAULT_VERIFY, valutLegalName,"owner111");
 			System.out.println("ReqvalutVerify "+rs);
-//			testSubmitReqVaultVerify();
-//			testRespVaultVerify();
+			testSubmitReqVaultVerify();
+			testRespVaultVerify();
 		} catch (DiamondWebException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -362,8 +363,8 @@ public class TestUse {
 //		init(supUser, supPwd, supPort);
 //		init(valutUser, valutPwd, valutPort);
 		init(aocUser, aocPwd, aocPort);
-//		List<StateAndRef<PackageState>> pkg = api.getPackageStateById(Vault.StateStatus.UNCONSUMED,basketno);
-		List<StateAndRef<PackageState>> pkg = api.getPackageStateByStatus(Vault.StateStatus.ALL,PackageState.AOC_SUBMIT_VAULT_VERIFY);
+		List<StateAndRef<PackageState>> pkg = api.getPackageStateById(Vault.StateStatus.ALL,basketno);
+		//List<StateAndRef<PackageState>> pkg = api.getPackageStateByStatus(Vault.StateStatus.ALL,PackageState.AOC_SUBMIT_VAULT_VERIFY);
 		System.out.println("query result: "+pkg.size());
 		pkg.stream().forEach(p ->{
 			

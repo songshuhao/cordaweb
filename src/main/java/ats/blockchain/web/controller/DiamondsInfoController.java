@@ -32,13 +32,11 @@ public class DiamondsInfoController extends BaseController {
 	public String addDiamondInfo(DiamondInfoData diamondsinfo) {
 		logger.debug("DiamondsInfoController:diamondsinfo---->" + diamondsinfo.toString());
 
-		boolean rs  = diamondsInfoService.addDiamondInfo(diamondsinfo);
-		String message = "add diamond success.";
-		if(!rs)
-		{
-			message = "add diamond failed.";
-		}
-		return ResultUtil.msg(rs, message);
+		Map<String, Object> rs = diamondsInfoService.addDiamondInfo(diamondsinfo);
+		logger.debug("addDiamondInfo: {},giano: {}, result: {}", diamondsinfo.getBasketno(), diamondsinfo.getGiano(),
+				rs);
+
+		return ResultUtil.parseMap(rs);
 	}
 
 	@RequestMapping("/findDiamondList")
@@ -53,13 +51,13 @@ public class DiamondsInfoController extends BaseController {
 	@RequestMapping("/getDiamondList")
 	@ResponseBody
 	public PagedObjectDTO getDiamondListClient(@RequestParam int pageNumber, int pageSize, HttpServletRequest request) {
-		List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(PackageState.PKG_ISSUE,PackageState.DMD_CREATE);
+		List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(PackageState.PKG_ISSUE,
+				PackageState.DMD_CREATE);
 		PagedObjectDTO dto = new PagedObjectDTO();
 		dto.setRows(list);
-		dto.setTotal((long)list.size());
+		dto.setTotal((long) list.size());
 		return dto;
 	}
-
 
 	@RequestMapping("/submitDiamondList")
 	@ResponseBody
@@ -82,7 +80,6 @@ public class DiamondsInfoController extends BaseController {
 		return ResultUtil.msg(true, "These diamonds sumbmit success");
 	}
 
-
 	@RequestMapping(value = "/importDiamondsInfo")
 	@ResponseBody
 	public String importDiamondsInfo(HttpServletRequest request) throws JSONException {
@@ -96,39 +93,36 @@ public class DiamondsInfoController extends BaseController {
 			e.printStackTrace();
 		}
 
-		if(AOCBeanUtils.isEmpty(diamondsinfos)) {
+		if (AOCBeanUtils.isEmpty(diamondsinfos)) {
 			return ResultUtil.fail("import file is empty.");
 		}
-		
+
 		boolean result = true;
 		message = "";
-		for(DiamondInfoData diamondInfoData : diamondsinfos)
-		{
-			boolean rs  = diamondsInfoService.addDiamondInfo(diamondInfoData);
-			if(!rs)
-			{
-				message = message +"Import error:["+ diamondInfoData.getGiano()+"]";
-				result = rs;
+		for (DiamondInfoData diamondInfoData : diamondsinfos) {
+			Map<String, Object> rs = diamondsInfoService.addDiamondInfo(diamondInfoData);
+			if (!ResultUtil.isSuccess(rs)) {
+				message = message + " Import error:[" + diamondInfoData.getGiano() + "] \n";
+				result = false;
 			}
 		}
 		return ResultUtil.msg(result, result ? "Import Success!" : message);
 	}
-	
 
 	public Map<String, Object> getBasketMap() {
-		 Map<String, Object>  basketMap = null;
+		Map<String, Object> basketMap = null;
 		List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(PackageState.PKG_ISSUE);
-		if(list!=null) {
-			basketMap = new HashMap<String,Object>();
-			for(DiamondInfoData l:list) {
+		if (list != null) {
+			basketMap = new HashMap<String, Object>();
+			for (DiamondInfoData l : list) {
 				basketMap.put(l.getBasketno(), l.getBasketno());
 			}
-			logger.debug("getBasketMap :{}",basketMap);
-		}else {
+			logger.debug("getBasketMap :{}", basketMap);
+		} else {
 			logger.debug("basket is null");
 			basketMap = Collections.emptyMap();
 		}
-			
+
 		return basketMap;
 	}
 

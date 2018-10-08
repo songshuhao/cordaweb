@@ -2,10 +2,10 @@ package ats.blockchain.web.controller;
 
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
@@ -14,24 +14,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 
-import ats.blockchain.web.dao.BasketinfoMapper;
-import ats.blockchain.web.dao.DiamondsinfoMapper;
+import ats.blockchain.web.bean.DiamondInfoData;
+import ats.blockchain.web.bean.PackageAndDiamond;
+import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.model.Basketinfo;
-import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.model.DiamondsinfoExample;
 import ats.blockchain.web.model.PagedObjectDTO;
+import ats.blockchain.web.servcie.PackageInfoService;
+import ats.blockchain.web.utils.AOCBeanUtils;
 
 @Controller
 @RequestMapping("/history")
 public class DiamondsHistoryController extends BaseController {
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
-	@Autowired
-	private DiamondsinfoMapper diamondsinfoMapper;
-	
-	@Autowired
-	private BasketinfoMapper basketinfoMapper;
 
+	@Resource
+	private PackageInfoService packageInfoServcie;
+	
 	@RequestMapping("/historyList")
 	public String findBasketList()
 	{
@@ -41,15 +42,13 @@ public class DiamondsHistoryController extends BaseController {
 	@RequestMapping("/getDiamondList")
 	@ResponseBody
 	public PagedObjectDTO getDiamondListClient(@RequestParam int pageNumber, int pageSize, HttpServletRequest request) {
-		DiamondsinfoExample example = new DiamondsinfoExample();
-		List<Diamondsinfo> diamondsinfos = diamondsinfoMapper.selectByExample(example);
+
+		List<DiamondInfoData> diamondsinfos = diamondsInfoService.getDiamondInfoData();
+		logger.debug("MoveDiamondsInfoController:packageInfo---->" + diamondsinfos.toString());
 		PagedObjectDTO pagedObjectDTO = new PagedObjectDTO();
-		if (diamondsinfos != null && !diamondsinfos.isEmpty()) {
-			pagedObjectDTO.setRows(diamondsinfos);
-			pagedObjectDTO.setTotal(Long.valueOf(diamondsinfos.size()));
-			return pagedObjectDTO;
-		}
-		return null;
+		pagedObjectDTO.setRows(diamondsinfos);
+		pagedObjectDTO.setTotal(Long.valueOf(diamondsinfos.size()));
+		return pagedObjectDTO;
 
 	}
 
@@ -58,17 +57,18 @@ public class DiamondsHistoryController extends BaseController {
 	public String getDiamondDetails(@RequestParam int pageNumber, int pageSize,String basketno) throws JSONException {
 		DiamondsinfoExample example = new DiamondsinfoExample();
 		example.createCriteria().andBasketnoEqualTo(basketno);
-		List<Diamondsinfo> diamondsinfos = diamondsinfoMapper.selectByExample(example);
-		Basketinfo basketinfo= basketinfoMapper.selectByPrimaryKey(basketno);
+		List<PackageAndDiamond> packageInfos = packageInfoServcie.getPackageAndDiamondById(basketno);
+		List<DiamondInfoData> diamondsinfos = packageInfos.get(0).getDiamondList();
+		PackageInfo basketinfo= packageInfos.get(0).getPkgInfo();
 		JSONObject result = new JSONObject();
-		if (diamondsinfos != null && !diamondsinfos.isEmpty()) {
+		if (AOCBeanUtils.isNotEmpty(diamondsinfos)) {
 			result.put("rows", JSON.toJSON(diamondsinfos));
 			result.put("total", JSON.toJSON(diamondsinfos.size()));
 			result.put("basketInfo", JSON.toJSON(basketinfo));
 		}else
 		{
-			result.put("rows", JSON.toJSON(diamondsinfos));
-			result.put("total", JSON.toJSON(diamondsinfos.size()));
+			result.put("rows", JSON.toJSON(Lists.newArrayList()));
+			result.put("total", JSON.toJSON(0));
 			result.put("basketInfo", JSON.toJSON(new Basketinfo()));
 		}
 		return result.toString();
@@ -77,16 +77,12 @@ public class DiamondsHistoryController extends BaseController {
 	
 	@RequestMapping("/getDiamondsHistoryList")
 	@ResponseBody
-	public PagedObjectDTO getDiamondsHistoryList(@RequestParam int pageNumber, int pageSize,String giano) {
-		DiamondsinfoExample example = new DiamondsinfoExample();
-		//example.createCriteria().andGianoEqualTo(giano);
-		List<Diamondsinfo> diamondsinfos = diamondsinfoMapper.selectByExample(example);
+	public PagedObjectDTO getDiamondsHistoryList(@RequestParam int pageNumber, int pageSize,String giano,String basketno) {
+		List<DiamondInfoData> diamondsinfos = diamondsInfoService.getDiamondInfoHistory(giano,basketno);
 		PagedObjectDTO pagedObjectDTO = new PagedObjectDTO();
-		if (diamondsinfos != null && !diamondsinfos.isEmpty()) {
-			pagedObjectDTO.setRows(diamondsinfos);
-			pagedObjectDTO.setTotal(Long.valueOf(diamondsinfos.size()));
-			return pagedObjectDTO;
-		}
-		return null;
+		pagedObjectDTO.setRows(diamondsinfos);
+		pagedObjectDTO.setTotal(Long.valueOf(diamondsinfos.size()));
+		return pagedObjectDTO;
+
 	}
 }

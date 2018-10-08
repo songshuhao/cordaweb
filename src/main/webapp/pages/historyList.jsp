@@ -2,9 +2,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <jsp:include page="diamodsdetail.jsp"></jsp:include>
 <jsp:include page="result.jsp"></jsp:include>
@@ -54,7 +56,7 @@
                 },
                 columns: [
                 	{
-                        title: 'number',//标题  可不加
+                        title: 'Number',//标题  可不加
                         width:'64px',
                         align: 'center',
                         valign: 'middle',
@@ -109,6 +111,7 @@
                         align: 'center',
                         field: 'shape',
                         valign: 'middle',
+                        visible:false,
                     },
                     {
                         title: 'Size',
@@ -139,8 +142,8 @@
                         visible:false,
                     },
                     {
-                        title: 'history',
-                        field: 'status',
+                        title: 'Status',
+                        field: 'statusDesc',
                         align: 'center',
                         valign: 'middle',
                     }
@@ -173,9 +176,11 @@
  }
  
  var giaNo = "";
+ var basketNo = "";
  window.operateEvents = {
  			'click #addBtn': function(e, value, row, index) {
 			giaNo = row.giano;
+			basketNo = row.basketno;
 			var oTable = DiamondsHistoryInit();
 		    oTable.Init();
 			$("#addModal").modal('show');

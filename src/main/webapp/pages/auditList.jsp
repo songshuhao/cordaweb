@@ -1,9 +1,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <jsp:include page="diamodsdetail.jsp"></jsp:include>
 <jsp:include page="result.jsp"></jsp:include>
@@ -58,7 +60,7 @@
         				field : "box"
         			},
                     {
-                        title: 'number',//标题  可不加
+                        title: 'Number',//标题  可不加
                         width:'64px',
                         align: 'center',
                         valign: 'middle',
@@ -93,8 +95,8 @@
                         valign: 'middle',
                     },
                     {
-                        title: 'Audit Status',
-                        field: 'status',
+                        title: 'Status',
+                        field: 'statusDesc',
                         align: 'center',
                         valign: 'middle',
                     }

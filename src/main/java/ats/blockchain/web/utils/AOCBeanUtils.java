@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -294,9 +295,14 @@ public class AOCBeanUtils {
 			logger.warn("csv file is empty.");
 			return Collections.emptyList();
 		}
+		CsvReader reader = new CsvReader(new FileReader(csvFile), ',');
+		return parseCsv(clazz, reader);
+	}
+
+	private static <T> List<T> parseCsv(Class<T> clazz, CsvReader reader)
+			throws IOException, InstantiationException, IllegalAccessException {
 		ClassMethods clazzMethod = ClassMethodFactory.Instance.getClassMethods(clazz);
 		List<T> list = new ArrayList<T>();
-		CsvReader reader = new CsvReader(new FileReader(csvFile), ',');
 		reader.readHeaders();
 		String[] header = reader.getHeaders();
 		int count = reader.getHeaderCount();
@@ -308,9 +314,13 @@ public class AOCBeanUtils {
 			String[] row = reader.getValues();
 			T t = clazz.newInstance();
 			for (int i = 0; i < count; i++) {
-				String filedName = header[i];
+				String fieldName = header[i];
 				String value = row[i];
-				Field f = clazzMethod.getField(filedName);
+				Field f = clazzMethod.getField(fieldName);
+				if(f==null) {
+					logger.warn("can't get filed: {}",fieldName);
+					continue;
+				}
 				Object objVal = convertType(value, f.getType());
 				f.set(t, objVal);
 			}
@@ -318,7 +328,15 @@ public class AOCBeanUtils {
 		}
 		return list;
 	}
-
+	/**
+	 * 从csv获取内容并转换为对象
+	 * @param inputStream
+	 * @param clazz
+	 * @return
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
 	public static <T> List<T> getObjectFromCsv(InputStream inputStream, Class<T> clazz)
 			throws IOException, InstantiationException, IllegalAccessException {
 		if (inputStream == null) {
@@ -327,29 +345,8 @@ public class AOCBeanUtils {
 		}
 
 		InputStreamReader isReader = new InputStreamReader(inputStream);
-		ClassMethods clazzMethod = ClassMethodFactory.Instance.getClassMethods(clazz);
-		List<T> list = new ArrayList<T>();
-		CsvReader reader = new CsvReader(isReader, ',');
-		reader.readHeaders();
-		String[] header = reader.getHeaders();
-		int count = reader.getHeaderCount();
-		if (count == 0) {
-			logger.warn("csv file is invaild: no headers.");
-			return Collections.emptyList();
-		}
-		while (reader.readRecord()) {
-			String[] row = reader.getValues();
-			T t = clazz.newInstance();
-			for (int i = 0; i < count; i++) {
-				String filedName = header[i];
-				String value = row[i];
-				Field f = clazzMethod.getField(filedName);
-				Object objVal = convertType(value, f.getType());
-				f.set(t, objVal);
-			}
-			list.add(t);
-		}
-		return list;
+		CsvReader csvReader =new CsvReader(isReader, ',');
+		return parseCsv(clazz, csvReader);
 	}
 
 	private static Object convertType(String value, Class<?> type) {
@@ -401,6 +398,7 @@ public class AOCBeanUtils {
 			for (DiamondsInfo li : list) {
 				DiamondInfoData di = new DiamondInfoData();
 				BeanUtils.copyProperties(li, di);
+				di.setStatusDesc(data.getStatusDesc());
 				diList.add(di);
 			}
 			pad.setDiamondList(diList);
@@ -408,7 +406,7 @@ public class AOCBeanUtils {
 		return pad;
 	}
 
-	public static <T> boolean isEmpty(List<T> list) {
+	public static <T> boolean isEmpty(Collection<T> list) {
 		boolean isEmpty = true;
 		if (null != list && !list.isEmpty()) {
 			isEmpty = false;
@@ -416,7 +414,7 @@ public class AOCBeanUtils {
 		return isEmpty;
 	}
 
-	public static <T> boolean isNotEmpty(List<T> list) {
+	public static <T> boolean isNotEmpty(Collection<T> list) {
 		boolean isEmpty = true;
 		if (null != list && !list.isEmpty()) {
 			isEmpty = false;

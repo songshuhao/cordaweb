@@ -2,9 +2,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <!-- 操作成功提示模态框 -->
 		<div id="opSuccessModal" class="modal fade " tabindex="-1" role="dialog" >

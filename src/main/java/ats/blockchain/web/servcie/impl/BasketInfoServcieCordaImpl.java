@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.DiamondWebException;
@@ -32,7 +33,6 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	@Autowired
 	private CordaApi cordaApi;
 	private DiamondTradeApi diamondApi;
-	// private Logger logger = LoggerFactory.getLogger(getClass());
 	private Logger logger = LogManager.getLogger(getClass());
 
 	@PostConstruct
@@ -394,7 +394,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		}else if(step.equals(Constants.AOC_TO_AUDIT))
 		{
 			//校验to do
-			String auditor = DiamondApplicationRunner.getAllUserMap().get("VaultA");
+			String auditor = DiamondApplicationRunner.getAllUserMap().get("AuditorA");
 			for(PackageInfo packageInfo : packageInfos)
 			{
 				logger.debug("submitPackageInfo {}",packageInfo.getBasketno());
@@ -443,12 +443,13 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		boolean flag = false;
 		String rs = "";
 		String externalid = packageInfo.getBasketno();
-		String auditor = DiamondApplicationRunner.getAllUserMap().get("VaultA");
+		String auditor = DiamondApplicationRunner.getAllUserMap().get("AuditorA");
+		String aoc = DiamondApplicationRunner.getAllUserMap().get("AOC");
 		String status = packageInfo.getStatus();
 		try {
 			if(status.equals(PackageState.AUDIT_ADD_VERIFY))
 			{
-				rs = diamondApi.auditDiamond(auditor, externalid);
+				rs = diamondApi.auditDiamondResp(externalid, aoc, packageInfo.getAuditdate(), status, packageInfo.getResult());
 			}else 
 			{
 				return flag;
@@ -460,5 +461,29 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			logger.error("auditPackageInfo error ", e);
 		}
 		return flag;
+	}
+
+	@Override
+	public List<PackageAndDiamond> getPackageAndDiamondById(String... basketNo)
+	{
+		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);
+		List<PackageAndDiamond> plist =Lists.newArrayList();
+		if(AOCBeanUtils.isNotEmpty(list))
+		{
+			plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
+		}
+		return plist;
+	}
+
+	@Override
+	public List<PackageInfo> getPackageStateWithoutRedeemByStatus(String redeemOwnerId, String... status)
+	{
+		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateWithoutRedeemByStatus(redeemOwnerId, status);
+		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
+		List<PackageInfo> pkgList = new ArrayList<PackageInfo>();
+		for (PackageAndDiamond pad : padList) {
+			pkgList.add(pad.getPkgInfo());
+		}
+		return pkgList;
 	}
 }

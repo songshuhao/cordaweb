@@ -10,11 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
 import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.model.Product;
@@ -38,6 +36,7 @@ public class DiamondApplicationRunner implements ApplicationRunner
 	
 	@Value("${product.path}")
 	private String productPath;
+	
 	@Autowired
 	private CordaApi cordaApi;
 	

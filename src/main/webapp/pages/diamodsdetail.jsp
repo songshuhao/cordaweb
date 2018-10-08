@@ -2,9 +2,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
 	<div class="modal-dialog modal-lg" role="document">
@@ -26,9 +28,9 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="diamondsnumber" class="col-sm-5 control-label">Number of Diamonds:</label>
+								<label for="diamondsNumber" class="col-sm-5 control-label">Number of Diamonds:</label>
 								<div class="col-sm-3">
-									<input type="text" name="diamondsnumber" class="col-sm-3 form-control" id="diamondsnumber" readonly="readonly"/>
+									<input type="text" name="diamondsNumber" class="col-sm-3 form-control" id="diamondsNumber" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -46,7 +48,7 @@
 				<table id="tableListForDetail"></table>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			</div>
 		</div>				
 	</div>
@@ -76,14 +78,14 @@
                 	var basketInfo = JSON.parse(data.basketInfo);
                 	console.log(basketInfo);
                 	$("#productcode1").val(basketInfo.productcode);
-                	$("#diamondsnumber").val(basketInfo.diamondsnumber);
+                	$("#diamondsNumber").val(basketInfo.diamondsNumber);
                 	$("#totalweight").val(basketInfo.totalweight);
                 	$("#mimweight").val(basketInfo.mimweight);
                     return JSON.parse(data.rows);
                 },
                 columns: [
                 	{
-                        title: 'number',//标题  可不加
+                        title: 'Number',//标题  可不加
                         width:'64px',
                         align: 'center',
                         valign: 'middle',
@@ -156,7 +158,7 @@
                     },
                     {
                         title: 'Status',
-                        field: 'status',
+                        field: 'statusDesc',
                         align: 'center',
                         valign: 'middle',
                     }

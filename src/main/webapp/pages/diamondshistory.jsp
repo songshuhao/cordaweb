@@ -2,9 +2,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <!-- 新增的模态框，在修改中将获取一行的值放入input中，改变一些参数继续使用 -->
 <div class="modal fade" id="addModal" tabindex="-1" role="dialog">
@@ -18,7 +20,7 @@
 			</div>
 			<div class="modal-footer">
 				<!-- <button type="button" id="conf" class="btn btn-default" onclick="add()">add</button> -->
-				<button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			</div>
 		</div>				
 	</div>
@@ -45,7 +47,7 @@ function DiamondsHistoryInit() {
             },
             columns: [
             	{
-                    title: 'number',//标题  可不加
+                    title: 'Number',//标题  可不加
                     width:'64px',
                     align: 'center',
                     valign: 'middle',
@@ -110,8 +112,8 @@ function DiamondsHistoryInit() {
                     valign: 'middle',
                 },
                 {
-                    title: 'history',
-                    field: 'status',
+                    title: 'Status',
+                    field: 'statusDesc',
                     align: 'center',
                     valign: 'middle',
                 }
@@ -127,7 +129,8 @@ function queryParamsHistory(params) {
         offset : this.offset, // 页码
         pageNumber : this.pageNumber,
         pageSize : this.pageSize,
-        giano : giaNo
+        giano : giaNo,
+        basketno : basketNo
 
 	};
 };

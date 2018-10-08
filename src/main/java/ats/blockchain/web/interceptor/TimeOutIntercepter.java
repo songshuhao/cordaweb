@@ -21,6 +21,8 @@ public class TimeOutIntercepter implements HandlerInterceptor
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
 	//可以随意访问的url
     public String[] allowUrls;
+    
+    private String defaultUrl = "/login";
 
     public void setAllowUrls(String[] allowUrls) 
     {
@@ -30,9 +32,10 @@ public class TimeOutIntercepter implements HandlerInterceptor
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception
     {
-    	logger.debug(this.getClass().getName()+":preHandle begin");
+    	logger.info("preHandle - {}", request.getRequestURI());
     	
     	String requestUrl = request.getRequestURI().replace(request.getContextPath(), "");
+    	
         response.setContentType("text/html;charset=utf-8");
         if(StringUtils.isNoneBlank(requestUrl)){
             for(String url:allowUrls){
@@ -50,13 +53,13 @@ public class TimeOutIntercepter implements HandlerInterceptor
         		return true;
         	}else
         	{
-        		response.sendRedirect("/login");
-            	return false;
+        		response.sendRedirect(request.getContextPath() + defaultUrl);
+            	return true;
         	}
         }else
         {
-        	response.sendRedirect("/login");
-        	return false;
+        	response.sendRedirect(request.getContextPath() + defaultUrl);
+        	return true;
         }
     }
 }

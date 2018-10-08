@@ -2,6 +2,8 @@ package ats.blockchain.web.servcie.impl;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -24,8 +26,17 @@ import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.corda.impl.DiamondTradeApi;
 import ats.blockchain.web.servcie.DiamondsInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
+import ats.blockchain.web.utils.Constants;
+import ats.blockchain.web.utils.ResultUtil;
 import net.corda.core.contracts.StateAndRef;
+import net.corda.core.node.services.Vault;
 
+
+/**
+ * 
+ * @author Administrator
+ *
+ */
 @Service
 public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 	@Autowired
@@ -39,25 +50,27 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 	}
 
 	@Override
-	public boolean addDiamondInfo(DiamondInfoData di) {
+	public Map<String, Object> addDiamondInfo(DiamondInfoData di) {
 		logger.debug("addDiamondInfo: {}", di);
 		String aocLegalName = DiamondApplicationRunner.getAllUserMap().get("AOC");
 		if (aocLegalName == null) {
 			logger.error("can't get aoc userinfo,won't add diamondInfo {}", di.getBasketno());
-			return false;
+			return ResultUtil.failMap("can't get AOC info.");
 		}
 		DiamondsInfo di1 = new DiamondsInfo();
 		BeanUtils.copyProperties(di, di1);
 		String id = di.getBasketno();
 		logger.debug("addDiamondInfo aoc: {}, basketNo: {} {}", aocLegalName, di1);
 		try {
-			String rs = diamondApi.createDiamond(aocLegalName, id, Collections.singletonList(di1));
+			String rs = diamondApi.createDiamond(aocLegalName, id, Lists.newArrayList(di1));
 			logger.debug("addDiamondInfo aoc: {}, basketNo: {},result: {}", aocLegalName, id, rs);
-			return true;
+			return ResultUtil.msgMap(true, "success");
 		} catch (DiamondWebException e) {
 			logger.error("addDiamondInfo basketNo " + id + " error:", e);
+			String message = e.getMessage();
+			String err = message.substring(message.indexOf(':')+1);
+			return ResultUtil.failMap(err);
 		}
-		return false;
 	}
 
 	@Override
@@ -87,6 +100,10 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 		return dList;
 	}
 
+	/**
+	 * add by shuhao.song
+	 * 2018-9-26 14:31:12
+	 */
 	@Override
 	public List<DiamondInfoData> submitDiamondList() {
 		String aocLegalName = DiamondApplicationRunner.getAllUserMap().get("AOC");
@@ -124,6 +141,50 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 		}
 		return dList;
 		
+	}
+	
+	@Override
+	public List<DiamondInfoData> getDiamondInfoData()
+	{
+		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState();
+		List<DiamondInfoData> dList = Lists.newArrayList();
+		if(AOCBeanUtils.isNotEmpty(list))
+		{
+			List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
+			plist.stream().forEach(p -> {
+				logger.debug("copy diamondInfo: {}",p.getDiamondList());
+				if(p.getDiamondList()!=null)
+				dList.addAll(p.getDiamondList());
+			});
+		}
+		return dList;
+	}
+
+	@Override
+	public List<DiamondInfoData> getDiamondInfoHistory(String giano,String basketno)
+	{
+		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(Vault.StateStatus.ALL, basketno);
+		List<DiamondInfoData> diamondInfoDatas = Lists.newArrayList();
+		if(AOCBeanUtils.isNotEmpty(list))
+		{
+			List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
+			plist.forEach(p->{
+				if(null != p.getDiamondList())
+				{
+					p.getDiamondList().stream().forEach(
+							item->{item.setStatus(ats.blockchain.cordapp.diamond.util.Constants.PKG_STATE_MAP.get(item.getStatus()));
+							if(item.getGiano().equals(giano))
+							{
+								diamondInfoDatas.add(item);
+							}
+						}
+					);
+				}
+
+			});
+		}
+		//diamondInfoDatas.addAll(p.getDiamondList().stream().filter(item->item.getGiano().equals(giano)).collect(Collectors.toList()));
+		return diamondInfoDatas;
 	}
 
 }

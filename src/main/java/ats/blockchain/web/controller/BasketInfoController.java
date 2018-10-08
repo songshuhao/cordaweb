@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.alibaba.fastjson.JSON;
+
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.model.PagedObjectDTO;
@@ -34,12 +36,17 @@ public class BasketInfoController extends BaseController {
 	@RequestMapping("/addBasketInfo")
 	@ResponseBody
 	public String addBasketInfo(PackageInfo basketinfo){
-		logger.debug("BasketInfoController:basketinfo---->{}", basketinfo.toString());
+		logger.debug("addBasketInfo: {}", JSON.toJSONString(basketinfo));
 		boolean rs = false;
 		rs = addPackageState(basketinfo);
-		String msg = ResultUtil.msg(rs, "");
+		String msg = "Add Success!";
+		if(!rs)
+		{
+			msg = "Add Failed";
+		}
 		logger.debug("BasketInfoController:basketinfo {} ,result: {}", basketinfo.getBasketno(),msg);
-		return msg;
+		return ResultUtil.msg(rs, msg);
+		
 	}
 
 	private boolean addPackageState(PackageInfo basketinfo) {
@@ -75,15 +82,26 @@ public class BasketInfoController extends BaseController {
 
 	@RequestMapping("/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(HttpServletRequest request)  {
-		List<PackageInfo> rs = basketInfoServcie.submitPackageByStatus(PackageState.PKG_CREATE);
+	public String submitBasketList(HttpServletRequest request)  
+	{
+		List<PackageInfo> list = basketInfoServcie.submitPackageByStatus(PackageState.PKG_CREATE);
 		String rsStr="";
-		if(rs.isEmpty()) {
-			rsStr = ResultUtil.success();
-		}else {
-			rsStr = ResultUtil.fail("issue package failed", rs);
+		if(AOCBeanUtils.isNotEmpty(list))
+		{
+			String message = "these data shoud be check[";
+			for(int i=0; i<list.size(); i++)
+			{
+				if(message.indexOf(list.get(i).getBasketno())==-1)
+				{
+					message = message+list.get(i).getBasketno()+":";
+				}
+				
+			}
+			message = message+"]";
+			return ResultUtil.msg(false, message);
 		}
-		return rsStr;
+		logger.debug("submitBasketList end");
+		return ResultUtil.msg(true, "These diamonds sumbmit success");
 	}
 
 	@RequestMapping(value = "/importBasketInfo")

@@ -10,11 +10,13 @@ import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
@@ -97,11 +99,14 @@ public class DiamondTradeApi {
 	 * @param linearid
 	 * @return
 	 */
-	public List<StateAndRef<PackageState>> getAllPackageState(UniqueIdentifier linearid) {
-		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, ImmutableList.of(linearid),
+	public List<StateAndRef<PackageState>> getAllPackageState(List<UniqueIdentifier> linearid) {
+		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, linearid,
 				Vault.StateStatus.ALL, null);
+		
 		return (rpcops.vaultQueryByCriteria(criteria, PackageState.class).getStates());
 	}
+	
+	
 
 	/**
 	 * 根据状态查询符合条件的状态为未消费的package
@@ -117,6 +122,39 @@ public class DiamondTradeApi {
 		CriteriaExpression exp = Builder.in(statusField, asList);
 		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
 		QueryCriteria cc = generalCriteria.and(crit);
+		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
+
+		List<StateAndRef<PackageState>> list = result.getStates();
+		logger.debug("getPackageStateByStatus {} query result size:{} ", asList, list.size());
+		return list;
+	}
+	
+	/**
+	 * 根据状态查询符合条件的状态为未消费的package<br>
+	 * redeemOwnerId 不为空，则根据Owner查询不包含该redeemOwnerId 的记录<br>
+	 * 为空则不加Owner条件查询
+	 * @param redeemOwnerId
+	 * @param status
+	 * @return
+	 */
+	public List<StateAndRef<PackageState>> getPackageStateWithoutRedeemByStatus(String redeemOwnerId,@Nonnull String... status) {
+		List<String> asList = Arrays.asList(status);
+		logger.debug("getPackageStateByStatus :{}", asList);
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
+		
+		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "status");
+		CriteriaExpression exp = Builder.in(statusField, asList);
+		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
+		QueryCriteria cc = null;
+		if(StringUtils.isNotBlank(redeemOwnerId)) {
+			Field ownField = getField(PackageSchemaV1.PersistentPackageState.class, "owner");
+			CriteriaExpression expOwn = Builder.notEqual(ownField, redeemOwnerId);
+			QueryCriteria critOwn = new QueryCriteria.VaultCustomQueryCriteria(expOwn);
+			cc = generalCriteria.and(crit).and(critOwn);
+		}else {
+			cc = generalCriteria.and(crit);
+		}
+		
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
 
 		List<StateAndRef<PackageState>> list = result.getStates();
@@ -155,15 +193,20 @@ public class DiamondTradeApi {
 	public List<StateAndRef<PackageState>> getPackageStateById(Vault.StateStatus consumedStatus,@Nonnull String... basketNo) {
 		List<String> asList = Arrays.asList(basketNo);
 		logger.debug("getPackageStateById :{}", asList);
-		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(consumedStatus);
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.CONSUMED);
 		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "basketno");
 		CriteriaExpression exp = Builder.in(statusField, asList);
 		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
 		QueryCriteria cc = generalCriteria.and(crit);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
 		List<StateAndRef<PackageState>> list = result.getStates();
-		logger.debug("getPackageStateById {} query result size:{} ", asList, list.size());
-		return list;
+		List<UniqueIdentifier> uList = Lists.newArrayList();
+		list.stream().forEach(p -> uList.add(p.getState().getData().getLinearId()));
+		
+		List<StateAndRef<PackageState>> uResult = getAllPackageState(uList);
+		
+		logger.debug("getPackageStateById {} query result size:{} ", asList, uResult.size());
+		return uResult;
 	}
 	/**
 	 * 查询所有钻石
@@ -283,7 +326,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.error("Failure to " + stateStr, ex);
-			throw new DiamondWebException(ex);
+			throw new DiamondWebException(ex.getMessage(),ex);
 		}
 	}
 
@@ -318,12 +361,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(supplierlist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to create diamond:", ee);
-			throw new DiamondWebException("Diamond create error");
 		} catch (Exception ex) {
-			logger.warn("Failure to create diamond:", ex);
-			throw new DiamondWebException("Diamond create failure");
+			logger.warn("Failure to create diamond:{}", ex.getMessage());
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -354,12 +394,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(supplierlist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to issue diamond:", ee);
-			throw new DiamondWebException("Diamond issue error");
 		} catch (Exception ex) {
 			logger.warn("Failure to issue diamond:", ex);
-			throw new DiamondWebException("Diamond issue failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -393,12 +430,9 @@ public class DiamondTradeApi {
 			strbuf.append(" verify by ");
 			strbuf.append(labIdentity).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to reqLabVerify diamond:", ee);
-			throw new DiamondWebException("Diamond reqLabVerify error");
 		} catch (Exception ex) {
 			logger.warn("Failure to reqLabVerify diamond:", ex);
-			throw new DiamondWebException("Diamond reqLabVerify failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -435,7 +469,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
-			throw new DiamondWebException("Diamond lab verify response failure",ex);
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 	
@@ -469,12 +503,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to reqVaultVerify diamond:", ee);
-			throw new DiamondWebException("Diamond reqVaultVerify error",ee);
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
-			throw new DiamondWebException("Diamond reqVaultVerify failure",ex);
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 	
@@ -511,7 +542,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond vault:{}", ex);
-			throw new DiamondWebException("Diamond vault response failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -542,12 +573,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to reqVaultVerify diamond:", ee);
-			throw new DiamondWebException("Diamond reqVaultVerify error");
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
-			throw new DiamondWebException("Diamond reqVaultVerify failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -578,12 +606,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to reqVaultVerify diamond:", ee);
-			throw new DiamondWebException("Diamond reqVaultVerify error");
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
-			throw new DiamondWebException("Diamond reqVaultVerify failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -619,7 +644,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
-			throw new DiamondWebException("Diamond lab verify response failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -649,12 +674,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to audit diamond:", ee);
-			throw new DiamondWebException("Diamond audit error");
-		} catch (Exception ex) {
+		}  catch (Exception ex) {
 			logger.warn("Failure to audit diamond:", ex);
-			throw new DiamondWebException("Diamond audit failure");
+			throw new  DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 	/**
@@ -693,7 +715,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
-			throw new DiamondWebException("Diamond lab verify response failure");
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -723,12 +745,9 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		} catch (ExecutionException ee) {
-			logger.warn("Failure to redeem diamond:", ee);
-			throw new DiamondWebException("Diamond redeem error");
 		} catch (Exception ex) {
-			logger.warn("Failure to redeem diamond:", ex);
-			throw new DiamondWebException("Diamond redeem failure");
+			logger.warn("Failure to redeem diamond:", ex.getMessage());
+			throw new DiamondWebException(ex.getMessage(),ex);
 		}
 	}
 
@@ -764,7 +783,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to redeem diamond:{}", ex);
-			throw new DiamondWebException("Diamond redeem response failure");
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 }

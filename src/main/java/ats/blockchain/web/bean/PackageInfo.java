@@ -32,6 +32,13 @@ public class PackageInfo  implements Serializable  {
 	private String giaapproveddate;
 	private String result;
 	private String status;
+	private String statusDesc;
+	public String getStatusDesc() {
+		return statusDesc;
+	}
+	public void setStatusDesc(String statusDesc) {
+		this.statusDesc = statusDesc;
+	}
 	public String getAoc() {
 		return aoc;
 	}
@@ -206,12 +213,14 @@ public class PackageInfo  implements Serializable  {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Basketinfo [aoc=");
+		builder.append("PackageInfo [aoc=");
 		builder.append(aoc);
 		builder.append(", basketno=");
 		builder.append(basketno);
 		builder.append(", productcode=");
 		builder.append(productcode);
+		builder.append(", uuid=");
+		builder.append(uuid);
 		builder.append(", suppliercode=");
 		builder.append(suppliercode);
 		builder.append(", suppliername=");
@@ -226,9 +235,9 @@ public class PackageInfo  implements Serializable  {
 		builder.append(giacontrolno);
 		builder.append(", gradlab=");
 		builder.append(gradlab);
-		builder.append(", gradLabLocation=");
+		builder.append(", locgradlab=");
 		builder.append(locgradlab);
-		builder.append(", collectionadr=");
+		builder.append(", collectionadd=");
 		builder.append(collectionadd);
 		builder.append(", invtymgr=");
 		builder.append(invtymgr);
@@ -236,7 +245,7 @@ public class PackageInfo  implements Serializable  {
 		builder.append(sealedbagno);
 		builder.append(", depaccno=");
 		builder.append(depaccno);
-		builder.append(", reVerificationId=");
+		builder.append(", reverification=");
 		builder.append(reverification);
 		builder.append(", ownmgr=");
 		builder.append(ownmgr);
@@ -260,6 +269,8 @@ public class PackageInfo  implements Serializable  {
 		builder.append(result);
 		builder.append(", status=");
 		builder.append(status);
+		builder.append(", statusDesc=");
+		builder.append(statusDesc);
 		builder.append("]");
 		return builder.toString();
 	}

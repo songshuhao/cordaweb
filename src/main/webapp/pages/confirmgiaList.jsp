@@ -2,9 +2,11 @@
     pageEncoding="UTF-8"%>
     
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <jsp:include page="diamodsdetail.jsp"></jsp:include>
 <jsp:include page="result.jsp"></jsp:include>
@@ -69,8 +71,8 @@
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" id="conf" class="btn btn-default" onclick="add()">add</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetAddModal()">cancel</button>
+						<button type="button" id="conf" class="btn btn-default" onclick="add()" class="btn btn-primary">Add</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetAddModal()">Cancel</button>
 					</div>
 				</div>				
 			</div>
@@ -124,7 +126,7 @@
                 },
                 columns: [
                     {
-                        title: 'number',//标题  可不加
+                        title: 'Number',//标题  可不加
                         width:'64px',
                         align: 'center',
                         valign: 'middle',
@@ -157,7 +159,13 @@
                         valign: 'middle',
                         visible: false,
                     },{
-                        title: 'operation',
+                        title: 'Status',
+                        field: 'statusDesc',
+                        align: 'center',
+                        valign: 'middle',
+                        visible: true,
+                    },{
+                        title: 'Operation',
                         field: 'status',
                         align: 'center',
                         valign: 'middle',

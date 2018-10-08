@@ -8,6 +8,7 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
@@ -28,6 +29,7 @@ public class LoginController extends BaseController {
 
 	@Autowired
 	DataMapper dataMapper;
+
 	@RequestMapping("/Hello")
 	@ResponseBody
 	public String sayHello() {
@@ -51,19 +53,17 @@ public class LoginController extends BaseController {
 		HttpSession session = request.getSession(false);
 		JSONObject result = new JSONObject();
 		
-		if (session == null) {
-			logger.warn("logon failed: can't get session");
-			result.put("state", "fail");
-			result.put("message","logon failed: can't get session");
-			return result.toString();
+		if (session != null) {
+			logger.debug("Invalidate old session");
+			session.invalidate();
 		}
-		session.invalidate();
+		
 		session = request.getSession(true);
 		if (checkLogin(userid,password)) {
 			session.setAttribute("supplierMap", DiamondApplicationRunner.getSupplierMap());
 			session.setAttribute("giaMap", DiamondApplicationRunner.getGiaLMap());
 			session.setAttribute("vaultMap", DiamondApplicationRunner.getVaultMap());
-			
+			session.setAttribute("redeemOwnerId", redeemOwnerId);
 			session.setAttribute("userInfo", this.getCurrentUserInfo());
 			session.setAttribute("productMap", this.getProductMap());
 			session.setAttribute("productMapJson", JSON.toJSON(this.getProductMap()));

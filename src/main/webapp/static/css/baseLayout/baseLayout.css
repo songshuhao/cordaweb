@@ -1,11 +1,4 @@
 /*----------------------------------------------
-Author : www.webthemez.com
-License: Commons Attribution 3.0
-http://creativecommons.org/licenses/by/3.0/
-------------------------------------------------*/
-
-
-/*----------------------------------------------
     COMMON  STYLES    
 ------------------------------------------------*/
 body {
@@ -69,6 +62,9 @@ color: #1CC09F;
 padding: 8px;
 width: 30px;
 text-align: center;
+}
+.myLegalName {
+color: #1CC09F;
 }
 .top-navbar{
 position: fixed;

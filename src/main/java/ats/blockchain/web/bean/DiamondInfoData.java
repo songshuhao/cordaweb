@@ -1,6 +1,7 @@
 package ats.blockchain.web.bean;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public class DiamondInfoData  implements Serializable{
 	private static final long serialVersionUID = 4122375686325300081L;
@@ -21,7 +22,7 @@ public class DiamondInfoData  implements Serializable{
 
 	private String shape;
 
-	private String size;
+	private BigDecimal size;
 
 	private String color;
 
@@ -34,6 +35,15 @@ public class DiamondInfoData  implements Serializable{
 	private String symmetry;
 
 	private String status;
+	private String statusDesc;
+
+	public String getStatusDesc() {
+		return statusDesc;
+	}
+
+	public void setStatusDesc(String statusDesc) {
+		this.statusDesc = statusDesc;
+	}
 
 	private String origin;
 
@@ -139,11 +149,11 @@ public class DiamondInfoData  implements Serializable{
 		this.shape = shape;
 	}
 
-	public String getSize() {
+	public BigDecimal getSize() {
 		return size;
 	}
 
-	public void setSize(String size) {
+	public void setSize(BigDecimal size) {
 		this.size = size;
 	}
 
@@ -328,6 +338,8 @@ public class DiamondInfoData  implements Serializable{
 		builder.append(symmetry);
 		builder.append(", status=");
 		builder.append(status);
+		builder.append(", statusDesc=");
+		builder.append(statusDesc);
 		builder.append(", origin=");
 		builder.append(origin);
 		builder.append(", minedate=");

@@ -9,9 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,14 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.PackageInfo;
-import ats.blockchain.web.dao.DiamondsinfoMapper;
 import ats.blockchain.web.model.BasketViewObject;
-import ats.blockchain.web.model.Basketinfo;
-import ats.blockchain.web.model.BasketinfoExample;
-import ats.blockchain.web.model.Diamondsinfo;
-import ats.blockchain.web.model.DiamondsinfoExample;
 import ats.blockchain.web.model.PagedObjectDTO;
-import ats.blockchain.web.servcie.BasketInfoServcie;
 import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
@@ -95,9 +87,10 @@ public class TransferDiamondsInfoController extends BaseController
 		{
 			if(step.equals(Constants.AOC_TO_VAULT_OWNER))
 			{
-				//11 14 15 17
+				//11 14 15 17 22
 				statusList.add(PackageState.VAULT_VERIFY_PASS);
 				statusList.add(PackageState.AUDIT_VERIFY_PASS);
+				statusList.add(PackageState.AUDIT_VERIFY_NOPASS);
 				statusList.add(PackageState.DMD_REQ_CHG_OWNER);
 				statusList.add(PackageState.DMD_CHANGE_OWNER_PASS);
 			}else if(step.equals(Constants.VAULT_OWNER_TO_AOC))

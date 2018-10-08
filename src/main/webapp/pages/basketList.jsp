@@ -2,9 +2,11 @@
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
+	/*
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path;
+			+ path;*/
+	String basePath = request.getContextPath();
 %>
 <jsp:include page="result.jsp"></jsp:include>
 <section class="content table-content">
@@ -36,13 +38,13 @@
 							<div class="form-group">
 								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
 								<div class="col-sm-5">
-									<input type="text" name="basketno" class="form-control" id="inputBasketNo" placeholder="Package Code" data-bv-notempty/>
+									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty/>
 								</div>
 							</div>
 							<div class="form-group" >
 								<label for="inputProduct" class="col-sm-5 control-label">Product Code:</label>
 								<div class="col-sm-5">
-									<select id="productCode" class="form-control" name="productcode">
+									<select id="productcode" class="form-control" name="productcode">
 								      <c:forEach items="${productList }" var="product">
 											<option value="${product.productcode }">
 												${product.productcode }
@@ -54,7 +56,7 @@
 							<div class="form-group">
 								<label for="inputName" class="col-sm-5 control-label">Supplier:</label>
 								<div class="col-sm-5">
-									<select id="supplierCode" class="form-control" name="suppliercode">
+									<select id="suppliercode" class="form-control" name="suppliercode">
 									  <c:forEach items="${supplierMap }" var="supplier">
 											<option value="${supplier.key }">
 												${supplier.key }
@@ -69,28 +71,28 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputdiamondsNumber" class="col-sm-5 control-label">Number of Diamonds:</label>
+								<label for="diamondsnumber" class="col-sm-5 control-label">Number of Diamonds:</label>
 								<div class="col-sm-5">
-									<input type="text" name="diamondsnumber" class="col-sm-4 form-control" id="inputdiamondsNumber" placeholder="Number of Diamonds:" data-bv-notempty/>
+									<input type="text" name="diamondsnumber" class="col-sm-4 form-control" id="diamondsnumber" placeholder="Number of Diamonds:" data-bv-notempty/>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="totalWeight" class="col-sm-5 control-label">Total Weight:</label>
 								<div class="col-sm-5">
-									<input type="text" name="totalweight" class="col-sm-4 form-control" id="totalWeight" placeholder="Total Weight" data-bv-notempty/>
+									<input type="text" name="totalweight" class="col-sm-4 form-control" id="totalweight" placeholder="Total Weight" data-bv-notempty/>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputmimWeight" class="col-sm-5 control-label">Minumum Weight Diamond:</label>
 								<div class="col-sm-5">
-									<input type="text" name="mimweight" class="col-sm-4 form-control" id="inputmimWeight" placeholder="Minumum Weight Diamond" data-bv-notempty/>
+									<input type="text" name="mimweight" class="col-sm-4 form-control" id="mimweight" placeholder="Minumum Weight Diamond" data-bv-notempty/>
 								</div>
 							</div>
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" id="conf" class="btn btn-primary" onclick="add()"><span class="glyphicon glyphicon-floppy-disk"></span>Add</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancel</button>
+						<button type="button" id="conf" class="btn btn-primary" onclick="add()"><!-- <span class="glyphicon glyphicon-floppy-disk"></span> -->Add</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal"><!-- <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> -->Cancel</button>
 					</div>
 				</div>				
 			</div>
@@ -114,8 +116,8 @@
 						</form>
 					</div>
 					<div class="modal-footer">
-						<input type="button" id="importCsv" onclick="importCsv()" class="btn btn-default" value="add" />  
-						<button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+						<input type="button" id="importCsv" onclick="importCsv()" class="btn btn-primary" value="Add" />  
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 					</div>
 				</div>				
 			</div>
@@ -126,12 +128,10 @@
     $(function(){
        var oTable = TableInit();
        oTable.Init();
-       
+       formValidate();
        $("form.required-validate").each(function() {
-           var $form = $(this);
-           $form.bootstrapValidator();
-
            // 修复bootstrap validator重复向服务端提交bug
+           var $form = $(this);
            $form.on('success.form.bv', function(e) {
                // Prevent form submission
                e.preventDefault();
@@ -166,7 +166,7 @@
                 },
                 columns: [
                     {
-                        title: 'number',//标题  可不加
+                        title: 'Number',//标题  可不加
                         width:'64px',
                         align: 'center',
                         valign: 'middle',
@@ -193,29 +193,39 @@
                         valign: 'middle',
                     },
                     {
-                        title: 'Number of Diamonds',
-                        align: 'center',
+                        title: 'Num of Diamonds',
                         field: 'diamondsnumber',
+                        align: 'center',
                         valign: 'middle',
                     },
                     {
-                        title: 'Todal Weight',
+                        title: 'Total Weight',
                         field: 'totalweight',
                         align: 'center',
                         valign: 'middle',
                     },
                     {
-                        title: 'Minimum Diamond',
+                        title: 'Min Diamond',
                         field: 'mimweight',
                         align: 'center',
                         valign: 'middle',
                     },
                     {
-                        title: 'status',
+                        title: 'Status',
+                        field: 'statusDesc',
+                        align: 'center',
+                        valign: 'middle',
+                        visible: true,
+                    }/* ,
+                    {
+                        title: 'Operation',
                         field: 'status',
                         align: 'center',
                         valign: 'middle',
-                    }
+                        visible: false,
+                        events: operateEvents,
+                        formatter : operateFormat,
+                    } */
                 ]
             });
         };
@@ -227,7 +237,8 @@
     	document.getElementById("addForm").reset();
     	$("#addForm").data('bootstrapValidator').destroy();
     	$('#addForm').data('bootstrapValidator',null);
-    	$('#addForm').bootstrapValidator();
+    	formValidate();
+    	/*非自定义情况 $('#addForm').bootstrapValidator(); */
     });
 	
   //Modal验证销毁重构
@@ -363,4 +374,135 @@
 			}
 		});
 	}
+	
+	
+	 function operateFormat(value, row, index) {
+		 /*var status = value;
+		 //console.log(status);
+		  if(status=='0'){
+			 return '<input type="button" value="Edit" id="editBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
+		 } */
+	 }
+	 
+	 
+	 //binding event shuhao.song
+	 window.operateEvents = {
+ 			'click #editBtn': function(e, value, row, index) {
+ 			$("#suppliercode").attr("value",row.suppliercode);
+			$("#basketno").val(row.basketno);
+			$("#diamondsnumber").val(row.diamondsnumber);
+			$("#totalweight").val(row.totalweight);
+			$("#mimweight").val(row.mimweight);
+			$(".modal-header > h3").text("Edit PackageInfo");
+			$("#conf").text("Edit");
+			
+			$("#suppliercode").attr("readonly","readonly");
+			$("#basketno").attr("readonly","readonly");
+	 		},
+	 		'click #addBtn': function(e, value, row, index) {
+	 			$(".modal-header > h3").text("Add PackageInfo");
+				$("#conf").text("Add");
+				$("#suppliercode").attr("readonly").remove();
+				$("#basketno").attr("readonly").remove();
+	 		}
+	 	};
+	 
+	 function formValidate()
+	 {
+		 var addForm = $("#addForm");
+		 addForm.bootstrapValidator({//根据自己的formid进行更改
+             message: 'This value is not valid',//默认提示信息
+             feedbackIcons: {//提示图标
+                 valid: 'glyphicon glyphicon-ok',
+                 invalid: 'glyphicon glyphicon-remove',
+                 validating: 'glyphicon glyphicon-refresh'
+             },
+             fields: {
+           		 basketno: {//名称校验
+                        message: 'This value is not valid',
+                        validators: {//验证条件
+                            /* notEmpty: {
+                                message: '附属品名称不能为空'
+                            }, */
+                            stringLength: {
+                                min: 1,
+                                max: 11,
+                                message: 'Max length 11!'
+                            },regexp: {//自定义校验
+                                regexp: /^[A-Za-z0-9]+$/,//匹配由数字和26个英文字母组成的字符串
+                                message: 'Value should be number and letter!'
+                            }
+                        }
+                    },
+          	   diamondsnumber: {//名称校验
+                     message: 'This value is not valid',
+                     validators: {//验证条件
+                         /* notEmpty: {
+                             message: '附属品名称不能为空'
+                         }, */
+                         stringLength: {
+                             min: 1,
+                             max: 10,
+                             message: 'Max length 10!'
+                         },regexp: {//自定义校验
+                             regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//>0的数字
+                             message: 'Value should bigger than 0!'
+                         }
+                     }
+                 },
+                 totalweight: {
+              	   message: 'This value is not valid',
+                     validators: {//验证条件
+                         /* notEmpty: {
+                             message: '附属品名称不能为空'
+                         }, */
+                         stringLength: {
+                             min: 1,
+                             max: 10,
+                             message: 'Max length 10!'
+                         },regexp: {//自定义校验
+                             regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//
+                             message: 'Value should bigger than 0!'
+                         }
+                     }
+                 },
+                 mimweight: {
+              	   message: 'This value is not valid',
+                     validators: {//
+                         /* notEmpty: {
+                             message: '附属品名称不能为空'
+                         }, */
+                         stringLength: {
+                             min: 1,
+                             max: 10,
+                             message: 'Max length 10!'
+                         },regexp: {//自定义校验
+                             regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,
+                             message: 'Value should bigger than 0!'
+                         },
+                         callback: {//自定义，可以在这里与其他输入项联动校验/
+                        	 message: 'Should small than total weight',
+                             callback:function(value, validator){
+                            	 var totalweight = $("#totalweight").val();
+                            	 console.log(totalweight);
+                            	 console.log(value);
+                            	 console.log(value > totalweight);
+                            	 if(value > totalweight)
+                            	 {
+                            		 return false; 
+                            	 }else
+                            	 {
+                            		return true;	 
+                            	 }
+                             }
+                         }
+                     }
+                 },
+             },
+         });
+		 
+		 var importForm = $("#importForm");
+		 importForm.bootstrapValidator();
+	 }
+	 
 </script>
