@@ -1,9 +1,7 @@
 package ats.blockchain.web.servcie.impl;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -26,7 +24,6 @@ import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.corda.impl.DiamondTradeApi;
 import ats.blockchain.web.servcie.DiamondsInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
-import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.ResultUtil;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.node.services.Vault;

@@ -18,7 +18,7 @@
 	</div>
 	<!-- bootstrapTable -->
 	</form>
-	<div class="row" style="margin: 10px;">
+	<div class="row">
 		 <div class="col-md-12">
 		   <table id="tableListForContacts"></table>
 		 </div>

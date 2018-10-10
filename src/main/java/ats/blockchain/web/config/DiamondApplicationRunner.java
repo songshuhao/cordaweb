@@ -128,14 +128,13 @@ public class DiamondApplicationRunner implements ApplicationRunner
 				productStream.close();
 			}
 		}
-
-		nodeInfoList = cordaApi.getTradediamondinf().getNodeInfos();
+		
 		this.getNodeInfoList();
 	}
 	
 	public List<NodeInfo> getNodeInfoList()
 	{
-		
+		nodeInfoList = cordaApi.getTradediamondinf().getNodeInfos();
 		for(NodeInfo nodeInfo : nodeInfoList)
 		{
 			Party p = nodeInfo.getLegalIdentities().get(0);

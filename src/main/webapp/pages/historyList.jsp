@@ -17,7 +17,7 @@
 		<div id="toolbar">
 		</div>
 		</form>
-		<div class="row" style="margin: 10px;">
+		<div class="row">
 			 <div class="col-md-12">
 			   <table id="tableListForContacts"></table>
 			 </div>
@@ -64,14 +64,6 @@
                             return index+1;
                         }
                     },
-                	{
-                        title: 'tradeid',
-                        field: 'tradeid',
-                        align: 'center',
-                        valign: 'middle',
-                        visible: false,
-                    },
-                    
                     {
                         title: 'Package Code',
                         field: 'basketno',
@@ -97,6 +89,7 @@
                         field: 'suppliername',
                         align: 'center',
                         valign: 'middle',
+                        visible:false,
                     },
                     {
                         title: 'GIA Number',

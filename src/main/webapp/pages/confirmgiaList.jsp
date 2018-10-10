@@ -18,7 +18,7 @@
 	</div>
 	<!-- bootstrapTable -->
 	</form>
-	<div class="row" style="margin: 10px;">
+	<div class="row">
 		 <div class="col-md-12">
 		   <table id="tableListForContacts"></table>
 		 </div>
@@ -56,9 +56,9 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="reverification" class="col-sm-4 control-label">Re-verfication ID:</label>
+								<label for="reverification" class="col-sm-4 control-label">Seal Number:</label>
 								<div class="col-sm-6">
-									<input type="text" name="reverification" class="form-control" id="reverification" placeholder="Re-verfication ID" data-bv-notempty/>
+									<input type="text" name="reverification" class="form-control" id="reverification" placeholder="Seal Number" data-bv-notempty/>
 								</div>
 							</div>
 							<div class="form-group">

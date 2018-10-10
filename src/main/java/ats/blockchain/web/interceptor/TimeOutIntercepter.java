@@ -32,7 +32,7 @@ public class TimeOutIntercepter implements HandlerInterceptor
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception
     {
-    	logger.info("preHandle - {}", request.getRequestURI());
+    	logger.debug("preHandle - {}", request.getRequestURI());
     	
     	String requestUrl = request.getRequestURI().replace(request.getContextPath(), "");
     	
@@ -54,12 +54,12 @@ public class TimeOutIntercepter implements HandlerInterceptor
         	}else
         	{
         		response.sendRedirect(request.getContextPath() + defaultUrl);
-            	return true;
+            	return false;
         	}
         }else
         {
         	response.sendRedirect(request.getContextPath() + defaultUrl);
-        	return true;
+        	return false;
         }
     }
 }

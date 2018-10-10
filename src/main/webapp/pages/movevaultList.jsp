@@ -18,7 +18,7 @@
 	</div>
 	<!-- bootstrapTable -->
 	</form>
-	<div class="row" style="margin: 10px;">
+	<div class="row">
 		 <div class="col-md-12">
 		   <table id="tableListForContacts"></table>
 		 </div>
@@ -56,7 +56,7 @@
 							<div class="form-group">
 								<label for="invtymgr" class="col-sm-4 control-label">Inventory Box:</label>
 								<div class="col-sm-6">
-									<input type="text" name="invtymgr" class="form-control" id="invtymgr" placeholder="Inventory Box:" data-bv-notempty/>
+									<input type="text" name="invtymgr" class="form-control" id="invtymgr" placeholder="Inventory Box"/>
 								</div>
 							</div>
 							

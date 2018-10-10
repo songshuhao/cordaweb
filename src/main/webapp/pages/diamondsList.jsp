@@ -19,7 +19,7 @@
 		</div>
 		<!-- bootstrapTable -->
 		</form>
-		<div class="row" style="margin: 10px;">
+		<div class="row">
 			 <div class="col-md-12">
 			   <table id="tableListForContacts"></table>
 			 </div>
@@ -39,13 +39,14 @@
 								<div class="form-group"> 
 									<label for="basketno" class="col-sm-2 control-label">Package Code:</label> 
 									<div class="col-md-4 rowGroup"> 
-										<select id="basketno" class="form-control" name="basketno">
+										<%-- <select id="basketno" class="form-control" name="basketno">
 									     	<c:forEach items="${basketMap }" var="basket">
 												<option value="${basket.key }">
 													${basket.key }
 												</option>
 											</c:forEach>
-									    </select>
+									    </select> --%>
+									    <input  type="text" class="form-control" id="basketno" name="basketno" readonly="readonly"/>
 									</div> 
 									<label for="origin" class="col-sm-2 control-label">Origin:</label> 
 									<div class="col-md-4 rowGroup"> 
@@ -333,9 +334,7 @@
     };
     
     function search() {
-    	console.log("333");
     	$('#tableListForContacts').bootstrapTable('refresh');
-    	console.log("444");
     }
     
   //点击取消后清空表单中已写信息
@@ -347,7 +346,7 @@
 	 var status = value;
 	 //console.log(status);
 	 if(status=='2'){
-		 return '';
+		 /* return '<input type="button" value="Edit" id="editBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>'; */
 	 }else if(status=='1'){
 		 return '<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
 	}
@@ -357,7 +356,6 @@
  //binding event shuhao.song
  window.operateEvents = {
  			'click #addBtn': function(e, value, row, index) {
-			//$("#tradeid").val(row.tradeid);
 			$("#suppliercode").val(row.suppliercode);
 			$("#basketno").val(row.basketno);
 			$("#productcode").val(row.productcode);
@@ -368,16 +366,10 @@
 			var product = '';
 			for(var productKey in productMap)
 			{
-				/* $("#shape").val("BR");
-				$("#color").val("D");
-				$("#clarity").val("VS1");
-				$("#cut").val("EX";
-				$("#polish").val("EX");
-				$("#symmetry").val("EX"); */
 				if(productKey == productcode)
 				{
 					product = productMap[productKey];
-					console.log(product);
+					//console.log(product);
 					$("#shape").val(product.shape);
 					$("#color").val(product.color);
 					$("#clarity").val(product.clarity);
@@ -388,7 +380,43 @@
 				}
 			}
 			
+			$(".modal-header > h3").text("Add DiamondsInfo");
+			$("#conf").text("Add");
+			
+ 		},
+ 		'click #editBtn': function(e, value, row, index) {
+ 			//console.log(row);
+			$("#suppliercode").val(row.suppliercode);
+			$("#basketno").val(row.basketno);
+			$("#productcode").val(row.productcode);
+			$("#giano").val(row.giano);
+			$("#size").val(row.size);
+			$("#shape").val(row.shape);
+			$("#color").val(row.color);
+			$("#clarity").val(row.clarity);
+			$("#cut").val(row.cut);
+			$("#polish").val(row.polish);
+			$("#symmetry").val(row.symmetry);
+			//-----------
+			$("#origin").val(row.origin);
+			$("#minedate").val(row.minedate);
+			$("#cutter").val(row.cutter);
+			$("#craftsmanname").val(row.craftsmanname);
+			$("#craftsmandate").val(row.craftsmandate);
+			$("#dealername").val(row.dealername);
+			$("#dealerdate").val(row.dealerdate);
+			$("#remark1").val(row.remark1);
+			$("#remark2").val(row.remark2);
+			
+			$(".modal-header > h3").text("Edit DiamondsInfo");
+			$("#conf").text("Edit");
+			
+			
+			
+			
+			
  		}
+ 		
  	};
  
     function submit()
@@ -480,7 +508,7 @@
             type: 'POST',
             dataType:'json',
             data: formData,
-            async: false,
+            //async: false,
             cache: false,
             contentType: false,
             processData: false,
@@ -558,6 +586,15 @@
                         }
                     }
                 },
+                /* minedate: {//名称校验
+                    message: 'This value is not valid',
+                    validators: {//验证条件
+                    	date : {  
+                            format : 'YYYY-MM-DD',  
+                            message : 'format should be yyyy-MM-dd'  
+                        } 
+                    }
+                }, */
                 /* origin2: {
              	   message: 'This value is not valid',
                     validators: {//验证条件

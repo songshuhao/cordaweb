@@ -44,7 +44,7 @@ public class DiamondsHistoryController extends BaseController {
 	public PagedObjectDTO getDiamondListClient(@RequestParam int pageNumber, int pageSize, HttpServletRequest request) {
 
 		List<DiamondInfoData> diamondsinfos = diamondsInfoService.getDiamondInfoData();
-		logger.debug("MoveDiamondsInfoController:packageInfo---->" + diamondsinfos.toString());
+		logger.debug("DiamondsHistoryController:diamondsinfos---->" + diamondsinfos.toString());
 		PagedObjectDTO pagedObjectDTO = new PagedObjectDTO();
 		pagedObjectDTO.setRows(diamondsinfos);
 		pagedObjectDTO.setTotal(Long.valueOf(diamondsinfos.size()));
@@ -61,15 +61,21 @@ public class DiamondsHistoryController extends BaseController {
 		List<DiamondInfoData> diamondsinfos = packageInfos.get(0).getDiamondList();
 		PackageInfo basketinfo= packageInfos.get(0).getPkgInfo();
 		JSONObject result = new JSONObject();
+		if(null != basketinfo)
+		{
+			result.put("basketInfo", JSON.toJSON(basketinfo));
+		}else
+		{
+			result.put("basketInfo", JSON.toJSON(new Basketinfo()));
+		}
 		if (AOCBeanUtils.isNotEmpty(diamondsinfos)) {
 			result.put("rows", JSON.toJSON(diamondsinfos));
 			result.put("total", JSON.toJSON(diamondsinfos.size()));
-			result.put("basketInfo", JSON.toJSON(basketinfo));
+			
 		}else
 		{
 			result.put("rows", JSON.toJSON(Lists.newArrayList()));
 			result.put("total", JSON.toJSON(0));
-			result.put("basketInfo", JSON.toJSON(new Basketinfo()));
 		}
 		return result.toString();
 	}

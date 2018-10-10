@@ -18,31 +18,31 @@
 				<div class="form-group">
 								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
 								<div class="col-sm-3">
-									<input type="text" name="basketno" class="col-sm-3 form-control" id="basketno1" readonly="readonly"/>
+									<input type="text" name="basketno1" class="col-sm-3 form-control" id="basketno1" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group" >
-								<label for="productcode" class="col-sm-5 control-label">Product Code:</label>
+								<label for="productcode1" class="col-sm-5 control-label">Product Code:</label>
 								<div class="col-sm-3">
-									<input type="text" name="productcode" class="col-sm-3 form-control" id="productcode1" readonly="readonly"/>
+									<input type="text" name="productcode1" class="col-sm-3 form-control" id="productcode1" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="diamondsNumber" class="col-sm-5 control-label">Number of Diamonds:</label>
+								<label for="diamondsnumber1" class="col-sm-5 control-label">Number of Diamonds:</label>
 								<div class="col-sm-3">
-									<input type="text" name="diamondsNumber" class="col-sm-3 form-control" id="diamondsNumber" readonly="readonly"/>
+									<input type="text" name="diamondsnumber1" class="col-sm-3 form-control" id="diamondsnumber1" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="totalweight" class="col-sm-5 control-label">Total Weight:</label>
+								<label for="totalweight1" class="col-sm-5 control-label">Total Weight:</label>
 								<div class="col-sm-3">
-									<input type="text" name="totalweight" class="col-sm-3 form-control" id="totalweight" readonly="readonly"/>
+									<input type="text" name="totalweight1" class="col-sm-3 form-control" id="totalweight1" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="mimweight" class="col-sm-5 control-label">Minumum Weight Diamond:</label>
+								<label for="mimweight1" class="col-sm-5 control-label">Minumum Weight Diamond:</label>
 								<div class="col-sm-3">
-									<input type="text" name="mimweight" class="col-sm-3 form-control" id="mimweight" readonly="readonly"/>
+									<input type="text" name="mimweight1" class="col-sm-3 form-control" id="mimweight1" readonly="readonly"/>
 								</div>
 							</div>
 				<table id="tableListForDetail"></table>
@@ -76,11 +76,10 @@
                 //showRefresh: false,                  //是否显示刷新按钮
                 responseHandler: function(data){
                 	var basketInfo = JSON.parse(data.basketInfo);
-                	console.log(basketInfo);
                 	$("#productcode1").val(basketInfo.productcode);
-                	$("#diamondsNumber").val(basketInfo.diamondsNumber);
-                	$("#totalweight").val(basketInfo.totalweight);
-                	$("#mimweight").val(basketInfo.mimweight);
+                	$("#diamondsnumber1").val(basketInfo.diamondsnumber);
+                	$("#totalweight1").val(basketInfo.totalweight);
+                	$("#mimweight1").val(basketInfo.mimweight);
                     return JSON.parse(data.rows);
                 },
                 columns: [

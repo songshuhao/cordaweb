@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,12 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.PackageInfo;
-import ats.blockchain.web.dao.DiamondsinfoMapper;
 import ats.blockchain.web.model.PagedObjectDTO;
 import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
-import ats.blockchain.web.utils.DateFormatUtils;
 import ats.blockchain.web.utils.ResultUtil;
 
 @Controller
@@ -64,7 +61,7 @@ public class ConfimDiamondsInfoController extends BaseController
 			}
 		}
 		packageInfo.setStatus(status);
-		packageInfo.setGiaapproveddate(DateFormatUtils.format(packageInfo.getGiaapproveddate(), "-"));
+		//packageInfo.setGiaapproveddate(DateFormatUtils.format(packageInfo.getGiaapproveddate(), "-"));
 		boolean result = packageInfoServcie.labConfirmPackageInfo(packageInfo);
 		String msg = "Add Success!";
 		if(!result)

@@ -19,7 +19,7 @@
 	</div>
 	<!-- bootstrapTable -->
 	</form>
-	<div class="row" style="margin: 10px;">
+	<div class="row">
 		 <div class="col-md-12">
 		   <table id="tableListForContacts"></table>
 		 </div>
@@ -291,7 +291,7 @@
             type: 'POST',
             dataType:'json',
             data: formData,
-            async: false,
+            //async: false,
             cache: false,
             contentType: false,
             processData: false,
@@ -426,8 +426,8 @@
                             }, */
                             stringLength: {
                                 min: 1,
-                                max: 11,
-                                message: 'Max length 11!'
+                                max: 12,
+                                message: 'Max length 12!'
                             },regexp: {//自定义校验
                                 regexp: /^[A-Za-z0-9]+$/,//匹配由数字和26个英文字母组成的字符串
                                 message: 'Value should be number and letter!'
@@ -481,18 +481,22 @@
                              message: 'Value should bigger than 0!'
                          },
                          callback: {//自定义，可以在这里与其他输入项联动校验/
-                        	 message: 'Should small than total weight',
+                        	 message: 'Should check total weight>=mimweight*diamondsnumber',
                              callback:function(value, validator){
                             	 var totalweight = $("#totalweight").val();
-                            	 console.log(totalweight);
-                            	 console.log(value);
-                            	 console.log(value > totalweight);
+                            	 var diamondsnumber = $("#diamondsnumber").val();
+                            	 //console.log(totalweight);
+                            	 //console.log(value);
+                            	 //console.log(value > totalweight);
                             	 if(value > totalweight)
                             	 {
                             		 return false; 
+                            	 }else if(value*diamondsnumber > totalweight)
+                            	 {
+                            		return false;	 
                             	 }else
                             	 {
-                            		return true;	 
+                            		 return true;
                             	 }
                              }
                          }

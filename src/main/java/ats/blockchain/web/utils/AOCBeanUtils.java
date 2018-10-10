@@ -356,9 +356,13 @@ public class AOCBeanUtils {
 		}
 		if (BigDecimal.class.equals(type)) {
 			obj = new BigDecimal(value);
-		} else if (Long.class.equals(type)) {
+		} else if (Integer.TYPE.equals(type) || Integer.class.equals(type)) {
+			obj = Integer.valueOf(value);
+		} else if (Boolean.TYPE.equals(type) || Boolean.class.equals(type)) {
+			obj = Boolean.valueOf(value);
+		} else if (Long.TYPE.equals(type) || Long.class.equals(type)) {
 			obj = Long.valueOf(value);
-		} else {
+		}  else {
 			obj = value;
 		}
 		return obj;
