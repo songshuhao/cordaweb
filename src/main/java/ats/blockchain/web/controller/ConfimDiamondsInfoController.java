@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -74,7 +73,7 @@ public class ConfimDiamondsInfoController extends BaseController
 	
 	@RequestMapping("/confirm/getBasketList")
 	@ResponseBody
-	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpServletRequest request) throws JSONException
+	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpSession session)
 	{
 		List<String> statusList = new ArrayList<String>();
 		if(StringUtils.isNotBlank(step))
@@ -90,7 +89,8 @@ public class ConfimDiamondsInfoController extends BaseController
 			}
 		}
 		
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(statusList.toArray(new String[statusList.size()]));
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
+		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -100,12 +100,14 @@ public class ConfimDiamondsInfoController extends BaseController
 	
 	@RequestMapping("/confirm/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(HttpServletRequest request,String step) throws JSONException
+	public String submitBasketList(HttpSession session,String step) 
 	{
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		//1，查询需要提交的basket信息
+
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(step);
+			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud check[";

@@ -35,6 +35,8 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="<%=basePath %>/basket/addBasketInfo" method="post" class="form-horizontal required-validate">
+							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
 								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
 								<div class="col-sm-5">
@@ -62,11 +64,6 @@
 												${supplier.key }
 											</option>
 										</c:forEach>
-								      <!-- <option value="S0001">S0001</option>
-								      <option value="S0002">S0002</option>
-								      <option value="S0003">S0003</option>
-								      <option value="S0004">S0004</option>
-								      <option value="S0005">S0005</option> -->
 								      </select>
 								</div>
 							</div>
@@ -216,16 +213,16 @@
                         align: 'center',
                         valign: 'middle',
                         visible: true,
-                    }/* ,
+                    } ,
                     {
                         title: 'Operation',
                         field: 'status',
                         align: 'center',
                         valign: 'middle',
-                        visible: false,
+                        visible: true,
                         events: operateEvents,
                         formatter : operateFormat,
-                    } */
+                    }
                 ]
             });
         };
@@ -377,33 +374,29 @@
 	
 	
 	 function operateFormat(value, row, index) {
-		 /*var status = value;
+		 var status = value;
 		 //console.log(status);
 		  if(status=='0'){
-			 return '<input type="button" value="Edit" id="editBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
-		 } */
+			 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
+		 }
 	 }
 	 
 	 
 	 //binding event shuhao.song
 	 window.operateEvents = {
- 			'click #editBtn': function(e, value, row, index) {
- 			$("#suppliercode").attr("value",row.suppliercode);
-			$("#basketno").val(row.basketno);
-			$("#diamondsnumber").val(row.diamondsnumber);
-			$("#totalweight").val(row.totalweight);
-			$("#mimweight").val(row.mimweight);
-			$(".modal-header > h3").text("Edit PackageInfo");
-			$("#conf").text("Edit");
-			
-			$("#suppliercode").attr("readonly","readonly");
-			$("#basketno").attr("readonly","readonly");
+ 			'click #modifyBtn': function(e, value, row, index) {
+	 			$("#suppliercode").attr("value",row.suppliercode);
+				$("#basketno").val(row.basketno);
+				$("#diamondsnumber").val(row.diamondsnumber);
+				$("#totalweight").val(row.totalweight);
+				$("#mimweight").val(row.mimweight);
+				$(".modal-header > h3").text("Modify PackageInfo");
+				$("#conf").text("Modify");
+				$("#seqNo").val(row.seqNo);				
 	 		},
 	 		'click #addBtn': function(e, value, row, index) {
 	 			$(".modal-header > h3").text("Add PackageInfo");
 				$("#conf").text("Add");
-				$("#suppliercode").attr("readonly").remove();
-				$("#basketno").attr("readonly").remove();
 	 		}
 	 	};
 	 
@@ -411,6 +404,7 @@
 	 {
 		 var addForm = $("#addForm");
 		 addForm.bootstrapValidator({//根据自己的formid进行更改
+			 //live: 'disabled',验证时机，enabled是内容有变化就验证（默认），disabled和submitted是提交再验证
              message: 'This value is not valid',//默认提示信息
              feedbackIcons: {//提示图标
                  valid: 'glyphicon glyphicon-ok',
@@ -446,7 +440,20 @@
                              message: 'Max length 10!'
                          },regexp: {//自定义校验
                              regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//>0的数字
-                             message: 'Value should bigger than 0!'
+                             message: 'Value should be number and bigger than 0!'
+                         },
+                         callback: {//自定义，可以在这里与其他输入项联动校验/
+                        	 //联动校验，修改此值会联动校验mimnumber
+                             callback:function(value, validator){
+                            	 var mimweight = $("#mimweight").val();
+                            	 if(mimweight !=null && mimweight !='')
+                            	 {
+                            		 addForm.data('bootstrapValidator')
+                                	 .updateStatus('mimweight', 'NOT_VALIDATED',null)
+                                	 .validateField('mimweight');
+                            	 }
+                            	 return true;
+                             }
                          }
                      }
                  },
@@ -462,7 +469,19 @@
                              message: 'Max length 10!'
                          },regexp: {//自定义校验
                              regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//
-                             message: 'Value should bigger than 0!'
+                             message: 'Value should be number and bigger than 0!'
+                         },callback: {//自定义，可以在这里与其他输入项联动校验/
+                        	 //联动校验，修改此值会联动校验mimnumber
+                             callback:function(value, validator){
+                            	 var mimweight = $("#mimweight").val();
+                            	 if(mimweight !=null && mimweight !='')
+                            	 {
+                            		 addForm.data('bootstrapValidator')
+                                	 .updateStatus('mimweight', 'NOT_VALIDATED',null)
+                                	 .validateField('mimweight');
+                            	 }
+                            	 return true;
+                             }
                          }
                      }
                  },
@@ -478,16 +497,15 @@
                              message: 'Max length 10!'
                          },regexp: {//自定义校验
                              regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,
-                             message: 'Value should bigger than 0!'
+                             message: 'Value should be number and bigger than 0!'
                          },
                          callback: {//自定义，可以在这里与其他输入项联动校验/
-                        	 message: 'Should check total weight>=mimweight*diamondsnumber',
+                        	 message: 'total weight>=mimweight*diamondsnumber',
                              callback:function(value, validator){
                             	 var totalweight = $("#totalweight").val();
                             	 var diamondsnumber = $("#diamondsnumber").val();
-                            	 //console.log(totalweight);
-                            	 //console.log(value);
-                            	 //console.log(value > totalweight);
+                            	 console.log("totalweight:" + totalweight);
+                            	 console.log("diamondsnumber:" + diamondsnumber);
                             	 if(value > totalweight)
                             	 {
                             		 return false; 
@@ -508,5 +526,4 @@
 		 var importForm = $("#importForm");
 		 importForm.bootstrapValidator();
 	 }
-	 
 </script>

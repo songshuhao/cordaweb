@@ -2,13 +2,15 @@ package ats.blockchain.web.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +24,7 @@ import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.model.PagedObjectDTO;
 import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
+import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.FileUtils;
 import ats.blockchain.web.utils.ResultUtil;
 
@@ -35,29 +38,29 @@ public class BasketInfoController extends BaseController {
 
 	@RequestMapping("/addBasketInfo")
 	@ResponseBody
-	public String addBasketInfo(PackageInfo basketinfo){
+	public String addBasketInfo(PackageInfo basketinfo) {
 		logger.debug("addBasketInfo: {}", JSON.toJSONString(basketinfo));
-		boolean rs = false;
-		rs = addPackageState(basketinfo);
-		String msg = "Add Success!";
-		if(!rs)
-		{
-			msg = "Add Failed";
-		}
-		logger.debug("BasketInfoController:basketinfo {} ,result: {}", basketinfo.getBasketno(),msg);
-		return ResultUtil.msg(rs, msg);
-		
+		Map<String, Object> rs = addPackageState(basketinfo);
+		logger.debug("BasketInfoController:basketinfo {} ,result: {}", basketinfo.getBasketno(), rs);
+		return ResultUtil.parseMap(rs);
+
 	}
 
-	private boolean addPackageState(PackageInfo basketinfo) {
-		boolean rs;
+	private Map<String, Object> addPackageState(PackageInfo basketinfo) {
+		Map<String, Object> rs = null;
 		String aocLegalName = getUserLegalName(aoc);
 		logger.debug("BasketInfoController: getUserLegalName for {} {}", aoc, aocLegalName);
 		basketinfo.setAoc(aocLegalName);
 		String supLegalName = getUserLegalName(basketinfo.getSuppliercode());
 		logger.debug("BasketInfoController: getUserLegalName for supplier{}", supLegalName);
 		basketinfo.setSuppliercode(supLegalName);
-		rs = basketInfoServcie.addPackageInfo(basketinfo);
+		String seqNo = basketinfo.getSeqNo();
+		logger.debug("addPackageState seqNo :{}",seqNo);
+		if(StringUtils.isBlank(seqNo)) {
+			rs = basketInfoServcie.addPackageInfo(basketinfo);
+		}else {
+			rs = basketInfoServcie.editPackageInfo(basketinfo);
+		}
 		return rs;
 	}
 
@@ -71,10 +74,11 @@ public class BasketInfoController extends BaseController {
 
 	@RequestMapping("/getBasketList")
 	@ResponseBody
-	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber, int pageSize, HttpServletRequest request)
-			throws JSONException {
+	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber, int pageSize, HttpSession session) {
 		PagedObjectDTO dto = new PagedObjectDTO();
-		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(PackageState.PKG_CREATE,PackageState.PKG_ISSUE);
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
+		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(userid,new String[] {PackageState.PKG_CREATE,
+				PackageState.PKG_ISSUE});
 		dto.setRows(list);
 		dto.setTotal((long) list.size());
 		return dto;
@@ -82,22 +86,17 @@ public class BasketInfoController extends BaseController {
 
 	@RequestMapping("/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(HttpServletRequest request)  
-	{
-		List<PackageInfo> list = basketInfoServcie.submitPackageByStatus(PackageState.PKG_CREATE);
-		String rsStr="";
-		if(AOCBeanUtils.isNotEmpty(list))
-		{
+	public String submitBasketList(HttpSession session) {
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
+		List<PackageInfo> list = basketInfoServcie.submitPackageByStatus(PackageState.PKG_CREATE, userid);
+		if (AOCBeanUtils.isNotEmpty(list)) {
 			String message = "these data shoud be check[";
-			for(int i=0; i<list.size(); i++)
-			{
-				if(message.indexOf(list.get(i).getBasketno())==-1)
-				{
-					message = message+list.get(i).getBasketno()+":";
+			for (int i = 0; i < list.size(); i++) {
+				if (message.indexOf(list.get(i).getBasketno()) == -1) {
+					message = message + list.get(i).getBasketno() + ":";
 				}
-				
 			}
-			message = message+"]";
+			message = message + "]";
 			return ResultUtil.msg(false, message);
 		}
 		logger.debug("submitBasketList end");
@@ -108,33 +107,31 @@ public class BasketInfoController extends BaseController {
 	@ResponseBody
 	public String importBasketInfo(HttpServletRequest request) {
 		List<PackageInfo> basketinfos = null;
-		try
-		{
-			String filename = FileUtils.getFile(request, "baskeinfo","files");
+		try {
+			String filename = FileUtils.getFile(request, "baskeinfo", "files");
 			basketinfos = AOCBeanUtils.getObjectFromCsv(filename, PackageInfo.class);
-		} catch (Exception e)
-		{
+		} catch (Exception e) {
 			logger.error("importBasketInfo error", e);
 			return ResultUtil.fail("file is invaild.");
 		}
-		
-		if(basketinfos==null || basketinfos.isEmpty()) {
+
+		if (basketinfos == null || basketinfos.isEmpty()) {
 			return ResultUtil.fail("import file is empty.");
 		}
 		List<PackageInfo> addFailList = new ArrayList<>();
-		for(PackageInfo bsk :basketinfos) {
-			if(!addPackageState(bsk)) {
-				logger.error("importBasketInfo to corda error: {} ",bsk);
+		for (PackageInfo bsk : basketinfos) {
+			if (!ResultUtil.isSuccess(addPackageState(bsk))) {
+				logger.error("importBasketInfo to corda error: {} ", bsk);
 				addFailList.add(bsk);
 			}
 		}
 		String resultStr = "";
-		if(addFailList.size()>0) {
+		if (addFailList.size() > 0) {
 			resultStr = ResultUtil.fail("add package failded", addFailList);
-		}else {
+		} else {
 			resultStr = ResultUtil.success();
 		}
-		
+
 		return resultStr;
 	}
 }

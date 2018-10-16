@@ -34,16 +34,18 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
+							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
 								<label for="gradlab" class="col-sm-4 control-label">Lab:</label>
 								<div class="col-sm-6">
-									<input type="text" name="gradlab" class="form-control" id="gradlab" placeholder="" data-bv-notempty readonly="readonly"/>
+									<input type="text" name="gradlab" class="form-control" id="gradlab"  readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-4 control-label">Package Code:</label>
+								<label for="basketno" class="col-sm-4 control-label">Package Code:</label>
 								<div class="col-sm-6">
-									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
+									<input type="text" name="basketno" class="form-control" id="basketno"  readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -71,7 +73,7 @@
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" id="conf" class="btn btn-default" onclick="add()" class="btn btn-primary">Add</button>
+						<button type="button" id="conf" onclick="add()" class="btn btn-primary">Add</button>
 						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetAddModal()">Cancel</button>
 					</div>
 				</div>				
@@ -82,11 +84,9 @@
     $(function(){
        var oTable = TableInit();
        oTable.Init();
-       
+       formValidate();
        $("form.required-validate").each(function() {
            var $form = $(this);
-           $form.bootstrapValidator();
-
            // 修复bootstrap validator重复向服务端提交bug
            $form.on('success.form.bv', function(e) {
                // Prevent form submission
@@ -185,13 +185,26 @@
 			resetAddModal();
 			$("#basketno").val(row.basketno);
 			$("#gradlab").val(row.gradlab);
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Add");
+   		},	
+   		'click #modifyBtn': function(e, value, row, index) {
+			resetAddModal();
+			$("#basketno").val(row.basketno);
+			$("#gradlab").attr("value",row.gradlab);
+			$("#result").attr("value",row.result);
+			$("#reverification").val(row.reverification);
+			$("#giaapproveddate").val(row.giaapproveddate);
+			
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Modify");
    		}
    	};
     
     function operateFormat(value, row, index) {
    	 var status = value;
    	 if(status=='6'){
-   		 return '';
+   		return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	 }else if(status=='5'){
    		 return '<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	}
@@ -245,9 +258,10 @@
 	}
 	//Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
+    	resetAddModal();
         $("#addForm").data('bootstrapValidator').destroy();
         $('#addForm').data('bootstrapValidator', null);
-        $('#addForm').bootstrapValidator();
+        formValidate();
     });
 	
 	//新增用户
@@ -289,5 +303,50 @@
 			}
 		});
 	}
+	
+	
+	function formValidate()
+	 {
+		 var addForm = $("#addForm");
+		 addForm.bootstrapValidator({//根据自己的formid进行更改
+            message: 'This value is not valid',//默认提示信息
+            feedbackIcons: {//提示图标
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+            	reverification: {//名称校验
+                       message: 'This value is not valid',
+                       validators: {//验证条件
+                           /* notEmpty: {
+                               message: '附属品名称不能为空'
+                           }, */
+                           stringLength: {
+                               min: 1,
+                               max: 20,
+                               message: 'Max length 20!'
+                           }
+                       }
+                   },
+                   giaapproveddate: {//名称校验
+                    message: 'This value is not valid',
+                    validators: {//验证条件
+                        /* notEmpty: {
+                            message: '附属品名称不能为空'
+                        },
+                        stringLength: {
+                            min: 1,
+                            max: 10,
+                            message: 'Max length 10!'
+                        },regexp: {//自定义校验
+                            regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//>0的数字
+                            message: 'Value should bigger than 0!'
+                        } */
+                    }
+                }
+            },
+        });
+	 }
 
 </script>

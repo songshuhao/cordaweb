@@ -164,12 +164,13 @@
 	 {
 	 	return '<button type="button" class="btn btn-default" data-dismiss="modal" id="addBtn">'+value+'</button>';
 	 };
-	 return '-';
+	 return;
 	
  }
  
  var giaNo = "";
  var basketNo = "";
+ 
  window.operateEvents = {
  			'click #addBtn': function(e, value, row, index) {
 			giaNo = row.giano;

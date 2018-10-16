@@ -8,7 +8,6 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
@@ -20,21 +19,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.alibaba.fastjson.JSON;
 
 import ats.blockchain.web.config.DiamondApplicationRunner;
-import ats.blockchain.web.dao.DataMapper;
 import ats.blockchain.web.model.UserInfo;
+import ats.blockchain.web.utils.Constants;
+import ats.blockchain.web.utils.ResultUtil;
 
 @Controller
 public class LoginController extends BaseController {
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-	DataMapper dataMapper;
-
-	@RequestMapping("/Hello")
-	@ResponseBody
-	public String sayHello() {
-		return "hello";
-	}
 
 	@RequestMapping("/login")
 	public String login() {
@@ -51,7 +42,7 @@ public class LoginController extends BaseController {
 	public String logon(@RequestParam("userid") String userid, @RequestParam("password") String password,
 			HttpServletRequest request) throws JSONException {
 		HttpSession session = request.getSession(false);
-		JSONObject result = new JSONObject();
+		String result ="";
 		
 		if (session != null) {
 			logger.debug("Invalidate old session");
@@ -67,14 +58,13 @@ public class LoginController extends BaseController {
 			session.setAttribute("userInfo", this.getCurrentUserInfo());
 			session.setAttribute("productMap", this.getProductMap());
 			session.setAttribute("productMapJson", JSON.toJSON(this.getProductMap()));
-			result.put("state", "success");
-			result.put("message","login success");
-			return result.toString();
+			session.setAttribute(Constants.SESSION_USER_ID, userid);
+			result = ResultUtil.msg(true, "login success");
 		} else {
-			result.put("state", "fail");
-			result.put("message","logon failed: username or password is wrong");
-			return result.toString();
+			result = ResultUtil.fail("logon failed: username or password is wrong");
 		}
+		return result;
+		
 	}
 
 	@RequestMapping(value = "/logout")

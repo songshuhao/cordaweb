@@ -58,6 +58,7 @@
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function() {
+        	$("#tableListForDetail").bootstrapTable('destroy'); 
             $('#tableListForDetail').bootstrapTable({
                 url: "<%=basePath %>/history/getDiamondDetails",
                 //pagination: true, //分页

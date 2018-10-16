@@ -19,7 +19,6 @@
 				<table id="tableListForHistory"></table>
 			</div>
 			<div class="modal-footer">
-				<!-- <button type="button" id="conf" class="btn btn-default" onclick="add()">add</button> -->
 				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			</div>
 		</div>				
@@ -31,6 +30,7 @@ function DiamondsHistoryInit() {
     //初始化Table
     var url = "<%=basePath %>/history/getDiamondsHistoryList";
     oTableInit.Init = function() {
+    	$("#tableListForHistory").bootstrapTable('destroy'); 
         $('#tableListForHistory').bootstrapTable({
             url: url,
             pagination: false, //分页

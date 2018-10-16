@@ -105,8 +105,8 @@ public class TestUse {
 		} catch (DiamondWebException e) {
 		}
 		
-		addDiamond();
-		issueDiamond();
+//		addDiamond();
+//		issueDiamond();
 		testReqLabVerify();
 		testReqVaultVerify();
 	}
@@ -127,42 +127,42 @@ public class TestUse {
 	}
 
 //	@Test
-	public void addDiamond() {
-		init(supUser, supPwd, supPort);
-
-		List<DiamondsInfo> list = Lists.newArrayList();
-		DiamondsInfo di = new DiamondsInfo();
-
-		di.setBasketno(basketno);
-		di.setClarity("A");
-		di.setColor("F");
-		//di.setSize("1");
-		di.setGiano("g11001");
-		di.setProductcode("100D1Duo");
-		di.setCraftsmandate("2018-10-01");
-		di.setSuppliercode(supLegalName);
-		di.setCraftsmanname("craf");
-		di.setCut("cut");
-		list.add(di);
-		try {
-			String rs = api.createDiamond(aocLegalName, basketno, list);
-			System.out.println("addDiamond " + rs);
-		} catch (DiamondWebException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-//	@Test
-	public void issueDiamond() {
-		init(supUser, supPwd, supPort);
-		try {
-			String rs = api.issueDiamond(aocLegalName, basketno);
-			System.out.println("issueDiamond " + rs);
-		} catch (DiamondWebException e) {
-			e.printStackTrace();
-		}
-	}
+//	public void addDiamond() {
+//		init(supUser, supPwd, supPort);
+//
+//		List<DiamondsInfo> list = Lists.newArrayList();
+//		DiamondsInfo di = new DiamondsInfo();
+//
+//		di.setBasketno(basketno);
+//		di.setClarity("A");
+//		di.setColor("F");
+//		//di.setSize("1");
+//		di.setGiano("g11001");
+//		di.setProductcode("100D1Duo");
+//		di.setCraftsmandate("2018-10-01");
+//		di.setSuppliercode(supLegalName);
+//		di.setCraftsmanname("craf");
+//		di.setCut("cut");
+//		list.add(di);
+//		try {
+//			String rs = api.createDiamond(aocLegalName, basketno, list);
+//			System.out.println("addDiamond " + rs);
+//		} catch (DiamondWebException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//
+////	@Test
+//	public void issueDiamond() {
+//		init(supUser, supPwd, supPort);
+//		try {
+//			String rs = api.issueDiamond(aocLegalName, basketno);
+//			System.out.println("issueDiamond " + rs);
+//		} catch (DiamondWebException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	@Test
 	public void testReqLabVerify() {

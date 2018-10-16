@@ -35,7 +35,10 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="<%=basePath %>/diamonds/addDiamondsInfo" method="post" class="form-horizontal required-validate">
+								<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
 								<input type="hidden" id="suppliercode" name="suppliercode" />
+								<input type="hidden" id="tradeid" name="tradeid" />
+								<input type="hidden" id="status" name="status" />
 								<div class="form-group"> 
 									<label for="basketno" class="col-sm-2 control-label">Package Code:</label> 
 									<div class="col-md-4 rowGroup"> 
@@ -151,7 +154,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" id="conf" class="btn btn-primary" onclick="add()" >Add</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetAddModal()">Cancel</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 					</div>
 				</div>				
 			</div>
@@ -177,8 +180,8 @@
 						</form>
 					</div>
 					<div class="modal-footer">
-						<input type="button" id="importCsv" onclick="importCsv()" class="btn btn-default" value="add" />  
-						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetimportModal()">cancel</button>
+						<input type="button" id="importCsv" onclick="importCsv()" class="btn btn-primary" value="Add" />  
+						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetimportModal()">Cancel</button>
 					</div>
 				</div>				
 			</div>
@@ -275,6 +278,7 @@
                         align: 'center',
                         field: 'shape',
                         valign: 'middle',
+                        visible: false,
                     },
                     {
                         title: 'Size',
@@ -299,12 +303,12 @@
                         field: 'symmetry',
                         align: 'center',
                         valign: 'middle',
+                        visible: false,
                     },{
                         title: 'Status',
                         field: 'statusDesc',
                         align: 'center',
                         valign: 'middle',
-                        visible: true,
                     },
                     {
                         title: 'Operation',
@@ -322,8 +326,6 @@
  
     
     function queryParams(params) {
-    	//var askid = $("#query-micro-company").val().toString();
-    	//var currency = $("#query-currency").val().toString();
     	return {
     		limit : this.limit, // 页面大小
 	        offset : this.offset, // 页码
@@ -344,10 +346,11 @@
     
  function operateFormat(value, row, index) {
 	 var status = value;
-	 //console.log(status);
-	 if(status=='2'){
-		 /* return '<input type="button" value="Edit" id="editBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>'; */
-	 }else if(status=='1'){
+	 console.log(row.giano);
+	 if(status=='2' || (row.giano != null && row.giano!='')){
+		 return '<div class="form-inline"><input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary" style="margin-right: 3px; margin-bottom:1px;"></input>'
+		 +'<input type="button" value="Delete" id="deleteBtn" data-toggle="modal" class="btn btn-primary"></input></div>';
+	 }else if(status=='1' && row.giano == null){
 		 return '<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
 	}
  }
@@ -356,9 +359,11 @@
  //binding event shuhao.song
  window.operateEvents = {
  			'click #addBtn': function(e, value, row, index) {
+ 			$("#tradeid").val(row.tradeid);
 			$("#suppliercode").val(row.suppliercode);
 			$("#basketno").val(row.basketno);
 			$("#productcode").val(row.productcode);
+			$("#status").val(row.status);
 			//钻石信息赋值
 			var productcode = $("#productcode").val();
 			var productMap = '${productMapJson}';
@@ -384,10 +389,12 @@
 			$("#conf").text("Add");
 			
  		},
- 		'click #editBtn': function(e, value, row, index) {
- 			//console.log(row);
+ 		'click #modifyBtn': function(e, value, row, index) {
+ 			console.log(row);
+ 			$("#tradeid").val(row.tradeid);
 			$("#suppliercode").val(row.suppliercode);
 			$("#basketno").val(row.basketno);
+			$("#status").val(row.status);
 			$("#productcode").val(row.productcode);
 			$("#giano").val(row.giano);
 			$("#size").val(row.size);
@@ -404,19 +411,17 @@
 			$("#craftsmanname").val(row.craftsmanname);
 			$("#craftsmandate").val(row.craftsmandate);
 			$("#dealername").val(row.dealername);
+			$("#reverification").val(row.reverification);
 			$("#dealerdate").val(row.dealerdate);
 			$("#remark1").val(row.remark1);
 			$("#remark2").val(row.remark2);
 			
-			$(".modal-header > h3").text("Edit DiamondsInfo");
-			$("#conf").text("Edit");
-			
-			
-			
-			
-			
+			$(".modal-header > h3").text("Modify DiamondsInfo");
+			$("#conf").text("Modify");
+ 		},
+ 		'click #deleteBtn': function(e, value, row, index) {
+ 			deleteDiamond(row);
  		}
- 		
  	};
  
     function submit()
@@ -445,9 +450,18 @@
     }
 	//新增
 	function add(){
+		var tradeId=$("#tradeid").val();
+		var url="";
 		
+		if(tradeId !='' && null != tradeId)
+		{
+			url = "<%=basePath %>/diamond/eidtDiamondInfo";
+			$('#addForm').bootstrapValidator('enableFieldValidators', 'giano', false);
+		}else
+		{
+			url = "<%=basePath %>/diamond/addDiamondInfo";
+		}
 		var $form = $("#addForm");
-
         var data = $form.data('bootstrapValidator');
         if (data) {
         // 修复记忆的组件不验证
@@ -459,9 +473,9 @@
         }
         var index = layer.load();
 		var param = $("#addForm").serializeArray();
-		//debugger;
+		
 		$.ajax({
-			url:"<%=basePath %>/diamond/addDiamondInfo",
+			url:url,
 			method:"post",
 			data:param,
 			dataType:"json",
@@ -480,6 +494,35 @@
 			}
 		});
 	}
+	
+	
+	//删除
+	function deleteDiamond(param){
+		
+		var index = layer.load();
+		console.log(param);
+		//alert(111);
+		//debugger;
+		$.ajax({
+			url:"<%=basePath %>/diamond/deleteDiamondInfo",
+			method:"post",
+			data:param,
+			dataType:"json",
+			success:function(data){
+				layer.close(index);
+				if(data.state=="success"){
+					messageShow(data,"#addModal",false)
+				}
+				if(data.state=="fail"){
+					messageShow(data,"#addModal",false)
+				}
+			},
+			error:function(){
+				layer.close(index);
+				messageShow(null,"#addModal",false)
+			}
+		});
+    }
 	
 	function openImport()
     {
@@ -504,7 +547,7 @@
     	//console.table(formData);
         $.ajax({
             //接口地址
-            url: '/diamond/importDiamondsInfo' ,
+            url: '<%=basePath %>/diamond/importDiamondsInfo' ,
             type: 'POST',
             dataType:'json',
             data: formData,
@@ -530,6 +573,7 @@
     
   //Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
+    	resetAddModal();
         $("#addForm").data('bootstrapValidator').destroy();
     	$('#addForm').data('bootstrapValidator',null);
     	formValidate();
@@ -556,17 +600,34 @@
             fields: {
             	giano: {//名称校验
                        message: 'This value is not valid',
+                       verbose: false,//多验证的情况下默认第一验证错误，则提示当前错误信息后面的验证不执行
                        validators: {//验证条件
                            /* notEmpty: {
                                message: '附属品名称不能为空'
                            }, */
                            stringLength: {
-                               min: 1,
-                               max: 11,
-                               message: 'Max length 11!'
+                        	   min: 8,
+                               max: 13,
+                               message: 'length should be 13 digit!'
                            },regexp: {//自定义校验
                                regexp: /^[A-Za-z0-9]+$/,//匹配由数字和26个英文字母组成的字符串
                                message: 'Value should be number and letter!'
+                           },remote:{
+                        	   message: "Gia number already exists",
+                        	   delay: 1000,
+                        	   type:'POST',
+                        	   url:'<%=basePath %>/diamond/checkGiaNo',
+                        	   data: function(validator,$field, value) {
+                                       return {
+                                    	   giano:giano,
+                                    	   tradeid:$("#tradeid").val(),
+                                    	   userid:$("#userid").val()
+                                       };
+                        		},
+                        	   //dataType:"json",
+                        	   dataFilter:function(data,type){
+                        		   return data;
+                               } ,
                            }
                        }
                    },
@@ -582,7 +643,7 @@
                             message: 'Max length 10!'
                         },regexp: {//自定义校验
                             regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//>0的数字
-                            message: 'Value should bigger than 0!'
+                            message: 'Value should be number and bigger than 0!'
                         }
                     }
                 },

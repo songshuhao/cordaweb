@@ -58,7 +58,12 @@ public class ResultUtil {
 		return "";
 	}
 
+	public static String getMessage(Map<String,Object> map) {
+		return (String) map.get("message");
+	}
+	
 	public static boolean isSuccess(Map<String, Object> map) {
+		
 		return map != null ? (map.containsKey("state") ? "sucess".equals(map.get("state")) : false) : false;
 	}
 

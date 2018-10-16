@@ -5,7 +5,8 @@ import java.math.BigDecimal;
 
 public class DiamondInfoData  implements Serializable{
 	private static final long serialVersionUID = 4122375686325300081L;
-	private int tradeid;
+	private String userid;
+	private String tradeid;
 	private String basketno;
 	private String giano;
 	private String reqcode;
@@ -68,12 +69,21 @@ public class DiamondInfoData  implements Serializable{
 	private String remark4;
 
 	private String remark5;
+	private String reverification;
 
-	public int getTradeid() {
+	public String getReverification() {
+		return reverification;
+	}
+
+	public void setReverification(String reverification) {
+		this.reverification = reverification;
+	}
+
+	public String getTradeid() {
 		return tradeid;
 	}
 
-	public void setTradeid(int tradeid) {
+	public void setTradeid(String tradeid) {
 		this.tradeid = tradeid;
 	}
 
@@ -301,10 +311,20 @@ public class DiamondInfoData  implements Serializable{
 		this.remark5 = remark5;
 	}
 
+	public String getUserid() {
+		return userid;
+	}
+
+	public void setUserid(String userid) {
+		this.userid = userid;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("DiamondInfoData [tradeid=");
+		builder.append("DiamondInfoData [userid=");
+		builder.append(userid);
+		builder.append(", tradeid=");
 		builder.append(tradeid);
 		builder.append(", basketno=");
 		builder.append(basketno);
@@ -364,6 +384,8 @@ public class DiamondInfoData  implements Serializable{
 		builder.append(remark4);
 		builder.append(", remark5=");
 		builder.append(remark5);
+		builder.append(", reverification=");
+		builder.append(reverification);
 		builder.append("]");
 		return builder.toString();
 	}

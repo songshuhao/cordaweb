@@ -1,0 +1,2 @@
+basketno,giano,size,productcode,supcode,supname,status
+B10004,gia10001,2,100D1Duo,SupplierA,SupplierA,2

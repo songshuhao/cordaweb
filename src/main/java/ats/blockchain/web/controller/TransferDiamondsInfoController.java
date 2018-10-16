@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -79,7 +80,7 @@ public class TransferDiamondsInfoController extends BaseController
 
 	@RequestMapping("/transfer/getBasketList")
 	@ResponseBody
-	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpServletRequest request) throws JSONException
+	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpSession session) throws JSONException
 	{
 		List<String> statusList = new ArrayList<String>();
 
@@ -99,7 +100,8 @@ public class TransferDiamondsInfoController extends BaseController
 				statusList.add(PackageState.DMD_SUBMIT_CHG_OWNER);
 			}
 		}
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(statusList.toArray(new String[statusList.size()]));
+		String userid= (String) session.getAttribute(Constants.SESSION_USER_ID);
+		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));

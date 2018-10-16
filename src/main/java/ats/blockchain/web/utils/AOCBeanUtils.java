@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -426,6 +427,77 @@ public class AOCBeanUtils {
 		return !isEmpty;
 	}
 
+	
+	public static List<PackageAndDiamond> mergeList(List<PackageAndDiamond> cacheList,
+			List<PackageAndDiamond> dbList) {
+		if (cacheList == null) {
+			return Collections.emptyList();
+		}
+
+		if (dbList == null||dbList.isEmpty()) {
+			return cacheList;
+		}
+		logger.debug("merge cache and db package, cache size: {}, db size: {}", cacheList.size(), dbList.size());
+		List<PackageAndDiamond> merge = new ArrayList<>(cacheList);
+
+		Map<String, PackageAndDiamond> map = new HashMap<>(dbList.size());
+		for (PackageAndDiamond p : dbList) {
+			String key = p.getPkgInfo().getBasketno();
+			map.put(key, p);
+			logger.debug("convert db package to map : {}", key);
+		}
+
+		cacheList.forEach(p -> {
+			String key = p.getPkgInfo().getBasketno();
+			logger.debug("merge key :{}", key);
+			if (!map.containsKey(key)) {
+				logger.debug("merge db package {}", key);
+				merge.add(p);
+			}
+		});
+
+		return merge;
+	}
+	
+	public static List<PackageInfo> mergePackageList(List<PackageInfo> cacheList,
+			List<PackageAndDiamond> dbList) {
+		if (cacheList == null) {
+			return Collections.emptyList();
+		}
+
+		if (dbList == null||dbList.isEmpty()) {
+			return cacheList;
+		}
+		if (cacheList == null||cacheList.isEmpty()) {
+			List<PackageInfo> merge = new ArrayList<>(dbList.size());
+			for (PackageAndDiamond p : dbList) {
+				merge.add(p.getPkgInfo());
+			}
+			return merge; 
+		}
+		logger.debug("merge cache and db package, cache size: {}, db size: {}", cacheList.size(), dbList.size());
+		List<PackageInfo> merge = new ArrayList<>(cacheList);
+
+		Map<String, PackageAndDiamond> map = new HashMap<>(dbList.size());
+		for (PackageAndDiamond p : dbList) {
+			String key = p.getPkgInfo().getBasketno();
+			map.put(key, p);
+			logger.debug("convert db package to map : {}", key);
+		}
+
+		cacheList.forEach(p -> {
+			String key = p.getBasketno();
+			logger.debug("merge key :{}", key);
+			if (!map.containsKey(key)) {
+				logger.debug("merge db package {}", key);
+				merge.add(p);
+			}
+		});
+		logger.debug("merge cache and db package, cache size: {}, db size: {},merge size: {}", cacheList.size(), dbList.size(),merge.size());
+		return merge;
+	}
+	
+	
 	public static void main(String[] args) {
 		try {
 			File file = ResourceUtils.getFile("classpath:templates/userinfo.csv");

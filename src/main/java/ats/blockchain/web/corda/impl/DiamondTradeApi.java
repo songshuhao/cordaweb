@@ -23,7 +23,7 @@ import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.cordapp.diamond.flow.DiamondAuditRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondChangeOwnerRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondCollectFlow;
-import ats.blockchain.cordapp.diamond.flow.DiamondCreateFlow;
+import ats.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondLabRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondRedeemFlow;
@@ -34,7 +34,7 @@ import ats.blockchain.cordapp.diamond.flow.DiamondReqLabVerifyFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondReqVaultVerifyFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondSubmitChangeOwnerFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondVaultRespFlow;
-import ats.blockchain.cordapp.diamond.flow.PackageCreateFlow;
+import ats.blockchain.cordapp.diamond.flow.PackageIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageRemoveFlow;
 import ats.blockchain.cordapp.diamond.schema.PackageSchemaV1;
@@ -304,9 +304,7 @@ public class DiamondTradeApi {
 		logger.debug("getLegalIdentities {} ", supplierlist.toString());
 		try {
 			Class initClass = null;
-			if (PackageState.PKG_CREATE.equals(state)) {
-				initClass = PackageCreateFlow.Initiator.class;
-			} else if (PackageState.PKG_ISSUE.equals(state)) {
+			if (PackageState.PKG_ISSUE.equals(state)) {
 				initClass = PackageIssueFlow.Initiator.class;
 			} else if (PackageState.PKG_REMOVE.equals(state)) {
 				initClass = PackageRemoveFlow.Initiator.class;
@@ -331,43 +329,6 @@ public class DiamondTradeApi {
 	}
 
 	/**
-	 * 向篮子中添加钻石
-	 * 
-	 * @param aoc
-	 * @param basketno
-	 *            篮子id
-	 * @param diamondinfolist
-	 *            钻石列表
-	 * @return
-	 * @throws DiamondWebException
-	 */
-	public String createDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist)
-			throws DiamondWebException {
-		logger.debug("createDiamond aoc: {} ,basketno : {}", aoc, basketno);
-		CordaX500Name x500Name = CordaX500Name.parse(aoc);
-		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-		if (aocIdentity == null)
-			throw new DiamondWebException("AOC not found");
-		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((supplierlist == null) || (supplierlist.size() == 0))
-			throw new DiamondWebException("can't find supplier");
-		try {
-			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondCreateFlow.Initiator.class,
-					aocIdentity, basketno, diamondinfolist);
-			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-			StringBuilder strbuf = new StringBuilder();
-			strbuf.append("Transaction completed with id ");
-			strbuf.append(stxn.getId());
-			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
-		} catch (Exception ex) {
-			logger.warn("Failure to create diamond:{}", ex.getMessage());
-			throw new  DiamondWebException(ex.getMessage(), ex);
-		}
-	}
-
-	/**
 	 * 提交钻石
 	 * 
 	 * @param aoc
@@ -375,7 +336,7 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String issueDiamond(String aoc, String basketno) throws DiamondWebException {
+	public String issueDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist) throws DiamondWebException {
 		logger.debug("issueDiamond aoc: {} ,basketno : {}", aoc, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
@@ -386,7 +347,7 @@ public class DiamondTradeApi {
 			throw new DiamondWebException("can't find supplier");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondIssueFlow.Initiator.class,
-					aocIdentity, basketno);
+					aocIdentity, basketno, diamondinfolist);
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");

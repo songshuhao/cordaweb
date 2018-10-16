@@ -34,6 +34,8 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
+							input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
 								<label for="vault" class="col-sm-4 control-label">Vault：</label>
 								<div class="col-sm-6">
@@ -47,7 +49,7 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-4 control-label">Package Code:</label>
+								<label for="basketno" class="col-sm-4 control-label">Package Code:</label>
 								<div class="col-sm-6">
 									<input type="text" name="basketno" class="form-control" id="basketno"  data-bv-notempty readonly="readonly"/>
 								</div>
@@ -81,10 +83,9 @@
     $(function(){
        var oTable = TableInit();
        oTable.Init();
-       
+       formValidate();
        $("form.required-validate").each(function() {
            var $form = $(this);
-           $form.bootstrapValidator();
 
            // 修复bootstrap validator重复向服务端提交bug
            $form.on('success.form.bv', function(e) {
@@ -184,6 +185,20 @@
 			$("#basketno").val(row.basketno);
 			$("#vault").val(row.vault);
 			$("#owner").val(row.owner);
+			
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Add");
+   		},	
+   		'click #modifyBtn': function(e, value, row, index) {
+			resetAddModal();
+			$("#basketno").val(row.basketno);
+			$("#vault").val(row.vault);
+			$("#owner").val(row.owner);
+			$("#invtymgr").val(row.invtymgr);
+			$("#sealedbagno").val(row.sealedbagno);
+			
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Modify");
    		}
    	};
     
@@ -191,7 +206,7 @@
    	 var status = value;
    	 //console.log(status);
    	 if(status=='10'){
-   		 return '';
+   		 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	 }else if(status=='9'){
    		 return '<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	}
@@ -246,9 +261,10 @@
 	
 	//Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
+    	resetAddModal();
     	$("#addForm").data('bootstrapValidator').destroy();
     	$('#addForm').data('bootstrapValidator',null);
-    	$('#addForm').bootstrapValidator();
+    	 formValidate();
     });
 	
 	//新增用户
@@ -289,5 +305,46 @@
 			}
 		});
 	}
+	
+	function formValidate()
+	 {
+		 var addForm = $("#addForm");
+		 addForm.bootstrapValidator({//根据自己的formid进行更改
+          message: 'This value is not valid',//默认提示信息
+          feedbackIcons: {//提示图标
+              valid: 'glyphicon glyphicon-ok',
+              invalid: 'glyphicon glyphicon-remove',
+              validating: 'glyphicon glyphicon-refresh'
+          },
+          fields: {
+        	  invtymgr: {//名称校验
+                     message: 'This value is not valid',
+                     validators: {//验证条件
+                         /* notEmpty: {
+                             message: '附属品名称不能为空'
+                         }, */
+                         stringLength: {
+                             min: 1,
+                             max: 20,
+                             message: 'Max length 20!'
+                         }
+                     }
+                 },
+                 sealedbagno: {//名称校验
+                     message: 'This value is not valid',
+                     validators: {//验证条件
+                         /* notEmpty: {
+                             message: '附属品名称不能为空'
+                         }, */
+                         stringLength: {
+                             min: 1,
+                             max: 20,
+                             message: 'Max length 20!'
+                         }
+                     }
+                 },
+          },
+      });
+	 }
 
 </script>

@@ -66,4 +66,24 @@ public class Product
 	{
 		this.symmetry = symmetry;
 	}
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Product [productcode=");
+		builder.append(productcode);
+		builder.append(", color=");
+		builder.append(color);
+		builder.append(", clarity=");
+		builder.append(clarity);
+		builder.append(", shape=");
+		builder.append(shape);
+		builder.append(", cut=");
+		builder.append(cut);
+		builder.append(", polish=");
+		builder.append(polish);
+		builder.append(", symmetry=");
+		builder.append(symmetry);
+		builder.append("]");
+		return builder.toString();
+	}
 }

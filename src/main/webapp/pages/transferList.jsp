@@ -34,6 +34,7 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
+							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
 							<div class="form-group">
 								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
 								<div class="col-sm-7">

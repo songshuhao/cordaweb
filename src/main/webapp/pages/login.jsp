@@ -52,7 +52,7 @@
 		        <div class="form-group">
 		          <div class="col-md-12">
 		          	<div class="control-wrapper" align="center">
-		          		<button class="btn btn-info" id="login">Login</button>
+		          		<button class="btn btn-info" id="login" style="font-size: 18px;">Login</button>
 		          		<!-- <input type="submit" class="btn btn-info" value="Login" id="login"> -->
 		          	</div>
 		          </div>

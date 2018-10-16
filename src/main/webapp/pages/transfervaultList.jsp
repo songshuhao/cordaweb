@@ -107,7 +107,7 @@
                         align: 'center',
                         valign: 'middle',
                         visible: true,
-                    },
+                    }/* ,
                     {
                         title: 'Operation',
                         field: 'status',
@@ -115,7 +115,7 @@
                         valign: 'middle',
                         events: operateEvents,
                         formatter : operateFormat,
-                    }
+                    } */
                 ]
             });
         };

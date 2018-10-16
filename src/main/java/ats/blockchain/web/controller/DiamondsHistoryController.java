@@ -55,8 +55,6 @@ public class DiamondsHistoryController extends BaseController {
 	@RequestMapping("/getDiamondDetails")
 	@ResponseBody
 	public String getDiamondDetails(@RequestParam int pageNumber, int pageSize,String basketno) throws JSONException {
-		DiamondsinfoExample example = new DiamondsinfoExample();
-		example.createCriteria().andBasketnoEqualTo(basketno);
 		List<PackageAndDiamond> packageInfos = packageInfoServcie.getPackageAndDiamondById(basketno);
 		List<DiamondInfoData> diamondsinfos = packageInfos.get(0).getDiamondList();
 		PackageInfo basketinfo= packageInfos.get(0).getPkgInfo();

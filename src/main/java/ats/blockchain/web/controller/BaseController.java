@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -19,7 +21,7 @@ public class BaseController
 {
 	@Resource(name="diamondsInfoServiceCordaImpl")
 	public DiamondsInfoService diamondsInfoService;
-	
+	private Logger logger  = LoggerFactory.getLogger(getClass());
 	@Autowired
 	public CordaApi cordaApi;
 	
@@ -40,6 +42,12 @@ public class BaseController
 		productMap = DiamondApplicationRunner.getProductMap();
 		return productMap;
 	}
+	
+	public Product getProduct(String prodCode) {
+		logger.debug("getProduct : {} ,productMap: {} ",prodCode,DiamondApplicationRunner.getProductMap());
+		return DiamondApplicationRunner.getProductMap().get(prodCode);
+	}
+	
 	public void setProductMap(Map<String, Product> productMap)
 	{
 		this.productMap = productMap;

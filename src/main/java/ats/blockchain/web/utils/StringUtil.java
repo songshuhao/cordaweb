@@ -1,11 +1,6 @@
 package ats.blockchain.web.utils;
 
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Currency;
-
-import net.corda.core.contracts.Amount;
+import java.util.UUID;
 
 public class StringUtil 
 {
@@ -40,24 +35,13 @@ public class StringUtil
 		return(false);
 	}
 	
-	public static String formTxnprice(Amount<Currency> amount)
-	{
-		return((amount == null) ? null : String.format("%1$s %2$d",amount.getToken().getCurrencyCode(),amount.getQuantity()));
+	
+	public static String getPackageSeqno() {
+		return "p"+UUID.randomUUID().toString();
 	}
 	
-	public static Timestamp extractDateinfo(String data,SimpleDateFormat dataDF)
-	{
-		Timestamp tsTemp=null;
-		if (!StringUtil.isNull(data))
-		{
-			try
-			{
-				tsTemp = new Timestamp(dataDF.parse(data).getTime());
-			}
-			catch (ParseException pe)
-			{
-			}
-		}
-		return(tsTemp);
+	public static String getDiamondSeqno() {
+		return "d"+UUID.randomUUID().toString();
 	}
+	
 }

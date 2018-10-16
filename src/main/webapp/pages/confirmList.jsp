@@ -35,15 +35,16 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
+							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
+								<label for="basketno" class="col-sm-5 control-label">Package Code:</label>
 								<div class="col-sm-5">
 									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
 								</div>
-								<label id="errorBasketNo" for="basketno" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
-								<label for="inputName" class="col-sm-5 control-label">Lab:</label>
+								<label for="gradlab" class="col-sm-5 control-label">Lab:</label>
 								<div class="col-sm-5">
 									<select id="gradlab" class="form-control" name="gradlab">
 									 <c:forEach items="${giaMap }" var="gia">
@@ -51,17 +52,14 @@
 												${gia.key }
 											</option>
 									</c:forEach>
-								     <!--  <option value="GIA-HongKong">GIA-HongKong</option>
-								      <option value="GIA-China">GIA-China</option> -->
 								      </select>
 								</div>
-								<label id="errorName" for="inputName" class="col-sm-3 control-label"></label>
 							</div>
 							
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" id="conf" class="btn btn-default" onclick="add()" class="btn btn-primary">Add</button>
+						<button type="button" id="conf" onclick="add()" class="btn btn-primary">Add</button>
 						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetAddModal()">Cancel</button>
 					</div>
 				</div>				
@@ -162,6 +160,15 @@
 		'click #addBtn': function(e, value, row, index) {
 			resetAddModal();
 			$("#basketno").val(row.basketno);
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Add");
+   		},
+   		'click #modifyBtn': function(e, value, row, index) {
+			resetAddModal();
+			$("#basketno").val(row.basketno);
+			$("#gradlab").attr("value",row.gradlab);
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Modify");
    		}
    	};
     
@@ -169,7 +176,7 @@
    	 var status = value;
    	 //console.log(status);
    	 if(status=='4'){
-   		 return '';
+   		 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	 }else if(status=='3'){
    		 return '<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	}
@@ -177,8 +184,6 @@
     
     var step = "atg";
     function queryParams(params) {
-    	//var askid = $("#query-micro-company").val().toString();
-    	//var currency = $("#query-currency").val().toString();
     	return {
     		limit : this.limit, // 页面大小
 	        offset : this.offset, // 页码

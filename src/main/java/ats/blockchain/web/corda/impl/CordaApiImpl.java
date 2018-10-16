@@ -1,15 +1,25 @@
 package ats.blockchain.web.corda.impl;
 
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
+import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.DiamondWebException;
+import ats.blockchain.web.bean.PackageAndDiamond;
+import ats.blockchain.web.cache.CacheFactory;
 import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.corda.PermConfigHelperInf;
+import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.StringUtil;
+import net.corda.core.contracts.StateAndRef;
 import net.corda.core.identity.Party;
 import net.corda.core.node.NodeInfo;
 
@@ -22,7 +32,7 @@ public class CordaApiImpl implements CordaApi {
 	private String nodeuser=null;
 	private String username=null;
 	private String password=null;
-	private List<NodeInfo> nodeInfos = null;
+//	private List<NodeInfo> nodeInfos = null;
 	private final static String LOCALHOSTADDR="127.0.0.1";
 	@Override
 	public DiamondTradeApi getTradediamondinf() {
@@ -71,10 +81,30 @@ public class CordaApiImpl implements CordaApi {
 			}
 		}
 		diamondtradeinf = new DiamondTradeApi(noderpcconn.getCordarpcops());
+		initCache();
 		nodeuser = diamondtradeinf.getCurrUser();
 		logger.info("NodeRCPConnection is established:"+nodeuser);
 	}
 	
+	private void initCache() {
+		logger.debug("init basketno and giano cache");
+		List<StateAndRef<PackageState>> list = diamondtradeinf.getAllPackageState();
+		Set<String> gianoSet = Sets.newConcurrentHashSet();
+		Set<String> pkgSet = Sets.newConcurrentHashSet();
+		List<PackageAndDiamond> padList =Lists.newArrayList();
+		list.forEach(s ->{
+			PackageState pkg = s.getState().getData();
+			pkgSet.add(pkg.getBasketno());
+			List<DiamondsInfo> dl = pkg.getDiamondinfolist();
+			if(dl!=null) {
+				dl.forEach(d-> gianoSet.add(d.getGiano()));
+			}else {
+				padList.add(AOCBeanUtils.convertSinglePkgState2PkgInfo(s));
+			}
+		});
+		logger.info("init basketno and giano cache end, basketno number: {},giano number: {}",pkgSet.size(),gianoSet.size());
+		CacheFactory.Instance.init(gianoSet, pkgSet,padList);
+	}
 	
 	public void cleanup()
 	{

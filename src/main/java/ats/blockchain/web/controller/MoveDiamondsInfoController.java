@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class MoveDiamondsInfoController extends BaseController
 	
 	@RequestMapping("/move/getBasketList")
 	@ResponseBody
-	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpServletRequest request) throws JSONException
+	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber,int pageSize,String step,HttpSession session) throws JSONException
 	{
 		List<String> statusList = new ArrayList<String>();
 		if(StringUtils.isNotBlank(step))
@@ -88,8 +89,8 @@ public class MoveDiamondsInfoController extends BaseController
 				statusList.add(PackageState.VAULT_ADD_VERIFY);
 			}
 		}
-		
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(statusList.toArray(new String[statusList.size()]));
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
+		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -99,11 +100,12 @@ public class MoveDiamondsInfoController extends BaseController
 	
 	@RequestMapping("/move/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(HttpServletRequest request,String step) throws JSONException
+	public String submitBasketList(HttpSession session,String step) throws JSONException
 	{
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(step);
+			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud be check[";
