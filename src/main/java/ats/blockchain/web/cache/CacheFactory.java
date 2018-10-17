@@ -5,8 +5,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
+import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.PackageAndDiamond;
 
 /**
@@ -44,6 +44,11 @@ public enum CacheFactory {
 		} else {
 			cache = new PackageCache();
 			cache.setBasketnoCache(packageSet);
+			if (padList != null) {
+				for (PackageAndDiamond p : padList) {
+					cache.add(p.getPkgInfo());
+				}
+			}
 			PackageCache old = userPackageCache.putIfAbsent(userId, cache);
 			cache = old == null ? cache : old;
 		}
@@ -65,7 +70,9 @@ public enum CacheFactory {
 			cache.setGiaCache(gianoSet);
 			if (padList != null) {
 				for (PackageAndDiamond p : padList) {
-					cache.add(p);
+					if(PackageState.PKG_ISSUE.equals(p.getPkgInfo().getStatus())) {
+						cache.add(p);
+					}
 				}
 			}
 			DiamondCache old = userDiamondCache.putIfAbsent(userId, cache);

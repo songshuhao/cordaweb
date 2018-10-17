@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -134,6 +133,6 @@ public class TransferDiamondsInfoController extends BaseController
 			}
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "These diamonds sumbmit success");
+		return ResultUtil.msg(true, "Sumbmit success");
 	}
 }

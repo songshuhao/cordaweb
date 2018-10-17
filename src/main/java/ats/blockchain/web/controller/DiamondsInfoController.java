@@ -121,12 +121,17 @@ public class DiamondsInfoController extends BaseController {
 			return ResultUtil.msg(false, message);
 		}
 		logger.debug("submitDiamondList end");
-		return ResultUtil.msg(true, "These diamonds sumbmit success");
+		return ResultUtil.msg(true, "Sumbmit success");
 	}
 
 	@RequestMapping(value = "/importDiamondsInfo")
 	@ResponseBody
 	public String importDiamondsInfo(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		if(session == null) {
+			return ResultUtil.fail("Can not get session");
+		}
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<DiamondInfoData> diamondsinfos = null;
 		try {
 			String filename = FileUtils.getFile(request, "diamondsinfo", "files");
@@ -141,6 +146,7 @@ public class DiamondsInfoController extends BaseController {
 			sb.append("Import error:\n");
 			Set<String> gianoSet =Sets.newHashSet();
 			for (DiamondInfoData diamondInfoData : diamondsinfos) {
+				diamondInfoData.setUserid(userid);
 				String basketno = diamondInfoData.getBasketno();
 				String giano = diamondInfoData.getGiano();
 				List<DiamondInfoData> hist = diamondsInfoService.getDiamondInfoHistory(giano, basketno);

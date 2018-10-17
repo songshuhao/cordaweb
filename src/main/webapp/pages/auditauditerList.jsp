@@ -36,12 +36,12 @@
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
 							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
+								<label for="basketno" class="col-sm-2 control-label">Package Code:</label>
 								<div class="col-sm-7">
-									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Basket Code" data-bv-notempty readonly="readonly"/>
+									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Basket Code" readonly="readonly"/>
 								</div>
-								<label id="errorBasketNo" for="basketno" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
 								<label for="result" class="col-sm-2 control-label">Result:</label>
@@ -51,14 +51,12 @@
 								      <option value="failure">audit-failure</option>
 								      </select>
 								</div>
-								<label id="errorresult" for="result" class="col-sm-3 control-label"></label>
 							</div>
 							<div class="form-group">
 								<label for="auditdate" class="col-sm-2 control-label">Audit Date:</label>
 								<div class="col-sm-7">
 									<input type="text" name="auditdate" class="form-control" id="auditdate" placeholder="Audit Date" data-bv-notempty/>
 								</div>
-								<label id="errorauditdate" for="auditdate" class="col-sm-3 control-label"></label>
 							</div>
 						</form>
 					</div>
@@ -139,7 +137,7 @@
                         formatter : operateFormatpackageno,
                     },
                     {
-                        title: 'Valut',
+                        title: 'vault',
                         field: 'vault',
                         align: 'center',
                         valign: 'middle',
@@ -188,19 +186,34 @@
     window.operateEvents = {
 		'click #addBtn': function(e, value, row, index) {
 			resetAddModal();
+			console.log(row);
 			$("#basketno").val(row.basketno);
+			$("#auditdate").val(row.auditdate);
+			$("#result").attr("value",row.result);
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Add");
+   		},	
+   		'click #modifyBtn': function(e, value, row, index) {
+			resetAddModal();
+			console.log(row);
+			$$("#basketno").val(row.basketno);
+			$("#auditdate").val(row.auditdate);
+			$("#result").attr("value",row.result);
+			
+			$("#seqNo").val(row.seqNo);
+			$("#conf").text("Modify");
    		}
    	};
     
     function operateFormat(value, row, index) {
-   	 var status = value;
-   	 var result = row.result;
-   	 //console.log(status);
-   	 if(status=='13'){
-   		 return '';
-   	 }else if(status=='12'){
-   		 return '<input type="button" value="Audit" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
-   	}
+	   	 var status = value;
+	   	 var result = row.result;
+	   	 //console.log(status);
+	   	 if(status=='13'){
+	   		 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
+	   	 }else if(status=='12'){
+	   		 return '<input type="button" value="Audit" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
+   		}
     }
     
     var step = "auta";//audit to aoc
@@ -283,8 +296,6 @@
         var index = layer.load();
 		var param = $("#addForm").serializeArray();
 		param.push({"name":"step","value":step});
-		//debugger;
-		$("#conf").attr("onclick","add()");
 		$.ajax({
 			url:"<%=basePath %>/audit/updateBasketInfo",
 			method:"post",

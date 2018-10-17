@@ -126,9 +126,10 @@
     //binding event shuhao.song
     window.operateEvents = {
 		'click #addBtn': function(e, value, row, index) {
-			$("#basketno").val(row.basketno);
+			/* $("#basketno").val(row.basketno);
 			$("#vault").val(row.vault);
 			$("#ownmgr").val(row.owner);
+			$("#seqNo").val(row.seqNo); */
    		}
    	};
     

@@ -40,13 +40,13 @@
 							<div class="form-group">
 								<label for="basketno" class="col-sm-4 control-label">Package Code:</label>
 								<div class="col-sm-6">
-									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty readonly="readonly"/>
+									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="result" class="col-sm-4 control-label">Re-verification Status:</label>
 								<div class="col-sm-6">
-									<input type="text" name="result" class="form-control" id="result" placeholder="result" data-bv-notempty readonly="readonly"/>
+									<input type="text" name="result" class="form-control" id="result" placeholder="result" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -183,7 +183,6 @@
 			resetAddModal();
 			$("#basketno").val(row.basketno);
 			$("#result").val(row.result);
-			
 			$("#seqNo").val(row.seqNo);
 			$("#conf").text("Add");
    		},	

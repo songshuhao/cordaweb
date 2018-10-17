@@ -125,6 +125,6 @@ public class ConfimDiamondsInfoController extends BaseController
 			
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "These diamonds sumbmit success");
+		return ResultUtil.msg(true, "Sumbmit success");
 	}
 }

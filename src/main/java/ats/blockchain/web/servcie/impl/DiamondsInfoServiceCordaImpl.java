@@ -177,11 +177,12 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 			return dList;
 		} else {
 			plist = cache.getDiamondByStatus(PackageState.DMD_CREATE);
+			logger.debug("submitDiamondList package size: {}",plist.size());
 			for (PackageAndDiamond packageAndDiamond : plist) {
 				PackageInfo pkgInfo = packageAndDiamond.getPkgInfo();
 				String basketno = pkgInfo.getBasketno();
 				List<DiamondInfoData> dl = packageAndDiamond.getDiamondList();
-				
+				logger.debug("submitDiamondList basketno: {} ,diamond size : {}",basketno,dl.size());
 				List<DiamondsInfo> diList =Lists.newArrayListWithCapacity(dl.size());
 				dl.forEach(d -> {
 					DiamondsInfo di = new DiamondsInfo();
@@ -194,6 +195,7 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 					cache.remove(basketno, status);
 				} catch (DiamondWebException e) {
 					logger.error("submitDiamondList error:Basketno:" + basketno, e);
+					dList.addAll(dl);
 				}
 			}
 		}

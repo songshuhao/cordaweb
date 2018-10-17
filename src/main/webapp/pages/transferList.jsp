@@ -35,6 +35,7 @@
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
 							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
 								<label for="inputBasketNo" class="col-sm-2 control-label">Package Code:</label>
 								<div class="col-sm-7">
@@ -170,6 +171,7 @@
 			$("#basketno").val(row.basketno);
 			$("#vault").val(row.vault);
 			$("#ownmgr").val(row.owner);
+			$("#seqNo").val(row.seqNo);
    		}
    	};
     

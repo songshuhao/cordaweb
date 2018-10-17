@@ -25,7 +25,7 @@ public interface PackageInfoService {
 	
 	List<PackageAndDiamond> getPackageAndDiamondById(String... basketNo);
 	
-	List<PackageInfo> getPackageStateWithoutRedeemByStatus(String redeemOwnerId,String... status);
+	List<PackageInfo> getPackageStateWithoutRedeemByStatus(String userid,String redeemOwnerId,String... status);
 
 	/**
 	 * 

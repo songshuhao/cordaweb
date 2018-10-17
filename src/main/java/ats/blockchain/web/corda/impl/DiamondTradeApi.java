@@ -24,7 +24,6 @@ import ats.blockchain.cordapp.diamond.flow.DiamondAuditRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondChangeOwnerRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondCollectFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
-import ats.blockchain.cordapp.diamond.flow.DiamondIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondLabRespFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondRedeemFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondRedeemRespFlow;
@@ -32,9 +31,7 @@ import ats.blockchain.cordapp.diamond.flow.DiamondReqAuditFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondReqChangeOwnerFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondReqLabVerifyFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondReqVaultVerifyFlow;
-import ats.blockchain.cordapp.diamond.flow.DiamondSubmitChangeOwnerFlow;
 import ats.blockchain.cordapp.diamond.flow.DiamondVaultRespFlow;
-import ats.blockchain.cordapp.diamond.flow.PackageIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageIssueFlow;
 import ats.blockchain.cordapp.diamond.flow.PackageRemoveFlow;
 import ats.blockchain.cordapp.diamond.schema.PackageSchemaV1;
@@ -372,8 +369,7 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException {
-		logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {}", lab, basketno);
+	public String reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException { logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {},status : {}", lab, basketno,status);
 		CordaX500Name x500Name = CordaX500Name.parse(lab);
 		final Party labIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (labIdentity == null)
@@ -515,7 +511,7 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String reqChangeOwnerDiamond(String basketno, String vault, String owner) throws DiamondWebException {
+	public String submitChangeOwnerDiamond(String basketno, String vault, String owner) throws DiamondWebException {
 		logger.debug("reqChangeOwnerDiamond vault: {} ,basketno : {},owner : {}", vault, basketno, owner);
 		CordaX500Name x500Name = CordaX500Name.parse(vault);
 		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
@@ -540,38 +536,6 @@ public class DiamondTradeApi {
 		}
 	}
 
-
-	/**
-	 * aoc提交钻石拥有者更改确认请求
-	 * @param basketno
-	 * @param vault
-	 * @return
-	 * @throws DiamondWebException
-	 */
-	public String submitChangeOwnerDiamond(String basketno, String vault) throws DiamondWebException {
-		logger.debug("submitChangeOwnerDiamond vault: {} ,basketno : {}", vault, basketno);
-		CordaX500Name x500Name = CordaX500Name.parse(vault);
-		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
-		if (vaultIdentity == null)
-			throw new DiamondWebException("vault " + vault + " not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("can't find aoc");
-		try {
-			final FlowHandle<SignedTransaction> flowhandle = rpcops
-					.startFlowDynamic(DiamondSubmitChangeOwnerFlow.Initiator.class, basketno, vaultIdentity);
-			final SignedTransaction stxn = flowhandle.getReturnValue().get();
-			StringBuilder strbuf = new StringBuilder();
-			strbuf.append("Transaction completed with id ");
-			strbuf.append(stxn.getId());
-			strbuf.append(" supplied by ");
-			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
-		} catch (Exception ex) {
-			logger.warn("Failure to reqVaultVerify diamond:", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
-		}
-	}
 
 	/**
 	 * vault 响应钻石拥有者更改请求

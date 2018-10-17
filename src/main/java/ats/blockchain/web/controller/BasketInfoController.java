@@ -77,8 +77,7 @@ public class BasketInfoController extends BaseController {
 	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber, int pageSize, HttpSession session) {
 		PagedObjectDTO dto = new PagedObjectDTO();
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(userid,new String[] {PackageState.PKG_CREATE,
-				PackageState.PKG_ISSUE});
+		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(userid,new String[] {PackageState.PKG_CREATE});
 		dto.setRows(list);
 		dto.setTotal((long) list.size());
 		return dto;
@@ -100,12 +99,17 @@ public class BasketInfoController extends BaseController {
 			return ResultUtil.msg(false, message);
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "These diamonds sumbmit success");
+		return ResultUtil.msg(true, "Sumbmit success");
 	}
 
 	@RequestMapping(value = "/importBasketInfo")
 	@ResponseBody
 	public String importBasketInfo(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		if(session == null) {
+			return ResultUtil.fail("Can not get session");
+		}
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<PackageInfo> basketinfos = null;
 		try {
 			String filename = FileUtils.getFile(request, "baskeinfo", "files");
@@ -120,6 +124,7 @@ public class BasketInfoController extends BaseController {
 		}
 		List<PackageInfo> addFailList = new ArrayList<>();
 		for (PackageInfo bsk : basketinfos) {
+			bsk.setUserid(userid);
 			if (!ResultUtil.isSuccess(addPackageState(bsk))) {
 				logger.error("importBasketInfo to corda error: {} ", bsk);
 				addFailList.add(bsk);

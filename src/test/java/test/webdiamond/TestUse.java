@@ -1,6 +1,7 @@
 package test.webdiamond;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import ats.blockchain.web.model.Basketinfo;
 import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.DateFormatUtils;
+import ats.blockchain.web.utils.StringUtil;
 import kotlin.reflect.jvm.internal.impl.serialization.jvm.JvmPackageTable.PackageTable;
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCClientConfiguration;
@@ -90,105 +92,63 @@ public class TestUse {
 		String pkgStr = "{\"aoc\":\"OU=AOC,O=AOC,L=HKSAR,C=CN\",\"basketno\":\"" + basketno
 				+ "\",\"diamondsnumber\":1,\"mimweight\":1,\"productcode\":\"100D1Duo\",\"suppliercode\":\"OU=Supplier,O=SupplierA,L=HKSAR,C=CN\",\"totalweight\":1}";
 		PackageInfo bk = JSON.parseObject(pkgStr, PackageInfo.class);
-		bk.setStatus("0");
+		bk.setSeqNo(StringUtil.getPackageSeqno());
 		PackageState pkg = new PackageState();
 		BeanUtils.copyProperties(bk, pkg);
 
-		String pkgIssue = PackageState.PKG_CREATE;
+		String pkgIssue = PackageState.PKG_ISSUE;
 		String is;
 		try {
-			is = api.createPackage(supLegalName, pkg, pkgIssue);
-			System.out.println("addPackage " + is);
-			pkgIssue = PackageState.PKG_ISSUE;
 			is = api.createPackage(supLegalName, pkg, pkgIssue);
 			System.out.println("issuePackage " + is);
 		} catch (DiamondWebException e) {
 		}
 		
 //		addDiamond();
-//		issueDiamond();
-		testReqLabVerify();
-		testReqVaultVerify();
+//		testReqLabVerify();
 	}
 
-//	@Test
-	public void issuePackage() {
-		init(aocUser, aocPwd, aocPort);
-		PackageState pkg = api.getPackageStateById(basketno).get(0).getState().getData();
-		//
-		String pkgIssue = PackageState.PKG_ISSUE;
-		pkg.setStatus("1");
-		String is;
+
+	@Test
+	public void addDiamond() {
+		init(supUser, supPwd, supPort);
+
+		List<DiamondsInfo> list = Lists.newArrayList();
+		DiamondsInfo di = new DiamondsInfo();
+		di.setTradeid(StringUtil.getDiamondSeqno());
+		di.setBasketno(basketno);
+		di.setClarity("A");
+		di.setColor("F");
+		di.setSize(BigDecimal.ONE);
+		di.setGiano("g11001");
+		di.setProductcode("100D1Duo");
+		di.setCraftsmandate("2018-10-01");
+		di.setSuppliercode(supLegalName);
+		di.setCraftsmanname("craf");
+		di.setCut("cut");
+		list.add(di);
 		try {
-			is = api.createPackage(supLegalName, pkg, pkgIssue);
-			System.out.println("issuePackage " + is);
+			String rs = api.issueDiamond(aocLegalName, basketno, list);
+			System.out.println("addDiamond " + rs);
 		} catch (DiamondWebException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
-
-//	@Test
-//	public void addDiamond() {
-//		init(supUser, supPwd, supPort);
-//
-//		List<DiamondsInfo> list = Lists.newArrayList();
-//		DiamondsInfo di = new DiamondsInfo();
-//
-//		di.setBasketno(basketno);
-//		di.setClarity("A");
-//		di.setColor("F");
-//		//di.setSize("1");
-//		di.setGiano("g11001");
-//		di.setProductcode("100D1Duo");
-//		di.setCraftsmandate("2018-10-01");
-//		di.setSuppliercode(supLegalName);
-//		di.setCraftsmanname("craf");
-//		di.setCut("cut");
-//		list.add(di);
-//		try {
-//			String rs = api.createDiamond(aocLegalName, basketno, list);
-//			System.out.println("addDiamond " + rs);
-//		} catch (DiamondWebException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
-//
-////	@Test
-//	public void issueDiamond() {
-//		init(supUser, supPwd, supPort);
-//		try {
-//			String rs = api.issueDiamond(aocLegalName, basketno);
-//			System.out.println("issueDiamond " + rs);
-//		} catch (DiamondWebException e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
 	@Test
 	public void testReqLabVerify() {
 		init(aocUser, aocPwd, aocPort);
 		try {
-			String rs = api.reqLabVerifyDiamond(basketno, PackageState.AOC_REQ_LAB_VERIFY, labLegalName);
-			System.out.println("ReqLabVerify "+rs);
-			testSubmitReqLabVerify();
+			String rs = api.reqLabVerifyDiamond(basketno, PackageState.AOC_SUBMIT_LAB_VERIFY, labLegalName);
+			System.out.println("Submit ReqLabVerify "+rs);
 			testRespLabVerify();
 		} catch (DiamondWebException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-
-	@Test
-	public void testSubmitReqLabVerify() {
-		init(aocUser, aocPwd, aocPort);
-		try {
-			String rs = api.reqLabVerifyDiamond(basketno, PackageState.AOC_SUBMIT_LAB_VERIFY, labLegalName);
-			System.out.println("Submit LabVerify "+rs);
-		} catch (DiamondWebException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+	
 	@Test
 	public void testRespLabVerify() {
 		init(labUser, labPwd, labPort);
@@ -231,20 +191,6 @@ public class TestUse {
 	}
 	
 	@Test
-	public void testReqVaultVerify() {
-		init(aocUser, aocPwd, aocPort);
-		try {
-			String rs = api.reqVaultVerifyDiamond(basketno, PackageState.AOC_REQ_VAULT_VERIFY, valutLegalName,"owner111");
-			System.out.println("ReqvalutVerify "+rs);
-			testSubmitReqVaultVerify();
-			testRespVaultVerify();
-		} catch (DiamondWebException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	@Test
 	public void testSubmitReqVaultVerify() {
 		init(aocUser, aocPwd, aocPort);
 		try {
@@ -266,7 +212,6 @@ public class TestUse {
 		String date = DateFormatUtils.format(new Date(), "yyyy-MM-dd");
 		inf.setInvtymgr("invty");
 		inf.setSealedbagno("sealed001");
-		inf.setOwner("O=OWNER");
 		inf.setStatus(PackageState.VAULT_VERIFY_PASS);
 		inf.setResult("pass");
 		inf.setReverification("verfied");
@@ -278,29 +223,6 @@ public class TestUse {
 		}
 	}
 	
-	
-	@Test
-	public void testChangeOwner() {
-		init(aocUser, aocPwd, aocPort);
-		
-		try {
-			String rs = api.reqChangeOwnerDiamond(basketno, valutLegalName, "new owner shy");
-			System.out.println("testReqChangeOwner "+rs);
-		} catch (DiamondWebException e) {
-			e.printStackTrace();
-		}
-	}
-	@Test
-	public void testsubChangeOwner() {
-		init(aocUser, aocPwd, aocPort);
-		
-		try {
-			String rs = api.submitChangeOwnerDiamond(basketno, valutLegalName);
-			System.out.println("testsubChangeOwner "+rs);
-		} catch (DiamondWebException e) {
-			e.printStackTrace();
-		}
-	}
 	@Test
 	public void testRespChangeOwner() {
 		init(valutUser, valutPwd, valutPort);
@@ -363,8 +285,10 @@ public class TestUse {
 //		init(supUser, supPwd, supPort);
 //		init(valutUser, valutPwd, valutPort);
 		init(aocUser, aocPwd, aocPort);
-		List<StateAndRef<PackageState>> pkg = api.getPackageStateById(Vault.StateStatus.ALL,basketno);
-		//List<StateAndRef<PackageState>> pkg = api.getPackageStateByStatus(Vault.StateStatus.ALL,PackageState.AOC_SUBMIT_VAULT_VERIFY);
+//		List<StateAndRef<PackageState>> pkg = api.getPackageStateById(Vault.StateStatus.UNCONSUMED,basketno);
+//		List<StateAndRef<PackageState>> pkg = api.getPackageStateByStatus(Vault.StateStatus.ALL,PackageState.AOC_SUBMIT_VAULT_VERIFY);
+		List<StateAndRef<PackageState>> pkg = api.getAllPackageState();
+		
 		System.out.println("query result: "+pkg.size());
 		pkg.stream().forEach(p ->{
 			

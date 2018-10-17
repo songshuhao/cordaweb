@@ -12,9 +12,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 
 import com.google.common.collect.Sets;
 
+import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.cordapp.diamond.util.Constants;
 import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.utils.StringUtil;
@@ -45,15 +47,16 @@ public class PackageCache {
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private Logger logger  = LoggerFactory.getLogger(getClass());
 	public void add(PackageInfo pkg) {
-		logger.debug("add cache: {}",pkg);
+		String status = pkg.getStatus();
 		String seqNo = pkg.getSeqNo();
 		if (StringUtils.isBlank(seqNo)) {
 			seqNo = StringUtil.getPackageSeqno();
 			pkg.setSeqNo(seqNo);
+			logger.debug("add cache  status: {} ,PackageInfo: {}",status,pkg);
 		}
-		String status = pkg.getStatus();
-		pkg.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
+		
 		pkgCache.put(seqNo, pkg);
+		pkg.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
 		synchronized (packageSet) {
 			String basketno = pkg.getBasketno();
 			if(seqNoBskNoMap.containsKey(seqNo)) {
@@ -68,13 +71,15 @@ public class PackageCache {
 				packageSet.add(basketno);
 			}
 		}
-
 	}
 
 	public void setBasketnoCache(Set<String> bskList) {
 		packageSet = bskList;
 	}
 
+	public PackageInfo getPackage(String seqNo) {
+		return pkgCache.get(seqNo);
+	}
 	/**
 	 * 检查篮子编号是否存在
 	 * 
@@ -103,14 +108,15 @@ public class PackageCache {
 		Set<String> set = Sets.newHashSet(status);
 		List<PackageInfo> list = pkgCache.values().stream().filter(p -> set.contains(p.getStatus()))
 				.collect(Collectors.toList());
-
 		return list;
 	}
 
 	public PackageInfo remove(String seqNo, String status) {
-		return null;
-//		PackageInfo p = pkgCache.get(seqNo);
-//		return status.equals(p.getStatus())?p:null;
-//		return diamondCache.remove(status, seqNo);
+		PackageInfo p = pkgCache.get(seqNo);
+		boolean equals = status.equals(p.getStatus());
+		if(equals){
+			p.setStatus(PackageState.PKG_REMOVE);
+		}
+		return equals?p:null;
 	}
 }

@@ -395,6 +395,7 @@
 				$("#seqNo").val(row.seqNo);				
 	 		},
 	 		'click #addBtn': function(e, value, row, index) {
+	 			$("#seqNo").val(row.seqNo);
 	 			$(".modal-header > h3").text("Add PackageInfo");
 				$("#conf").text("Add");
 	 		}

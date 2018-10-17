@@ -172,10 +172,6 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-					<fork>true</fork>
-					<verbose>true</verbose>
-					<executable>javac</executable>
-					<compilerVersion>1.8</compilerVersion>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>

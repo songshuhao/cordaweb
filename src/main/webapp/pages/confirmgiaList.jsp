@@ -282,7 +282,6 @@
         var index = layer.load();
 		var param = $("#addForm").serializeArray();
 		param.push({"name":"step","value":step});
-		$("#conf").attr("onclick","add()");
 		$.ajax({
 			url:"<%=basePath %>/confirm/updateBasketInfo",
 			method:"post",

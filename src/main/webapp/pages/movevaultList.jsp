@@ -34,24 +34,24 @@
 					</div>
 					<div class="modal-body">
 						<form id="addForm" action="" method="post" class="form-horizontal required-validate">
-							input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
+							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
 							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
 								<label for="vault" class="col-sm-4 control-label">Vault：</label>
 								<div class="col-sm-6">
-									<input type="text" name="vault" class="form-control" id="vault"  data-bv-notempty readonly="readonly"/>
+									<input type="text" name="vault" class="form-control" id="vault"  readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="owner" class="col-sm-4 control-label">Owner ID:</label>
 								<div class="col-sm-6">
-									<input type="text" name="owner" class="form-control" id="owner" data-bv-notempty readonly="readonly"/>
+									<input type="text" name="owner" class="form-control" id="owner" readonly="readonly"/>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="basketno" class="col-sm-4 control-label">Package Code:</label>
 								<div class="col-sm-6">
-									<input type="text" name="basketno" class="form-control" id="basketno"  data-bv-notempty readonly="readonly"/>
+									<input type="text" name="basketno" class="form-control" id="basketno" readonly="readonly"/>
 								</div>
 							</div>
 							

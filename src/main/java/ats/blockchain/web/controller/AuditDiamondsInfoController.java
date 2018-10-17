@@ -92,7 +92,8 @@ public class AuditDiamondsInfoController extends BaseController
 				statusList.add(PackageState.AUDIT_ADD_VERIFY);
 			}
 		}
-		List<PackageInfo> list = packageInfoServcie.getPackageStateWithoutRedeemByStatus(redeemOwnerId, statusList.toArray(new String[statusList.size()]));
+		String userid = (String) request.getSession().getAttribute(Constants.SESSION_USER_ID);
+		List<PackageInfo> list = packageInfoServcie.getPackageStateWithoutRedeemByStatus(userid,redeemOwnerId, statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -125,6 +126,6 @@ public class AuditDiamondsInfoController extends BaseController
 			}
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "These diamonds sumbmit success");
+		return ResultUtil.msg(true, "Sumbmit success");
 	}
 }
