@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -17,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.google.common.collect.Sets;
-
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.DiamondInfoData;
+import ats.blockchain.web.cache.CacheFactory;
+import ats.blockchain.web.cache.DiamondCache;
 import ats.blockchain.web.model.PagedObjectDTO;
 import ats.blockchain.web.model.Product;
 import ats.blockchain.web.utils.AOCBeanUtils;
@@ -134,28 +133,33 @@ public class DiamondsInfoController extends BaseController {
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<DiamondInfoData> diamondsinfos = null;
 		try {
-			String filename = FileUtils.getFile(request, "diamondsinfo", "files");
-			diamondsinfos = AOCBeanUtils.getObjectFromCsv(filename, DiamondInfoData.class);
-
+			diamondsinfos = FileUtils.getFile(request, "diamondsinfo", "files",DiamondInfoData.class);
 			if (AOCBeanUtils.isEmpty(diamondsinfos)) {
 				return ResultUtil.fail("import file is empty.");
 			}
-
+			//刷新diamondcache,将新录入的package信息更新到cache
+			diamondsInfoService.getDiamondInfoByStatus(userid,PackageState.PKG_ISSUE);
+			DiamondCache cache = CacheFactory.Instance.getDiamondCache(userid);
 			boolean result = true;
 			StringBuilder sb = new StringBuilder(128);
 			sb.append("Import error:\n");
-			Set<String> gianoSet =Sets.newHashSet();
 			for (DiamondInfoData diamondInfoData : diamondsinfos) {
 				diamondInfoData.setUserid(userid);
 				String basketno = diamondInfoData.getBasketno();
+				if(!cache.containsPackage(basketno)) {
+					sb.append("package doesn't exist: "+basketno).append("\n");
+					result = false;
+					continue;
+				}
+				
 				String giano = diamondInfoData.getGiano();
 				List<DiamondInfoData> hist = diamondsInfoService.getDiamondInfoHistory(giano, basketno);
-				if(gianoSet.contains(giano)) {
+				
+				
+				if(cache.containsDiamond(giano)) {
 					sb.append("diamond giano duplicate: "+giano).append("\n");
 					result = false;
 					continue;
-				}else {
-					gianoSet.add(giano);
 				}
 				
 				if(hist!=null && hist.size()>0) {

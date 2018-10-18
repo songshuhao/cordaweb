@@ -80,35 +80,36 @@ public class DiamondCache {
 		String basketno = diamond.getBasketno();
 		PackageAndDiamond pad1 = diamondCache.getValue(basketno, status);
 		List<DiamondInfoData> list = pad1.getDiamondList();
-		if (list == null) {
-			list = Lists.newArrayList();
-			pad1.setDiamondList(list);
+		List<DiamondInfoData> tmp = Lists.newArrayList();
+		if (list!= null) {
+			tmp.addAll(list);
 		}
 		String tradeid = StringUtil.getDiamondSeqno();
 		diamond.setTradeid(tradeid);
-		list.add(diamond);
+		diamond.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
+		tmp.add(diamond);
 		
-		logger.debug("add diamond  {} to package {}",diamond.getGiano(),pad1.getPkgInfo().getBasketno());
-		// pad1.getPkgInfo().setStatusDesc(Constants.PKG_STATE_MAP.get(status));
+		logger.debug("add diamond  {} ,status {} to package {}", diamond.getGiano(),status, pad1.getPkgInfo().getBasketno());
 		synchronized (diamondSet) {
 			String giano = diamond.getGiano();
 			diamondSet.add(giano);
 			updateTradeIdGiaMap(tradeid, giano);
 		}
-		check(pad1);
 		PackageInfo stat = pad1.getPkgInfo();
-		int dlSize = list.size();
+		check(stat,tmp);
+		pad1.setDiamondList(tmp);
+		int dlSize = tmp.size();
 		int basketSize = stat.getDiamondsnumber();
 		if (dlSize == basketSize) {
 			String oldStatus = stat.getStatus();
 			String newStatus = PackageState.DMD_CREATE;
 			stat.setStatus(newStatus);
 			stat.setStatusDesc(Constants.PKG_STATE_MAP.get(stat.getStatus()));
-			list.stream().forEach(d -> {
+			tmp.stream().forEach(d -> {
 				d.setStatus(newStatus);
 				d.setStatusDesc(stat.getStatusDesc());
 			});
-
+			logger.info("package is full {},change status from  {}  to {}",basketno,Constants.PKG_STATE_MAP.get(oldStatus),stat.getStatusDesc());
 			diamondCache.remove(basketno, oldStatus);
 			diamondCache.put(basketno, newStatus, pad1);
 			logger.debug("update package: {}", pad1);
@@ -127,17 +128,21 @@ public class DiamondCache {
 		String basketno = diamond.getBasketno();
 		PackageAndDiamond oldPad = diamondCache.getValue(basketno, status);
 		List<DiamondInfoData> list = oldPad.getDiamondList();
-		if (list == null) {
-			return;
+		List<DiamondInfoData> tmp = Lists.newArrayList();
+		if (list!= null) {
+			tmp.addAll(list);
 		}
+		diamond.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
+		tmp.add(diamond);
+		check(oldPad.getPkgInfo(),tmp);
+		oldPad.setDiamondList(tmp);
 		synchronized (diamondSet) {
-			for (DiamondInfoData p : list) {
+			for (DiamondInfoData p : tmp) {
 				String tradeid = p.getTradeid();
 				if (tradeid.equals(diamond.getTradeid())) {
 					diamondSet.remove(p.getGiano());
 					BeanUtils.copyProperties(diamond, p);
 					p.setStatus(status);
-					;
 					p.setStatusDesc(oldPad.getPkgInfo().getStatusDesc());
 					String giano = diamond.getGiano();
 					diamondSet.add(giano);
@@ -146,7 +151,6 @@ public class DiamondCache {
 				}
 			}
 		}
-		check(oldPad);
 	}
 
 	/**
@@ -211,9 +215,7 @@ public class DiamondCache {
 		return list;
 	}
 
-	private static void check(@Nonnull PackageAndDiamond pad) throws DiamondWebException {
-		List<DiamondInfoData> orginalList = pad.getDiamondList();
-		PackageInfo stat = pad.getPkgInfo();
+	private static void check(@Nonnull PackageInfo stat,@Nonnull List<DiamondInfoData> orginalList) throws DiamondWebException {
 		int dlSize = orginalList.size();
 		int basketSize = stat.getDiamondsnumber();
 		if (dlSize > basketSize) {
@@ -291,19 +293,20 @@ public class DiamondCache {
 			return diamondSet.contains(giano);
 		}
 	}
-/**
- * 
- * @param tradeid
- * @param giano
- * @return true: giano 改变，false giano不变
- * @throws DiamondWebException
- */
+
+	/**
+	 * 
+	 * @param tradeid
+	 * @param giano
+	 * @return true: giano 改变，false giano不变
+	 * @throws DiamondWebException
+	 */
 	public boolean checkGianoChange(String tradeid, String giano) throws DiamondWebException {
 		String oldGia = tradeIdGiaMap.get(tradeid);
 		if (oldGia == null) {
 			throw new DiamondWebException("giano should not be null.");
 		}
-		logger.debug("checkGianoChange tradeid: {} ,oldGia: {} ,newGia: {}",tradeid,oldGia,giano);
+		logger.debug("checkGianoChange tradeid: {} ,oldGia: {} ,newGia: {}", tradeid, oldGia, giano);
 		return !oldGia.equals(giano);
 	}
 
@@ -316,18 +319,7 @@ public class DiamondCache {
 	}
 
 	public void remove(String basketno, String status) {
-		PackageAndDiamond pad = diamondCache.remove(basketno, status);
+		diamondCache.remove(basketno, status);
 		logger.info("remove diamond basketno: {} ,status:{}", basketno, status);
-		List<DiamondInfoData> diamondList = pad.getDiamondList();
-		if (diamondList == null) {
-			logger.warn("package {} has no diamond,won't remove diamond.", basketno);
-			return;
-		}
-		synchronized (diamondSet) {
-			for (DiamondInfoData d : diamondList) {
-				diamondSet.remove(d.getGiano());
-				logger.debug("remove diamond basketno: {},giano: {}", basketno, d.getGiano());
-			}
-		}
 	}
 }

@@ -129,11 +129,11 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateByStatus(status);
 		List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		DiamondCache cache = CacheFactory.Instance.getDiamondCache(userid);
+		plist.forEach(p ->cache.add(p));
 		List<PackageAndDiamond> cacheList = cache.getDiamondByStatus(status);
 
-		List<PackageAndDiamond> mergeList = AOCBeanUtils.mergeList(cacheList, plist);
 		List<DiamondInfoData> dList = Lists.newArrayList();
-		mergeList.stream().forEach(p -> {
+		cacheList.stream().forEach(p -> {
 			PackageInfo pkg = p.getPkgInfo();
 			int num = pkg.getDiamondsnumber();
 			int addednum = null == p.getDiamondList() ? 0 : p.getDiamondList().size();

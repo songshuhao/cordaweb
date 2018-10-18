@@ -50,16 +50,13 @@
 	        var sessionStatus = xhr.getResponseHeader('sessionstatus');
 	        if(sessionStatus == 'timeout') {
 	            var top = getTopWinow();
-	            layer.msg('Session timeout! Three seconds later, jump to login page!',{
+	            top.location.href = '<%=basePath %>/login';
+	            <%-- layer.msg('Session timeout! Three seconds later, jump to login page!',{
 	            	 icon: 2,
 	                 //time: 3000 //2秒关闭（如果不配置，默认是3秒）
 	               },function(){
 	                   top.location.href = '<%=basePath %>/login';
-	            }); 
-	            <%-- var yes = confirm('Session timeout! Please login again!');
-	            if (yes) {
-	                top.location.href = '<%=basePath %>/login';
-	            } --%>
+	            });  --%>
 	        }
 	    }
 	});
@@ -94,7 +91,9 @@
 		  {
 		  	$(modalId).modal('hide');
 		  }
-		  $("#opFailedModal").modal('show');
+		  $("#opFailedModal").modal('show').on('hidden.bs.modal', function() {
+		    	search();
+		  });
 		  $("#failedMessage").text("unknown exception");
 	  }else if(data.state=='success')
 	  {
@@ -112,7 +111,9 @@
 		  {
 		  	$(modalId).modal('hide');
 		  }
-		  $("#opFailedModal").modal('show');
+		  $("#opFailedModal").modal('show').on('hidden.bs.modal', function() {
+		    	search();
+		  });
 		 $("#failedMessage").text(data.message);
 	  }
 	}

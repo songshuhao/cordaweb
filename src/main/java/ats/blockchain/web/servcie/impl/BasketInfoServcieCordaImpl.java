@@ -31,6 +31,7 @@ import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.ResultUtil;
+import ats.blockchain.web.utils.StringUtil;
 import net.corda.core.contracts.StateAndRef;
 
 @Service
@@ -50,16 +51,23 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		logger.debug("addBasketInfo :{}", pkgInf);
 
 		String userid = pkgInf.getUserid();
+		String basketno = pkgInf.getBasketno();
 		logger.debug("get package cache of user: {}", userid);
+		if(userid ==null) {
+			logger.error("userid is null ,basketno: {}",basketno);
+			return ResultUtil.failMap("userid can't be null");
+		}
 		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 		boolean flag = cache.containsPackage(pkgInf.getBasketno());
 		if (flag) {
-			return ResultUtil.failMap("package no duplicate :" + pkgInf.getBasketno());
+			return ResultUtil.failMap("package no duplicate :" + basketno);
 		}
 		pkgInf.setStatus(PackageState.PKG_CREATE);
+		String  seqNo = StringUtil.getPackageSeqno();
+		pkgInf.setSeqNo(seqNo);
 		pkgInf.setStatusDesc(ats.blockchain.cordapp.diamond.util.Constants.PKG_STATE_MAP.get(PackageState.PKG_CREATE));
 		cache.add(pkgInf);
-		logger.debug("{} package add to cache.", pkgInf.getBasketno());
+		logger.debug("{} package add to cache.", basketno);
 		return ResultUtil.msgMap(true, "success");
 	}
 
@@ -111,12 +119,14 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateByStatus(status);
 		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+		padList.forEach( p -> cache.update(p.getPkgInfo()));
+		
 		List<PackageInfo> pkgList = cache.getPackageByStatus(status);
-	
-		logger.debug("userid: {} get {} from corda size: {}", userid, Arrays.toString(status), padList.size());
-		logger.debug("userid: {} get {} from cache size: {}", userid, Arrays.toString(status), pkgList.size());
-		List<PackageInfo> mergeList = AOCBeanUtils.mergePackageList(pkgList, padList);
-		return mergeList;
+		return pkgList;
+//		logger.debug("userid: {} get {} from corda size: {}", userid, Arrays.toString(status), padList.size());
+//		logger.debug("userid: {} get {} from cache size: {}", userid, Arrays.toString(status), pkgList.size());
+//		List<PackageInfo> mergeList = AOCBeanUtils.mergePackageList(pkgList, padList);
+//		return mergeList;
 	}
 
 	@Override

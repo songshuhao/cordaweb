@@ -46,7 +46,7 @@ public enum CacheFactory {
 			cache.setBasketnoCache(packageSet);
 			if (padList != null) {
 				for (PackageAndDiamond p : padList) {
-					cache.add(p.getPkgInfo());
+					cache.update(p.getPkgInfo());
 				}
 			}
 			PackageCache old = userPackageCache.putIfAbsent(userId, cache);

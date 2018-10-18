@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -26,6 +28,47 @@ public class FileUtils
 {
 	/**
 	 * 
+	 * @param <T>
+	 * @param <T>
+	 * @param <T>
+	 * @param request
+	 * @param csvName
+	 * @param inputNmae
+	 * @return
+	 * @throws FileUploadException
+	 * @throws IOException
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 */
+	public static <T> List<T> getFile(HttpServletRequest request,String csvName,String inputNmae,Class<T> clazz) throws FileUploadException, IOException, InstantiationException, IllegalAccessException
+	{
+		List<T> list = new ArrayList<T>();
+		if (ServletFileUpload.isMultipartContent(request))
+		{
+			InputStream ins = null;
+			ServletFileUpload upload = new ServletFileUpload();
+			FileItemIterator iter = upload.getItemIterator(request);
+			while (iter.hasNext())
+			{
+				FileItemStream item = iter.next();
+				ins = item.openStream();
+				String fieldname = item.getFieldName();
+				if (!item.isFormField() && fieldname.equals(inputNmae))
+				{
+					list = AOCBeanUtils.getObjectFromCsv(ins, clazz);
+				}
+			}
+			if (ins != null)
+			{
+				ins.close();
+				ins = null;
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * 将文件上传到import目录下
 	 * @param request
 	 * @param csvName
 	 * @param inputNmae
@@ -33,7 +76,7 @@ public class FileUtils
 	 * @throws FileUploadException
 	 * @throws IOException
 	 */
-	public static String getFile(HttpServletRequest request,String csvName,String inputNmae) throws FileUploadException, IOException
+	public static String getFileName(HttpServletRequest request,String csvName,String inputNmae) throws FileUploadException, IOException
 	{
 		String filename = "";
 		if (ServletFileUpload.isMultipartContent(request))
@@ -61,16 +104,6 @@ public class FileUtils
 						while ((nRead=ins.read(byBuf,0,4096)) != -1)
 							ops.write(byBuf,0,nRead);
 					}
-				}
-				if (ins != null)
-				{
-					ins.close();
-					ins = null;
-				}
-				if (ops != null)
-				{
-					ops.close();
-					ops = null;
 				}
 			}
 		}

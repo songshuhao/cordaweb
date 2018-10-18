@@ -47,14 +47,8 @@ public class PackageCache {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void add(PackageInfo pkg) {
-		String status = pkg.getStatus();
 		String seqNo = pkg.getSeqNo();
-		if (StringUtils.isBlank(seqNo)) {
-			seqNo = StringUtil.getPackageSeqno();
-			pkg.setSeqNo(seqNo);
-			logger.debug("add cache  status: {} ,PackageInfo: {}", status, pkg);
-		}
-
+		String status = pkg.getStatus();
 		pkgCache.put(seqNo, pkg);
 		pkg.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
 		synchronized (packageSet) {
@@ -72,7 +66,16 @@ public class PackageCache {
 			}
 		}
 	}
-
+	
+	public void update(PackageInfo pkg) {
+		String seqNo = pkg.getSeqNo();
+		if(pkgCache.containsKey(seqNo)) {
+			logger.debug("package in cache ,don't add again,baksetno: {},staus : {}",pkg.getBasketno(),pkg.getStatusDesc());
+			return;
+		}
+		add(pkg);
+	}
+	
 	public void setBasketnoCache(Set<String> bskList) {
 		packageSet = bskList;
 	}
@@ -90,12 +93,6 @@ public class PackageCache {
 	public boolean containsPackage(String basketno) {
 		synchronized (packageSet) {
 			return packageSet.contains(basketno);
-		}
-	}
-
-	public void addPackage(String basketno) {
-		synchronized (packageSet) {
-			packageSet.add(basketno);
 		}
 	}
 

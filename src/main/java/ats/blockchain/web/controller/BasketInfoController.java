@@ -112,8 +112,7 @@ public class BasketInfoController extends BaseController {
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<PackageInfo> basketinfos = null;
 		try {
-			String filename = FileUtils.getFile(request, "baskeinfo", "files");
-			basketinfos = AOCBeanUtils.getObjectFromCsv(filename, PackageInfo.class);
+			basketinfos = FileUtils.getFile(request, "baskeinfo", "files",PackageInfo.class);
 		} catch (Exception e) {
 			logger.error("importBasketInfo error", e);
 			return ResultUtil.fail("file is invaild.");
@@ -122,17 +121,21 @@ public class BasketInfoController extends BaseController {
 		if (basketinfos == null || basketinfos.isEmpty()) {
 			return ResultUtil.fail("import file is empty.");
 		}
+		
 		List<PackageInfo> addFailList = new ArrayList<>();
+		String message = "";
 		for (PackageInfo bsk : basketinfos) {
 			bsk.setUserid(userid);
-			if (!ResultUtil.isSuccess(addPackageState(bsk))) {
+			Map<String, Object> map = addPackageState(bsk);
+			if (!ResultUtil.isSuccess(map)) {
 				logger.error("importBasketInfo to corda error: {} ", bsk);
+				message = message + map.get("message")+"\n";
 				addFailList.add(bsk);
 			}
 		}
 		String resultStr = "";
 		if (addFailList.size() > 0) {
-			resultStr = ResultUtil.fail("add package failded", addFailList);
+			resultStr = ResultUtil.fail("add package failded:["+message+"]", addFailList);
 		} else {
 			resultStr = ResultUtil.success();
 		}
