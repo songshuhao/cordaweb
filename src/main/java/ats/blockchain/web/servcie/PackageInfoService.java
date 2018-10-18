@@ -90,7 +90,7 @@ public interface PackageInfoService {
 	 * @param packageInfos
 	 * @return
 	 */
-	List<PackageInfo> submitPackageInfo(List<PackageInfo> packageInfos,String step);
+	List<PackageInfo> submitPackageInfo(List<PackageInfo> packageInfos,String step,String userid);
 
 	
 	

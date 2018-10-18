@@ -152,7 +152,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 
 	@Override
 	public boolean labConfirmPackageInfo(PackageInfo pkgInf) {
-		logger.debug("confrimPackageInfo :{}", JSON.toJSONString(pkgInf));
+		logger.debug("confrimPackageInfo :{}",pkgInf);
 
 		boolean flag = false;
 		String rs = "";
@@ -161,11 +161,16 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		try {
 			PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 			if (status.equals(PackageState.AOC_REQ_LAB_VERIFY)) {
-				cache.add(pkgInf);
+				PackageInfo old = cache.getPackage(pkgInf.getSeqNo());
+				old.setGradlab(pkgInf.getGradlab());
+				old.setStatus(status);
 			} else if (status.equals(PackageState.LAB_ADD_VERIFY)) {
-				pkgInf.setAoc(DiamondApplicationRunner.getAllUserMap().get("AOC"));
-				pkgInf.setGiacontrolno("1");
-				cache.add(pkgInf);
+				PackageInfo old = cache.getPackage(pkgInf.getSeqNo());
+				old.setResult(pkgInf.getResult());
+				old.setReverification(pkgInf.getReverification());
+				old.setGiaapproveddate(pkgInf.getGiaapproveddate());
+				old.setStatus(status);
+				old.setGiacontrolno("1");
 			} else {
 				return flag;
 			}
@@ -281,13 +286,13 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			if (status.equals(PackageState.AOC_REQ_VAULT_VERIFY)) {
 				packageInfoCache.setVault(pkgInf.getVault());
 				packageInfoCache.setOwner(pkgInf.getOwner());
-				cache.add(packageInfoCache);
+				packageInfoCache.setStatus(status);
 				flag = true;
 			} else if (status.equals(PackageState.VAULT_ADD_VERIFY)) {
 				packageInfoCache.setInvtymgr(pkgInf.getInvtymgr());
 				packageInfoCache.setSealedbagno(pkgInf.getSealedbagno());
 				packageInfoCache.setAoc(DiamondApplicationRunner.getAllUserMap().get("AOC"));
-				cache.add(packageInfoCache);
+				packageInfoCache.setStatus(status);
 				flag = true;
 			} 
 
@@ -308,7 +313,10 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 		try {
 			if (status.equals(PackageState.DMD_REQ_CHG_OWNER)) {
-				cache.add(pkgInf);
+				PackageInfo old = cache.getPackage(pkgInf.getSeqNo());
+				old.setOwner(pkgInf.getOwner());
+				old.setVault(pkgInf.getVault());
+				old.setStatus(status);
 				flag = true;
 			}
 		} catch (Exception e) {
@@ -319,15 +327,18 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	}
 
 	@Override
-	public List<PackageInfo> submitPackageInfo(List<PackageInfo> packageInfos, String step) {
+	public List<PackageInfo> submitPackageInfo(List<PackageInfo> packageInfos, String step,String userid) {
+		logger.debug("submitPackageInfo, step: {} ,num: {}",step,packageInfos.size());
 		List<PackageInfo> failedList = new ArrayList<>();
 		if (step.equals(Constants.AOC_TO_VAULT_OWNER)) {
 			// 16
 			// 校验to do
 			for (PackageInfo packageInfo : packageInfos) {
-				logger.debug("submitPackageInfo {} ", packageInfo);
+				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+				logger.debug("submit change owner {} ", packageInfo);
 				try {
 					diamondApi.submitChangeOwnerDiamond(packageInfo.getBasketno(), packageInfo.getVault(),packageInfo.getOwner());
+					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
 					failedList.add(packageInfo);
@@ -338,9 +349,11 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			// 17
 			// 校验to do
 			for (PackageInfo packageInfo : packageInfos) {
-				logger.debug("submitPackageInfo {}", packageInfo.getBasketno());
+				logger.debug("change owner response {}", packageInfo);
+				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				try {
 					diamondApi.changeOwnerResp(packageInfo.getBasketno(), packageInfo.getAoc());
+					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
 					failedList.add(packageInfo);
@@ -351,8 +364,10 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			String auditor = DiamondApplicationRunner.getAllUserMap().get("AuditorA");
 			for (PackageInfo packageInfo : packageInfos) {
 				logger.debug("submitPackageInfo {}", packageInfo.getBasketno());
+				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				try {
 					diamondApi.auditDiamond(auditor, packageInfo.getBasketno());
+					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
 					failedList.add(packageInfo);
@@ -363,6 +378,9 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 
 			for (PackageInfo packageInfo : packageInfos) {
 				logger.debug("submitPackageInfo {}", packageInfo.getBasketno());
+				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+				String oldStatus = packageInfo.getStatus();
+			
 				String status = "";
 				if ("verified".equals(packageInfo.getResult())) {
 					status = PackageState.AUDIT_VERIFY_PASS;
@@ -372,6 +390,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				try {
 					diamondApi.auditDiamondResp(packageInfo.getBasketno(), packageInfo.getAoc(),
 							packageInfo.getAuditdate(), status, packageInfo.getResult());
+					cache.remove(packageInfo.getSeqNo(), oldStatus);
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
 					failedList.add(packageInfo);
@@ -395,7 +414,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			if (status.equals(PackageState.AUDIT_ADD_VERIFY)) {
 				packageInfoCache.setResult(packageInfo.getResult());
 				packageInfoCache.setAuditdate(packageInfo.getAuditdate());
-				cache.add(packageInfoCache);
+				packageInfoCache.setStatus(status);
 				flag = true;
 			}
 		} catch (Exception e) {

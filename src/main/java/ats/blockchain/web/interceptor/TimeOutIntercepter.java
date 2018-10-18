@@ -58,8 +58,22 @@ public class TimeOutIntercepter implements HandlerInterceptor
         	}
         }else
         {
-        	response.sendRedirect(request.getContextPath() + defaultUrl);
+        	if(isAjaxRequest(request))
+        	{
+        		response.setHeader("sessionstatus", "timeout"); 
+        	}else
+        	{
+        		response.sendRedirect(request.getContextPath() + defaultUrl);
+			}
         	return false;
         }
+    }
+    
+    public static boolean isAjaxRequest(HttpServletRequest request){
+        boolean result = false;
+        String headerX = request.getHeader("X-Requested-With");
+        result = (headerX != null  && headerX.equalsIgnoreCase("XMLHttpRequest"));
+        return  result;     
+         
     }
 }

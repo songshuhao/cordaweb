@@ -437,6 +437,7 @@ public class AOCBeanUtils {
 		if (dbList == null||dbList.isEmpty()) {
 			return cacheList;
 		}
+		
 		logger.debug("merge cache and db package, cache size: {}, db size: {}", cacheList.size(), dbList.size());
 		List<PackageAndDiamond> merge = new ArrayList<>(cacheList);
 
@@ -461,17 +462,18 @@ public class AOCBeanUtils {
 	
 	public static List<PackageInfo> mergePackageList(List<PackageInfo> cacheList,
 			List<PackageAndDiamond> dbList) {
-		if (cacheList == null) {
-			return Collections.emptyList();
-		}
 
 		if (dbList == null||dbList.isEmpty()) {
+			logger.debug("merge package : db list is empty ,return cache list. size: {}",cacheList.size());
+			cacheList.forEach(m -> logger.debug("merge package: {}",m));
 			return cacheList;
 		}
 		if (cacheList == null||cacheList.isEmpty()) {
+			logger.debug("merge package : cache is empty ,return db list. size: {}",dbList.size());
 			List<PackageInfo> merge = new ArrayList<>(dbList.size());
 			for (PackageAndDiamond p : dbList) {
 				merge.add(p.getPkgInfo());
+				logger.debug("merge package: {}",p.getPkgInfo());
 			}
 			return merge; 
 		}
@@ -489,11 +491,12 @@ public class AOCBeanUtils {
 			String key = p.getBasketno();
 			logger.debug("merge key :{}", key);
 			if (!map.containsKey(key)) {
-				logger.debug("merge db package {}", key);
+				logger.debug("merge db package {} ", key,p);
 				merge.add(p);
 			}
 		});
 		logger.debug("merge cache and db package, cache size: {}, db size: {},merge size: {}", cacheList.size(), dbList.size(),merge.size());
+		merge.forEach(m -> logger.debug("merge package: {}",m));
 		return merge;
 	}
 	

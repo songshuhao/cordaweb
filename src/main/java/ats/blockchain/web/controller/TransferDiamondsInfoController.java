@@ -110,13 +110,14 @@ public class TransferDiamondsInfoController extends BaseController
 	
 	@RequestMapping("/transfer/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(@RequestBody BasketViewObject basketViewObject) throws JSONException
+	public String submitBasketList(@RequestBody BasketViewObject basketViewObject,HttpSession session) throws JSONException
 	{
 		String step = basketViewObject.getStep() == null ? "" : basketViewObject.getStep();
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<PackageInfo> baseinfoList = basketViewObject.getPackageInfos();
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step);
+			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud be check[";

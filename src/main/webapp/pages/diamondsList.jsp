@@ -390,7 +390,7 @@
 			
  		},
  		'click #modifyBtn': function(e, value, row, index) {
- 			console.log(row);
+ 			//console.log(row);
  			$("#tradeid").val(row.tradeid);
 			$("#suppliercode").val(row.suppliercode);
 			$("#basketno").val(row.basketno);

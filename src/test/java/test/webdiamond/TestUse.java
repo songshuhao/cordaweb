@@ -104,8 +104,12 @@ public class TestUse {
 		} catch (DiamondWebException e) {
 		}
 		
-//		addDiamond();
-//		testReqLabVerify();
+		addDiamond();
+		testReqLabVerify();
+		testRespLabVerify();
+		//testSubmitReqVaultVerify();
+		//testRespVaultVerify();
+
 	}
 
 

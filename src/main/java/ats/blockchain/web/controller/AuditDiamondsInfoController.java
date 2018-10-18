@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -103,13 +104,14 @@ public class AuditDiamondsInfoController extends BaseController
 	
 	@RequestMapping(value="/audit/submitBasketList")
 	@ResponseBody
-	public String submitBasketList(@RequestBody BasketViewObject basketViewObject) throws JSONException
+	public String submitBasketList(@RequestBody BasketViewObject basketViewObject,HttpSession session) throws JSONException
 	{
 		String step = basketViewObject.getStep() == null ? "" : basketViewObject.getStep();
 		List<PackageInfo> baseinfoList = basketViewObject.getPackageInfos();
+		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step);
+			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud be check[";

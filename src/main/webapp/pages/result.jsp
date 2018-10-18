@@ -40,15 +40,54 @@
 		</div>
 <script type="text/javascript">
 	/**
+	 * 设置未来(全局)的AJAX请求默认选项
+	 * 主要设置了AJAX请求遇到Session过期的情况
+	 * add by shuhao.song
+	 */
+	$.ajaxSetup({
+	    type: 'POST',
+	    complete: function(xhr,status) {
+	        var sessionStatus = xhr.getResponseHeader('sessionstatus');
+	        if(sessionStatus == 'timeout') {
+	            var top = getTopWinow();
+	            layer.msg('Session timeout! Three seconds later, jump to login page!',{
+	            	 icon: 2,
+	                 //time: 3000 //2秒关闭（如果不配置，默认是3秒）
+	               },function(){
+	                   top.location.href = '<%=basePath %>/login';
+	            }); 
+	            <%-- var yes = confirm('Session timeout! Please login again!');
+	            if (yes) {
+	                top.location.href = '<%=basePath %>/login';
+	            } --%>
+	        }
+	    }
+	});
+	 
+	/**
+	 * 在页面中任何嵌套层次的窗口中获取顶层窗口
+	 * @return 当前页面的顶层窗口对象
+	 */
+	function getTopWinow(){
+	    var p = window;
+	    while(p != p.parent){
+	        p = p.parent;
+	    }
+	    return p;
+	}
+	
+	
+	/**
 	data：return data
 	modalId：hidden div，id or null
 	isSubmit：true false
+	add by shuhao.song
 	*/
 	function messageShow(data,modalId,isSubmit)
 	{
-	  console.log(data);
-	  console.log(modalId);
-	  console.log(isSubmit);
+	  //console.log(data);
+	  //console.log(modalId);
+	  //console.log(isSubmit);
 	  if(data == null)
 	  {
 		  if(null != modalId)

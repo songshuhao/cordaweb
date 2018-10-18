@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 
 import com.google.common.collect.Sets;
 
@@ -45,28 +44,29 @@ public class PackageCache {
 	private Map<String, String> seqNoBskNoMap = new HashMap<String, String>();
 
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private Logger logger  = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
 	public void add(PackageInfo pkg) {
 		String status = pkg.getStatus();
 		String seqNo = pkg.getSeqNo();
 		if (StringUtils.isBlank(seqNo)) {
 			seqNo = StringUtil.getPackageSeqno();
 			pkg.setSeqNo(seqNo);
-			logger.debug("add cache  status: {} ,PackageInfo: {}",status,pkg);
+			logger.debug("add cache  status: {} ,PackageInfo: {}", status, pkg);
 		}
-		
+
 		pkgCache.put(seqNo, pkg);
 		pkg.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
 		synchronized (packageSet) {
 			String basketno = pkg.getBasketno();
-			if(seqNoBskNoMap.containsKey(seqNo)) {
+			if (seqNoBskNoMap.containsKey(seqNo)) {
 				String oldBskNo = seqNoBskNoMap.get(seqNo);
 				if (!oldBskNo.equals(basketno)) {
 					seqNoBskNoMap.put(seqNo, basketno);
 					packageSet.remove(oldBskNo);
 					packageSet.add(basketno);
 				}
-			}else {
+			} else {
 				seqNoBskNoMap.put(seqNo, basketno);
 				packageSet.add(basketno);
 			}
@@ -80,6 +80,7 @@ public class PackageCache {
 	public PackageInfo getPackage(String seqNo) {
 		return pkgCache.get(seqNo);
 	}
+
 	/**
 	 * 检查篮子编号是否存在
 	 * 
@@ -100,7 +101,7 @@ public class PackageCache {
 
 	public PackageInfo getPackage(String seqNo, String status) {
 		PackageInfo p = pkgCache.get(seqNo);
-		return  status.equals(p.getStatus())?p:null;
+		return status.equals(p.getStatus()) ? p : null;
 		// return diamondCache.getValue(status, seqNo);
 	}
 
@@ -114,9 +115,6 @@ public class PackageCache {
 	public PackageInfo remove(String seqNo, String status) {
 		PackageInfo p = pkgCache.get(seqNo);
 		boolean equals = status.equals(p.getStatus());
-		if(equals){
-			p.setStatus(PackageState.PKG_REMOVE);
-		}
-		return equals?p:null;
+		return equals ? pkgCache.remove(seqNo) : null;
 	}
 }
