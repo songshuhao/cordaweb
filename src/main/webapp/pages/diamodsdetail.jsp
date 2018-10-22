@@ -61,6 +61,7 @@
         	$("#tableListForDetail").bootstrapTable('destroy'); 
             $('#tableListForDetail').bootstrapTable({
                 url: "<%=basePath %>/history/getDiamondDetails",
+                cache:false,
                 //pagination: true, //分页
                 //search: true, //显示搜索框
                 //sortable: false,    //是否启用排序

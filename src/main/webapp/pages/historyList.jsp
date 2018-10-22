@@ -31,12 +31,13 @@
     });
  
     function TableInit() {
-    	//console.log("get diamond list");
+    	////console.log("get diamond list");
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function() {
             $('#tableListForContacts').bootstrapTable({
                 url: "<%=basePath %>/history/getDiamondList",
+                cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
                 //sortable: false,    //是否启用排序
@@ -159,7 +160,7 @@
     	$('#tableListForContacts').bootstrapTable('refresh');
     }
  function operateFormat(value, row, index) {
-	 console.log(value);
+	 //console.log(value);
 	 if(null != value && value!='')
 	 {
 	 	return '<button type="button" class="btn btn-default" data-dismiss="modal" id="addBtn">'+value+'</button>';

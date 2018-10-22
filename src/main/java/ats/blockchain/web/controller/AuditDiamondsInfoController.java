@@ -128,6 +128,6 @@ public class AuditDiamondsInfoController extends BaseController
 			}
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "Sumbmit success");
+		return ResultUtil.msg(true, "Submit success");
 	}
 }

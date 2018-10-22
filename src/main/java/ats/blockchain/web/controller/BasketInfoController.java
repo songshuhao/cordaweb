@@ -48,17 +48,24 @@ public class BasketInfoController extends BaseController {
 
 	private Map<String, Object> addPackageState(PackageInfo basketinfo) {
 		Map<String, Object> rs = null;
-		String aocLegalName = getUserLegalName(aoc);
+		String aocLegalName = null;
+		String supLegalName = null;
+		try {
+			aocLegalName = getUserLegalName(aoc);
+			supLegalName = getUserLegalName(basketinfo.getSuppliercode());
+		} catch (Exception e) {
+			String message = e.getMessage();
+			return ResultUtil.failMap(message);
+		}
 		logger.debug("BasketInfoController: getUserLegalName for {} {}", aoc, aocLegalName);
 		basketinfo.setAoc(aocLegalName);
-		String supLegalName = getUserLegalName(basketinfo.getSuppliercode());
 		logger.debug("BasketInfoController: getUserLegalName for supplier{}", supLegalName);
 		basketinfo.setSuppliercode(supLegalName);
 		String seqNo = basketinfo.getSeqNo();
-		logger.debug("addPackageState seqNo :{}",seqNo);
-		if(StringUtils.isBlank(seqNo)) {
+		logger.debug("addPackageState seqNo :{}", seqNo);
+		if (StringUtils.isBlank(seqNo)) {
 			rs = basketInfoServcie.addPackageInfo(basketinfo);
-		}else {
+		} else {
 			rs = basketInfoServcie.editPackageInfo(basketinfo);
 		}
 		return rs;
@@ -77,7 +84,8 @@ public class BasketInfoController extends BaseController {
 	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber, int pageSize, HttpSession session) {
 		PagedObjectDTO dto = new PagedObjectDTO();
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(userid,new String[] {PackageState.PKG_CREATE});
+		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(userid,
+				new String[] { PackageState.PKG_CREATE });
 		dto.setRows(list);
 		dto.setTotal((long) list.size());
 		return dto;
@@ -99,20 +107,20 @@ public class BasketInfoController extends BaseController {
 			return ResultUtil.msg(false, message);
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "Sumbmit success");
+		return ResultUtil.msg(true, "Submit success");
 	}
 
 	@RequestMapping(value = "/importBasketInfo")
 	@ResponseBody
 	public String importBasketInfo(HttpServletRequest request) {
 		HttpSession session = request.getSession();
-		if(session == null) {
+		if (session == null) {
 			return ResultUtil.fail("Can not get session");
 		}
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<PackageInfo> basketinfos = null;
 		try {
-			basketinfos = FileUtils.getFile(request, "baskeinfo", "files",PackageInfo.class);
+			basketinfos = FileUtils.getFile(request, "baskeinfo", "files", PackageInfo.class);
 		} catch (Exception e) {
 			logger.error("importBasketInfo error", e);
 			return ResultUtil.fail("file is invaild.");
@@ -121,21 +129,36 @@ public class BasketInfoController extends BaseController {
 		if (basketinfos == null || basketinfos.isEmpty()) {
 			return ResultUtil.fail("import file is empty.");
 		}
-		
+
 		List<PackageInfo> addFailList = new ArrayList<>();
-		String message = "";
+		String message = "Check package failded:\n";
+		for (PackageInfo bsk : basketinfos) {
+			bsk.setUserid(userid);
+			Map<String, Object> check = AOCBeanUtils.checkPackage(bsk);
+			if (!ResultUtil.isSuccess(check)) {
+				Object err = check.get("message");
+				logger.error("importBasketInfo to corda error ,baksetno:{} ,error: {}", bsk, err);
+				message = message + err + "\n";
+				addFailList.add(bsk);
+			}
+		}
+		if (addFailList.size() > 0) {
+			return ResultUtil.fail(message, addFailList);
+		}
+
 		for (PackageInfo bsk : basketinfos) {
 			bsk.setUserid(userid);
 			Map<String, Object> map = addPackageState(bsk);
 			if (!ResultUtil.isSuccess(map)) {
 				logger.error("importBasketInfo to corda error: {} ", bsk);
-				message = message + map.get("message")+"\n";
+				message = message + map.get("message") + "\n";
 				addFailList.add(bsk);
 			}
 		}
+
 		String resultStr = "";
 		if (addFailList.size() > 0) {
-			resultStr = ResultUtil.fail("add package failded:["+message+"]", addFailList);
+			resultStr = ResultUtil.fail("Add package failded:\n" + message, addFailList);
 		} else {
 			resultStr = ResultUtil.success();
 		}

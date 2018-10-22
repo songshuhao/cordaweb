@@ -107,6 +107,7 @@
         oTableInit.Init = function() {
             $('#tableListForContacts').bootstrapTable({
                 url: "<%=basePath %>/confirm/getBasketList",
+                cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
                 //sortable: false,    //是否启用排序
@@ -155,6 +156,12 @@
                     },{
                         title: 'Lab',
                         field: 'gradlab',
+                        align: 'center',
+                        valign: 'middle',
+                        visible: false,
+                    },{
+                        title: 'Seal Number',
+                        field: 'reverification',
                         align: 'center',
                         valign: 'middle',
                         visible: false,

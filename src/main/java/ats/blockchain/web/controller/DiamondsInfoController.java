@@ -120,7 +120,7 @@ public class DiamondsInfoController extends BaseController {
 			return ResultUtil.msg(false, message);
 		}
 		logger.debug("submitDiamondList end");
-		return ResultUtil.msg(true, "Sumbmit success");
+		return ResultUtil.msg(true, "Submit success");
 	}
 
 	@RequestMapping(value = "/importDiamondsInfo")
@@ -145,6 +145,7 @@ public class DiamondsInfoController extends BaseController {
 			sb.append("Import error:\n");
 			for (DiamondInfoData diamondInfoData : diamondsinfos) {
 				diamondInfoData.setUserid(userid);
+				diamondInfoData.setStatus(PackageState.PKG_ISSUE);
 				String basketno = diamondInfoData.getBasketno();
 				if(!cache.containsPackage(basketno)) {
 					sb.append("package doesn't exist: "+basketno).append("\n");

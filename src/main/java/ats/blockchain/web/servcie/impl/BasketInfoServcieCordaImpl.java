@@ -123,10 +123,6 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		
 		List<PackageInfo> pkgList = cache.getPackageByStatus(status);
 		return pkgList;
-//		logger.debug("userid: {} get {} from corda size: {}", userid, Arrays.toString(status), padList.size());
-//		logger.debug("userid: {} get {} from cache size: {}", userid, Arrays.toString(status), pkgList.size());
-//		List<PackageInfo> mergeList = AOCBeanUtils.mergePackageList(pkgList, padList);
-//		return mergeList;
 	}
 
 	@Override
@@ -345,7 +341,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			// 校验to do
 			for (PackageInfo packageInfo : packageInfos) {
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
-				logger.debug("submit change owner {} ", packageInfo);
+				logger.debug("submit change owner baksetno : {} ,package: {}", packageInfo);
 				try {
 					diamondApi.submitChangeOwnerDiamond(packageInfo.getBasketno(), packageInfo.getVault(),packageInfo.getOwner());
 					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
@@ -359,7 +355,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			// 17
 			// 校验to do
 			for (PackageInfo packageInfo : packageInfos) {
-				logger.debug("change owner response {}", packageInfo);
+				logger.debug("change owner response basketno: {} ,package: {}",packageInfo.getBasketno(), packageInfo);
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				try {
 					diamondApi.changeOwnerResp(packageInfo.getBasketno(), packageInfo.getAoc());
@@ -373,7 +369,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			// 校验to do
 			String auditor = DiamondApplicationRunner.getAllUserMap().get("AuditorA");
 			for (PackageInfo packageInfo : packageInfos) {
-				logger.debug("submitPackageInfo {}", packageInfo.getBasketno());
+				logger.debug("submitPackageInfo aoc to audit basketno:{} , package:{}", packageInfo);
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				try {
 					diamondApi.auditDiamond(auditor, packageInfo.getBasketno());
@@ -387,7 +383,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			// 校验to do
 
 			for (PackageInfo packageInfo : packageInfos) {
-				logger.debug("submitPackageInfo {}", packageInfo.getBasketno());
+				logger.debug("submitPackageInfo audit to aoc basketno: {} ,package:{}", packageInfo.getBasketno(),packageInfo);
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				String oldStatus = packageInfo.getStatus();
 			
@@ -449,12 +445,10 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateWithoutRedeemByStatus(redeemOwnerId, status);
 		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+		padList.forEach(p-> cache.update(p.getPkgInfo()));
 		List<PackageInfo> pkgList = cache.getPackageByStatus(status);
 	
-		logger.debug("userid: {} get {} from corda size: {}", userid, Arrays.toString(status), padList.size());
-		logger.debug("userid: {} get {} from cache size: {}", userid, Arrays.toString(status), pkgList.size());
-		List<PackageInfo> mergeList = AOCBeanUtils.mergePackageList(pkgList, padList);
-		return mergeList;
+		return pkgList;
 	}
 
 }

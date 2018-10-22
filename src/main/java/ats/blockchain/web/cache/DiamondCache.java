@@ -54,6 +54,10 @@ public class DiamondCache {
 		PackageInfo pkg = pad.getPkgInfo();
 		String status = pkg.getStatus();
 		String basketno = pkg.getBasketno();
+		if(diamondCache.containRow(basketno)) {
+			return;
+		}
+		
 		diamondCache.put(basketno, status, pad);
 		List<DiamondInfoData> list = pad.getDiamondList();
 		if (list == null) {

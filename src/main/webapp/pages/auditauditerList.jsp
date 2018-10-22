@@ -96,6 +96,7 @@
         oTableInit.Init = function() {
             $('#tableListForContacts').bootstrapTable({
                 url: "<%=basePath %>/audit/getBasketList",
+                cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
                 //sortable: false,    //是否启用排序
@@ -111,7 +112,7 @@
                 showColumns: true,                  //是否显示所有的列
                 showRefresh: true,                  //是否显示刷新按钮
                 responseHandler: function(data){
-                	//console.log(data);
+                	////console.log(data);
                     return data.rows;
                 },
                 columns: [
@@ -186,7 +187,7 @@
     window.operateEvents = {
 		'click #addBtn': function(e, value, row, index) {
 			resetAddModal();
-			console.log(row);
+			//console.log(row);
 			$("#basketno").val(row.basketno);
 			$("#auditdate").val(row.auditdate);
 			$("#result").attr("value",row.result);
@@ -195,7 +196,7 @@
    		},	
    		'click #modifyBtn': function(e, value, row, index) {
 			resetAddModal();
-			console.log(row);
+			//console.log(row);
 			$$("#basketno").val(row.basketno);
 			$("#auditdate").val(row.auditdate);
 			$("#result").attr("value",row.result);
@@ -208,7 +209,7 @@
     function operateFormat(value, row, index) {
 	   	 var status = value;
 	   	 var result = row.result;
-	   	 //console.log(status);
+	   	 ////console.log(status);
 	   	 if(status=='13'){
 	   		 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
 	   	 }else if(status=='12'){

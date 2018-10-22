@@ -18,7 +18,7 @@
 		            <h4 class="modal-title">success</h4>
 		        </div>
 		        <div class="modal-body" style="text-align: center;">
-		            <p  class="p1" style="color:green" id="successMessage">Success</p>
+		            <p style="color:green" id="successMessage">Success</p>
 		        </div>
 		    </div>
 		  </div>
@@ -33,7 +33,7 @@
 		            <h4 class="modal-title">Failed</h4>
 		        </div>
 		        <div class="modal-body" style="text-align: center;">
-		            <p class="p1" style="color:red" id="failedMessage">fail</p>
+		            <p style="color:red" id="failedMessage">Fail</p>
 		        </div>
 		    </div>
 		  </div>
@@ -82,9 +82,9 @@
 	*/
 	function messageShow(data,modalId,isSubmit)
 	{
-	  //console.log(data);
-	  //console.log(modalId);
-	  //console.log(isSubmit);
+	  ////console.log(data);
+	  ////console.log(modalId);
+	  ////console.log(isSubmit);
 	  if(data == null)
 	  {
 		  if(null != modalId)
@@ -94,7 +94,7 @@
 		  $("#opFailedModal").modal('show').on('hidden.bs.modal', function() {
 		    	search();
 		  });
-		  $("#failedMessage").text("unknown exception");
+		  $("#failedMessage").text("Unknown exception");
 	  }else if(data.state=='success')
 	  {
 		  if(!isSubmit)
@@ -111,10 +111,16 @@
 		  {
 		  	$(modalId).modal('hide');
 		  }
+		  //console.log(data.message);
+		  if(data.message != null && data.message.trim() !="")
+		  {
+			  var showMessage = data.message.replace(/\n/g,'</br>');
+			  $("#failedMessage").html(showMessage);
+		  }
 		  $("#opFailedModal").modal('show').on('hidden.bs.modal', function() {
 		    	search();
 		  });
-		 $("#failedMessage").text(data.message);
+		 
 	  }
 	}
 </script>

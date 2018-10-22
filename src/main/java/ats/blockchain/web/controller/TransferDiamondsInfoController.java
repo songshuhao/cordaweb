@@ -134,6 +134,6 @@ public class TransferDiamondsInfoController extends BaseController
 			}
 		}
 		logger.debug("submitBasketList end");
-		return ResultUtil.msg(true, "Sumbmit success");
+		return ResultUtil.msg(true, "Submit success");
 	}
 }

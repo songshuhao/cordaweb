@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
@@ -39,6 +40,7 @@ import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
+import ats.blockchain.web.config.DiamondApplicationRunner;
 import ats.blockchain.web.model.UserInfo;
 import net.corda.core.contracts.StateAndRef;
 
@@ -425,97 +427,45 @@ public class AOCBeanUtils {
 		}
 		return !isEmpty;
 	}
-
 	
-	public static List<PackageAndDiamond> mergeList(List<PackageAndDiamond> cacheList,
-			List<PackageAndDiamond> dbList) {
-		if (cacheList == null) {
-			return Collections.emptyList();
+	private static final Pattern baksetnoPattern = Pattern.compile("^[A-Za-z0-9]{1,12}$");
+	private static final Pattern diamondNumPattern = Pattern.compile("^[+]?\\d{1,10}$");
+	private static final Pattern weightPattern = Pattern.compile("^[+]?(\\d{1,10})(.\\d+)?$");
+	
+	public static Map<String,Object> checkPackage(@Nonnull PackageInfo pkg) {
+		String baksetno = pkg.getBasketno();
+		StringBuilder msg = new StringBuilder();
+		msg.append("package :").append(baksetno).append("\n");
+		if(!baksetnoPattern.matcher(baksetno).matches()) {
+			msg.append("invaild packageno: ").append(baksetno).append("\n");
 		}
-
-		if (dbList == null||dbList.isEmpty()) {
-			return cacheList;
+		int diamondsnumber = pkg.getDiamondsnumber();
+		String diamondNum = String.valueOf(diamondsnumber);
+		if(!diamondNumPattern.matcher(diamondNum).matches()||diamondsnumber==0) {
+			msg.append("invaild diamondnumber: ").append(diamondNum).append("\n");
 		}
 		
-		logger.debug("merge cache and db package, cache size: {}, db size: {}", cacheList.size(), dbList.size());
-		List<PackageAndDiamond> merge = new ArrayList<>(cacheList);
-
-		Map<String, PackageAndDiamond> map = new HashMap<>(dbList.size());
-		for (PackageAndDiamond p : dbList) {
-			String key = p.getPkgInfo().getBasketno();
-			map.put(key, p);
-			logger.debug("convert db package to map : {}", key);
+		BigDecimal total = pkg.getTotalweight();
+		if(!weightPattern.matcher(total.toPlainString()).matches()||total.compareTo(BigDecimal.ZERO)==0) {
+			msg.append("invaild total weight: ").append(diamondNum).append("\n");
 		}
-
-		cacheList.forEach(p -> {
-			String key = p.getPkgInfo().getBasketno();
-			logger.debug("merge key :{}", key);
-			if (!map.containsKey(key)) {
-				logger.debug("merge db package {}", key);
-				merge.add(p);
-			}
-		});
-
-		return merge;
+		
+		BigDecimal min = pkg.getMimweight();
+		if(!weightPattern.matcher(min.toPlainString()).matches()|| min.compareTo(BigDecimal.ZERO)==0) {
+			msg.append("invaild min weight: ").append(diamondNum).append("\n");
+		}
+		if(total.compareTo(min.multiply(new BigDecimal(diamondsnumber)))<0) {
+			msg.append("totalweight,minweight,diamandsnumber don't match.\n");
+		}
+		
+		String code = pkg.getProductcode();
+		if(!DiamondApplicationRunner.getProductMap().containsKey(code)) {
+			msg.append("unknown product code:").append(code).append("\n");
+		}
+		
+		boolean b = msg.length()==0;
+		String rs = b?"success":msg.toString();
+		
+		return ResultUtil.msgMap(b, rs);
 	}
-	
-	public static List<PackageInfo> mergePackageList(List<PackageInfo> cacheList,
-			List<PackageAndDiamond> dbList) {
-
-		if (dbList == null||dbList.isEmpty()) {
-			logger.debug("merge package : db list is empty ,return cache list. size: {}",cacheList.size());
-			cacheList.forEach(m -> logger.debug("merge package: {}",m));
-			return cacheList;
-		}
-		if (cacheList == null||cacheList.isEmpty()) {
-			logger.debug("merge package : cache is empty ,return db list. size: {}",dbList.size());
-			List<PackageInfo> merge = new ArrayList<>(dbList.size());
-			for (PackageAndDiamond p : dbList) {
-				merge.add(p.getPkgInfo());
-				logger.debug("merge package: {}",p.getPkgInfo());
-			}
-			return merge; 
-		}
-		logger.debug("merge cache and db package, cache size: {}, db size: {}", cacheList.size(), dbList.size());
-		List<PackageInfo> merge = new ArrayList<>(cacheList);
-
-		Map<String, PackageAndDiamond> map = new HashMap<>(dbList.size());
-		for (PackageAndDiamond p : dbList) {
-			String key = p.getPkgInfo().getBasketno();
-			map.put(key, p);
-			logger.debug("convert db package to map : {}", key);
-		}
-
-		cacheList.forEach(p -> {
-			String key = p.getBasketno();
-			logger.debug("merge key :{}", key);
-			if (!map.containsKey(key)) {
-				logger.debug("merge db package {} ", key,p);
-				merge.add(p);
-			}
-		});
-		logger.debug("merge cache and db package, cache size: {}, db size: {},merge size: {}", cacheList.size(), dbList.size(),merge.size());
-		merge.forEach(m -> logger.debug("merge package: {}",m));
-		return merge;
-	}
-	
-	
-	public static void main(String[] args) {
-		try {
-			File file = ResourceUtils.getFile("classpath:templates/userinfo.csv");
-			System.out.println(file.getPath());
-			List<UserInfo> list = AOCBeanUtils.getObjectFromCsv(file.getPath(), UserInfo.class);
-			System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(list));
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 }

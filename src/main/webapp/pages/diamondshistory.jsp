@@ -33,6 +33,7 @@ function DiamondsHistoryInit() {
     	$("#tableListForHistory").bootstrapTable('destroy'); 
         $('#tableListForHistory').bootstrapTable({
             url: url,
+            cache:false,
             pagination: false, //分页
             search: false, //显示搜索框
             sidePagination: "client", //服务端处理分页server

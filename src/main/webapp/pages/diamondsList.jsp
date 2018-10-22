@@ -219,12 +219,13 @@
     });
  
     function TableInit() {
-    	//console.log("get diamond list");
+    	////console.log("get diamond list");
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function() {
             $('#tableListForContacts').bootstrapTable({
                 url: "<%=basePath %>/diamond/getDiamondList",
+                cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
                 //sortable: false,    //是否启用排序
@@ -240,7 +241,7 @@
                 showColumns: true,                  //是否显示所有的列
                 showRefresh: true,                  //是否显示刷新按钮
                 responseHandler: function(data){
-                	//console.log(data.rows);
+                	////console.log(data.rows);
                     return data.rows;
                 },
                 columns: [
@@ -336,6 +337,7 @@
     };
     
     function search() {
+    	//console.log(111111111111111);
     	$('#tableListForContacts').bootstrapTable('refresh');
     }
     
@@ -346,7 +348,7 @@
     
  function operateFormat(value, row, index) {
 	 var status = value;
-	 console.log(row.giano);
+	 //console.log(row.giano);
 	 if(status=='2' || (row.giano != null && row.giano!='')){
 		 return '<div class="form-inline"><input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary" style="margin-right: 3px; margin-bottom:1px;"></input>'
 		 +'<input type="button" value="Delete" id="deleteBtn" data-toggle="modal" class="btn btn-primary"></input></div>';
@@ -374,7 +376,7 @@
 				if(productKey == productcode)
 				{
 					product = productMap[productKey];
-					//console.log(product);
+					////console.log(product);
 					$("#shape").val(product.shape);
 					$("#color").val(product.color);
 					$("#clarity").val(product.clarity);
@@ -390,7 +392,7 @@
 			
  		},
  		'click #modifyBtn': function(e, value, row, index) {
- 			//console.log(row);
+ 			////console.log(row);
  			$("#tradeid").val(row.tradeid);
 			$("#suppliercode").val(row.suppliercode);
 			$("#basketno").val(row.basketno);
@@ -500,7 +502,7 @@
 	function deleteDiamond(param){
 		
 		var index = layer.load();
-		console.log(param);
+		//console.log(param);
 		//alert(111);
 		//debugger;
 		$.ajax({
@@ -619,7 +621,7 @@
                         	   url:'<%=basePath %>/diamond/checkGiaNo',
                         	   data: function(validator,$field, value) {
                                        return {
-                                    	   giano:giano,
+                                    	   giano:$("#giano").val(),
                                     	   tradeid:$("#tradeid").val(),
                                     	   userid:$("#userid").val()
                                        };

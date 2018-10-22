@@ -9,16 +9,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
-import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.cordapp.diamond.util.Constants;
 import ats.blockchain.web.bean.PackageInfo;
-import ats.blockchain.web.utils.StringUtil;
 
 public class PackageCache {
 	/**
@@ -47,6 +44,7 @@ public class PackageCache {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void add(PackageInfo pkg) {
+		logger.debug("add package into cache: {}",pkg);
 		String seqNo = pkg.getSeqNo();
 		String status = pkg.getStatus();
 		pkgCache.put(seqNo, pkg);
@@ -73,6 +71,7 @@ public class PackageCache {
 			logger.debug("package in cache ,don't add again,baksetno: {},staus : {}",pkg.getBasketno(),pkg.getStatusDesc());
 			return;
 		}
+		logger.debug("update package cache :{}",pkg);
 		add(pkg);
 	}
 	
@@ -110,6 +109,7 @@ public class PackageCache {
 	}
 
 	public PackageInfo remove(String seqNo, String status) {
+		logger.debug("remove seqNo: {} ,status: {} from package cache.",seqNo,status);
 		PackageInfo p = pkgCache.get(seqNo);
 		boolean equals = status.equals(p.getStatus());
 		return equals ? pkgCache.remove(seqNo) : null;

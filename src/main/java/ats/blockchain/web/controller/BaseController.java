@@ -114,7 +114,7 @@ public class BaseController
 	public String getUserLegalName(String userId) {
 		String userLegalName = DiamondApplicationRunner.getAllUserMap().get(userId);
 		if(StringUtils.isBlank(userLegalName)) {
-			throw new IllegalArgumentException("invaild userId:"+userId);
+			throw new IllegalArgumentException("invaild corda orginazation:"+userId);
 		}
 		return userLegalName;
 		

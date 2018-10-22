@@ -91,6 +91,7 @@
         oTableInit.Init = function() {
             $('#tableListForContacts').bootstrapTable({
                 url: "<%=basePath %>/confirm/getBasketList",
+                cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
                 //sortable: false,    //是否启用排序
@@ -106,7 +107,7 @@
                 showColumns: true,                  //是否显示所有的列
                 showRefresh: true,                  //是否显示刷新按钮
                 responseHandler: function(data){
-                	//console.log(data);
+                	////console.log(data);
                     return data.rows;
                 },
                 columns: [
@@ -174,7 +175,7 @@
     
     function operateFormat(value, row, index) {
    	 var status = value;
-   	 //console.log(status);
+   	 ////console.log(status);
    	 if(status=='4'){
    		 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
    	 }else if(status=='3'){

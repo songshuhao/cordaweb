@@ -38,13 +38,13 @@
 							<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
 							<input type="hidden" id="seqNo" name="seqNo"/>
 							<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
+								<label for="basketno" class="col-sm-5 control-label">Package Code:</label>
 								<div class="col-sm-5">
 									<input type="text" name="basketno" class="form-control" id="basketno" placeholder="Package Code" data-bv-notempty/>
 								</div>
 							</div>
 							<div class="form-group" >
-								<label for="inputProduct" class="col-sm-5 control-label">Product Code:</label>
+								<label for="productcode" class="col-sm-5 control-label">Product Code:</label>
 								<div class="col-sm-5">
 									<select id="productcode" class="form-control" name="productcode">
 								      <c:forEach items="${productList }" var="product">
@@ -56,7 +56,7 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputName" class="col-sm-5 control-label">Supplier:</label>
+								<label for="suppliercode" class="col-sm-5 control-label">Supplier:</label>
 								<div class="col-sm-5">
 									<select id="suppliercode" class="form-control" name="suppliercode">
 									  <c:forEach items="${supplierMap }" var="supplier">
@@ -144,11 +144,12 @@
         oTableInit.Init = function() {
             $('#tableListForContacts').bootstrapTable({
                 url: "<%=basePath %>/basket/getBasketList",
+                cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
-                //sortable: false,    //是否启用排序
-                //sortName: "basketno",
-                //sortOrder: "asc",     //排序方式 
+                //sortable: true,    //是否启用排序
+                //sortName: "productcode",
+                //sortOrder: "desc",     //排序方式 
                 sidePagination: "client", //服务端处理分页server
                 pageNumber: 1,                       //初始化加载第一页，默认第一页
                 pageSize: 10,                       //每页的记录行数（*）
@@ -173,12 +174,14 @@
                     },
                     {
                         title: 'Package Code',
+                        //sortable: true,
                         field: 'basketno',
                         align: 'center',
                         valign: 'middle',
                     },
                     {
                         title: 'Product Code',
+                        //sortable: true,
                         field: 'productcode',
                         align: 'center',
                         valign: 'middle',
@@ -228,6 +231,10 @@
         };
         return oTableInit;
     };
+    
+    $('#addModal').on('shown.bs.modal',function(e){
+    	//$('#basketno').focus();
+    });
  
   //Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
@@ -258,6 +265,7 @@
     };
     
     function search() {
+    	
     	var url = "<%=basePath %>/basket/getBasketList";
     	$('#tableListForContacts').bootstrapTable('refresh', {url: url});
     }
@@ -375,7 +383,7 @@
 	
 	 function operateFormat(value, row, index) {
 		 var status = value;
-		 //console.log(status);
+		 ////console.log(status);
 		  if(status=='0'){
 			 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
 		 }
@@ -440,7 +448,7 @@
                              max: 10,
                              message: 'Max length 10!'
                          },regexp: {//自定义校验
-                             regexp: /^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/,//>0的数字
+                             regexp: /^[1-9]\d*$/,//>0的数字
                              message: 'Value should be number and bigger than 0!'
                          },
                          callback: {//自定义，可以在这里与其他输入项联动校验/
@@ -505,8 +513,8 @@
                              callback:function(value, validator){
                             	 var totalweight = $("#totalweight").val();
                             	 var diamondsnumber = $("#diamondsnumber").val();
-                            	 console.log("totalweight:" + totalweight);
-                            	 console.log("diamondsnumber:" + diamondsnumber);
+                            	 //console.log("totalweight:" + totalweight);
+                            	 //console.log("diamondsnumber:" + diamondsnumber);
                             	 if(value > totalweight)
                             	 {
                             		 return false; 
