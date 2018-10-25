@@ -204,8 +204,8 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 	}
 
 	@Override
-	public List<DiamondInfoData> getDiamondInfoData() {
-		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState();
+	public List<DiamondInfoData> getDiamondInfoData(int pageNum,int pageSize) {
+		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState(pageNum,pageSize);
 		List<DiamondInfoData> dList = Lists.newArrayList();
 		if (AOCBeanUtils.isNotEmpty(list)) {
 			List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
@@ -220,7 +220,9 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 
 	@Override
 	public List<DiamondInfoData> getDiamondInfoHistory(String giano, String basketno) {
-		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(Vault.StateStatus.ALL, basketno);
+		List<StateAndRef<PackageState>>  list= null;
+			list=diamondApi.getPackageStateById(Vault.StateStatus.ALL, basketno);
+		
 		List<DiamondInfoData> diamondInfoDatas = Lists.newArrayList();
 		if (AOCBeanUtils.isNotEmpty(list)) {
 			List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);

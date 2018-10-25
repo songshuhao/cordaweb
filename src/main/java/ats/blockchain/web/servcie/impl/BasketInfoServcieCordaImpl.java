@@ -1,7 +1,6 @@
 package ats.blockchain.web.servcie.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -87,8 +86,36 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	@Override
 	public List<PackageInfo> getPackageInfo() {
 		List<PackageInfo> pkgList = new ArrayList<PackageInfo>();
-		logger.error("getPackageInfo unimplements!!!");
-
+		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState();
+		logger.debug("getPackageInfo size: {}",list.size());
+		if (AOCBeanUtils.isNotEmpty(list)) {
+			List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
+			plist.stream().forEach(p -> {
+				logger.debug("get getPkgInfo: {}", p.getPkgInfo());
+					pkgList.add(p.getPkgInfo());
+			});
+		}
+		return pkgList;
+	}
+	
+	@Override
+	public long getPackageInfoNum() {
+		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState();
+		return (long) list.size();
+	}
+	
+	@Override
+	public List<PackageInfo> getPackageInfo(int pageNum, int pageSize) {
+		List<PackageInfo> pkgList = new ArrayList<PackageInfo>();
+		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState(pageNum,pageSize);
+		logger.debug("getPackageInfo size: {}",list.size());
+		if (AOCBeanUtils.isNotEmpty(list)) {
+			List<PackageAndDiamond> plist = AOCBeanUtils.convertPakageState2PackageInfo(list);
+			plist.stream().forEach(p -> {
+				logger.debug("get getPkgInfo: {}", p.getPkgInfo());
+					pkgList.add(p.getPkgInfo());
+			});
+		}
 		return pkgList;
 	}
 
@@ -136,7 +163,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	}
 
 	@Override
-	public List<PackageInfo> getPackageInfoById(String... basketNo) {
+	public List<PackageInfo> getPackageInfoById(int pageNum, int pageSize,String... basketNo) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);
 		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		List<PackageInfo> pkgList = new ArrayList<PackageInfo>();
@@ -146,6 +173,13 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		return pkgList;
 	}
 
+	@Override
+	public long getPackageInfoNumById(String... basketNo) {
+		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);
+	
+		return (long) list.size();
+	}
+	
 	@Override
 	public List<PackageState> getPackageStateById(String... basketNo) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);

@@ -435,8 +435,8 @@ public class AOCBeanUtils {
 	public static Map<String,Object> checkPackage(@Nonnull PackageInfo pkg) {
 		String baksetno = pkg.getBasketno();
 		StringBuilder msg = new StringBuilder();
-		msg.append("package :").append(baksetno).append("\n");
 		if(!baksetnoPattern.matcher(baksetno).matches()) {
+			msg.append("package :").append(baksetno).append("\n");
 			msg.append("invaild packageno: ").append(baksetno).append("\n");
 		}
 		int diamondsnumber = pkg.getDiamondsnumber();

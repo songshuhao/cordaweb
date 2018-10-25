@@ -8,7 +8,7 @@
 	String basePath = request.getContextPath();
 %>
 <div class="navbar-header">
-    <a class="navbar-brand" ><strong>DIAMOND </strong></a>
+    <a class="navbar-brand" ><i class="fa fa-user fa-fw"></i><strong>${userid}</strong></a>
 </div>
 
 <ul class="nav navbar-top-links navbar-right"> 

@@ -62,10 +62,11 @@ public class BasketInfoController extends BaseController {
 		logger.debug("BasketInfoController: getUserLegalName for supplier{}", supLegalName);
 		basketinfo.setSuppliercode(supLegalName);
 		String seqNo = basketinfo.getSeqNo();
-		logger.debug("addPackageState seqNo :{}", seqNo);
 		if (StringUtils.isBlank(seqNo)) {
+			logger.debug("addPackageState seqNo :{},basketno : {}", seqNo,basketinfo.getBasketno());
 			rs = basketInfoServcie.addPackageInfo(basketinfo);
 		} else {
+			logger.debug("editPackageState seqNo :{},basketno : {}", seqNo,basketinfo.getBasketno());
 			rs = basketInfoServcie.editPackageInfo(basketinfo);
 		}
 		return rs;
@@ -125,15 +126,18 @@ public class BasketInfoController extends BaseController {
 			logger.error("importBasketInfo error", e);
 			return ResultUtil.fail("file is invaild.");
 		}
-
 		if (basketinfos == null || basketinfos.isEmpty()) {
+			logger.error("import file is empty.");
 			return ResultUtil.fail("import file is empty.");
 		}
-
+		logger.debug("importBasketInfo read PackageInfo from file number:{}",basketinfos.size());
+		
 		List<PackageInfo> addFailList = new ArrayList<>();
 		String message = "Check package failded:\n";
 		for (PackageInfo bsk : basketinfos) {
 			bsk.setUserid(userid);
+			logger.debug("importBasketInfo check :{}",bsk.getBasketno());
+			
 			Map<String, Object> check = AOCBeanUtils.checkPackage(bsk);
 			if (!ResultUtil.isSuccess(check)) {
 				Object err = check.get("message");
@@ -147,7 +151,7 @@ public class BasketInfoController extends BaseController {
 		}
 
 		for (PackageInfo bsk : basketinfos) {
-			bsk.setUserid(userid);
+			logger.debug("importBasketInfo add :{}",bsk.getBasketno());
 			Map<String, Object> map = addPackageState(bsk);
 			if (!ResultUtil.isSuccess(map)) {
 				logger.error("importBasketInfo to corda error: {} ", bsk);

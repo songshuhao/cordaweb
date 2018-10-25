@@ -8,6 +8,7 @@
 			+ path;*/
 	String basePath = request.getContextPath();
 %>
+<jsp:include page="diamondshistory.jsp"></jsp:include>
 <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
@@ -126,6 +127,8 @@
                         field: 'giano',
                         align: 'center',
                         valign: 'middle',
+                        events: operateEventsGiaNo,
+                        formatter : operateFormatGiaNo,
                     },
                     {
                         title: 'Shape',
@@ -191,6 +194,30 @@
    			$("#detailModal").modal('show');
    		 	var oTableInit = DiamondsDetailInit();
    		 	oTableInit.Init();
+   			
+    		}
+    	};
+    
+    function operateFormatGiaNo(value, row, index) {
+   	 //console.log(value);
+   	 if(null != value && value!='')
+   	 {
+   	 	return '<button type="button" class="btn btn-default" data-dismiss="modal" id="addBtn">'+value+'</button>';
+   	 };
+   	 return;
+   	
+    }
+    
+    var giaNo = "";
+    var basketNo = "";
+    
+    window.operateEventsGiaNo = {
+    			'click #addBtn': function(e, value, row, index) {
+   			giaNo = row.giano;
+   			basketNo = row.basketno;
+   			var oTable = DiamondsHistoryInit();
+   		    oTable.Init();
+   			$("#addModal").modal('show');
    			
     		}
     	};

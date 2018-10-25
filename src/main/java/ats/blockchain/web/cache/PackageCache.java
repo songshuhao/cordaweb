@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -29,7 +29,7 @@ public class PackageCache {
 	 * key: seqNo<br>
 	 * value: PackageInfo
 	 */
-	private ConcurrentMap<String, PackageInfo> pkgCache = new ConcurrentHashMap<String, PackageInfo>();
+	private ConcurrentMap<String, PackageInfo> pkgCache = new ConcurrentSkipListMap<String, PackageInfo>();
 
 	/**
 	 * 缓存所有basketno 用于校验篮子是否重复

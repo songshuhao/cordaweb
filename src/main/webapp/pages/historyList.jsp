@@ -10,7 +10,6 @@
 %>
 <jsp:include page="diamodsdetail.jsp"></jsp:include>
 <jsp:include page="result.jsp"></jsp:include>
-<jsp:include page="diamondshistory.jsp"></jsp:include>
 	<section class="content table-content">
 		<form class="form-inline" >
 		<!-- 工具栏 -->
@@ -40,21 +39,22 @@
                 cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
-                //sortable: false,    //是否启用排序
-                //sortName: "basketNo",
-                //sortOrder: "asc",     //排序方式 
-                sidePagination: "client", //服务端处理分页server
+                sortable: true,    //是否启用排序
+                sortName: "basketno",
+                sortOrder: "desc",     //排序方式 
+                sidePagination: "server", //服务端处理分页server,client
                 pageNumber: 1,                       //初始化加载第一页，默认第一页
                 pageSize: 10,                       //每页的记录行数（*）
                 pageList: [5, 10, 25, 50],          //每页的记录行数（*）
                 //contentType : "application/x-www-form-urlencoded",
                 queryParams: queryParams, //传递参数（*）
                 toolbar:"#toolbar",//工具栏
-                showColumns: true,                  //是否显示所有的列
-                showRefresh: false,                  //是否显示刷新按钮
-                responseHandler: function(data){
+                showColumns: false,                  //是否显示所有的列
+                showRefresh: true,                  //是否显示刷新按钮
+                /* responseHandler: function(data){
+                	//console.log(data);
                     return data.rows;
-                },
+                }, */
                 columns: [
                 	{
                         title: 'Number',//标题  可不加
@@ -70,6 +70,8 @@
                         field: 'basketno',
                         align: 'center',
                         valign: 'middle',
+                        sortable: true,
+                        sortOrder: "desc",
                         events: operateEventspackageno,
                         formatter : operateFormatpackageno,
                     },
@@ -93,12 +95,19 @@
                         visible:false,
                     },
                     {
+                        title: 'Diamonds Number',
+                        field: 'diamondsnumber',
+                        align: 'center',
+                        valign: 'middle',
+                    },
+                    /* {
                         title: 'GIA Number',
                         field: 'giano',
                         align: 'center',
                         valign: 'middle',
-                        events: operateEvents,
-                        formatter : operateFormat,
+                        visible:false,
+                        //events: operateEvents,
+                        //formatter : operateFormat,
                     },
                     {
                         title: 'Shape',
@@ -112,6 +121,7 @@
                         field: 'size',
                         align: 'center',
                         valign: 'middle',
+                        visible:false,
                        
                     },
                     {
@@ -134,7 +144,7 @@
                         align: 'center',
                         valign: 'middle',
                         visible:false,
-                    },
+                    }, */
                     {
                         title: 'Status',
                         field: 'statusDesc',
@@ -148,38 +158,20 @@
     };
  
     function queryParams(params) {
+    	//console.log(params);
     	return {
-    		limit : this.limit, // 页面大小
-	        offset : this.offset, // 页码
+    		limit : params.limit, // 每页记录数5,10.15....
+	        offset : params.offset, // 从第几条记录开始,第0页，第1页
 	        pageNumber : this.pageNumber,
 	        pageSize : this.pageSize,
+	        order: params.order,//排序
+	        sort: params.sort,//排序列名
+	        search:params.search,//查询条件
     	};
     };
     
     function search() {
     	$('#tableListForContacts').bootstrapTable('refresh');
     }
- function operateFormat(value, row, index) {
-	 //console.log(value);
-	 if(null != value && value!='')
-	 {
-	 	return '<button type="button" class="btn btn-default" data-dismiss="modal" id="addBtn">'+value+'</button>';
-	 };
-	 return;
-	
- }
- 
- var giaNo = "";
- var basketNo = "";
- 
- window.operateEvents = {
- 			'click #addBtn': function(e, value, row, index) {
-			giaNo = row.giano;
-			basketNo = row.basketno;
-			var oTable = DiamondsHistoryInit();
-		    oTable.Init();
-			$("#addModal").modal('show');
-			
- 		}
- 	};
+
 </script>

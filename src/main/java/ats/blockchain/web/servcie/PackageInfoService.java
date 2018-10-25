@@ -15,7 +15,10 @@ public interface PackageInfoService {
 	
 	List<PackageInfo> getPackageInfo();
 
-	List<PackageInfo> getPackageInfoById(String... basketNo);
+	List<PackageInfo> getPackageInfo(int pageNum,int pageSize);
+	
+	
+	List<PackageInfo> getPackageInfoById(int pageNum, int pageSize,String... basketNo);
 
 	List<PackageInfo> getPackageInfoByStatus(String userid, String... status);
 
@@ -92,6 +95,8 @@ public interface PackageInfoService {
 	 */
 	List<PackageInfo> submitPackageInfo(List<PackageInfo> packageInfos,String step,String userid);
 
-	
+	long getPackageInfoNum();
+
+	long getPackageInfoNumById(String... basketNo);
 	
 }

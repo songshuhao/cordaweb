@@ -27,14 +27,14 @@ public class FileUtils {
 	 * 
 	 * @param request
 	 * @param csvName
-	 * @param inputNmae
+	 * @param inputName
 	 * @return
 	 * @throws FileUploadException
 	 * @throws IOException
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 */
-	public static <T> List<T> getFile(HttpServletRequest request, String csvName, String inputNmae, Class<T> clazz)
+	public static <T> List<T> getFile(HttpServletRequest request, String csvName, String inputName, Class<T> clazz)
 			throws FileUploadException, IOException, InstantiationException, IllegalAccessException {
 		List<T> list = new ArrayList<T>();
 		if (ServletFileUpload.isMultipartContent(request)) {
@@ -46,7 +46,7 @@ public class FileUtils {
 				try {
 					ins = item.openStream();
 					String fieldname = item.getFieldName();
-					if (!item.isFormField() && fieldname.equals(inputNmae)) {
+					if (!item.isFormField() && fieldname.equals(inputName)) {
 						list.addAll(AOCBeanUtils.getObjectFromCsv(ins, clazz));
 					}
 				} finally {

@@ -50,6 +50,7 @@ import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.Vault.Page;
 import net.corda.core.node.services.vault.Builder;
 import net.corda.core.node.services.vault.CriteriaExpression;
+import net.corda.core.node.services.vault.PageSpecification;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
 
@@ -101,6 +102,19 @@ public class DiamondTradeApi {
 				Vault.StateStatus.ALL, null);
 		
 		return (rpcops.vaultQueryByCriteria(criteria, PackageState.class).getStates());
+	}
+	/**
+	 * 根据uuid 查询所有状态的package信息
+	 * 
+	 * @param linearid
+	 * @return
+	 */
+	public List<StateAndRef<PackageState>> getAllPackageStateByPage(int pageNum,int pageSize,List<UniqueIdentifier> linearid) {
+		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, linearid,
+				Vault.StateStatus.ALL, null);
+		
+		PageSpecification page = new PageSpecification(pageNum,pageSize);
+		return (rpcops.vaultQueryByWithPagingSpec(PackageState.class, criteria, page).getStates());
 	}
 	
 	
@@ -205,6 +219,35 @@ public class DiamondTradeApi {
 		logger.debug("getPackageStateById {} query result size:{} ", asList, uResult.size());
 		return uResult;
 	}
+/**
+ * 根据篮子id查询符合条件的状态为consumedStatus的package
+ * @param pageNumber
+ * @param pageSize
+ * @param consumedStatus
+ * @param basketNo
+ * @return
+ */
+	public List<StateAndRef<PackageState>> getPackageStatePageById(int pageNumber ,int pageSize,Vault.StateStatus consumedStatus,@Nonnull String... basketNo) {
+		List<String> asList = Arrays.asList(basketNo);
+		logger.debug("getPackageStateById :{}", asList);
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(consumedStatus);
+		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "basketno");
+		CriteriaExpression exp = Builder.in(statusField, asList);
+		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
+		QueryCriteria cc = generalCriteria.and(crit);
+		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
+	
+//		Page<PackageState> result = rpcops.vaultQueryByWithPagingSpec(PackageState.class, cc, page);
+		
+		List<StateAndRef<PackageState>> list = result.getStates();
+		List<UniqueIdentifier> uList = Lists.newArrayList();
+		list.stream().forEach(p -> uList.add(p.getState().getData().getLinearId()));
+		
+		List<StateAndRef<PackageState>> uResult = getAllPackageStateByPage(pageNumber,pageSize,uList);
+		
+		logger.debug("getPackageStateById {} query result size:{} ", asList, uResult.size());
+		return uResult;
+	}
 	/**
 	 * 查询所有钻石
 	 * @return
@@ -216,6 +259,17 @@ public class DiamondTradeApi {
 		logger.debug("getAllPackageState query result size:{} ", list.size());
 		return list;
 	}
+	
+	public List<StateAndRef<PackageState>> getAllPackageState(int pageNum,int pageSize){
+		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
+		PageSpecification page = new PageSpecification(pageNum,pageSize);
+		
+		Page<PackageState> result = rpcops.vaultQueryByWithPagingSpec(PackageState.class, generalCriteria, page);
+		List<StateAndRef<PackageState>> list = result.getStates();
+		logger.debug("getAllPackageState query result size:{} ", list.size());
+		return list;
+	}
+	
 	/**
 	 * 根据篮子id查询符合条件的状态为UNCONSUMED的package
 	 * 

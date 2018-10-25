@@ -99,9 +99,9 @@
                 cache:false,
                 pagination: true, //分页
                 search: true, //显示搜索框
-                //sortable: false,    //是否启用排序
-                //sortName: "basketno",
-                //sortOrder: "asc",     //排序方式 
+                sortable: true,    //是否启用排序
+                sortOrder: "desc",     //排序方式 
+                sortName: "basketno",
                 sidePagination: "client", //服务端处理分页server
                 pageNumber: 1,                       //初始化加载第一页，默认第一页
                 pageSize: 10,                       //每页的记录行数（*）
@@ -132,6 +132,8 @@
                     {
                         title: 'Package Code',
                         field: 'basketno',
+                        sortable: true,    //是否启用排序
+                        sortOrder: "desc",     //排序方式 
                         align: 'center',
                         valign: 'middle',
                         events: operateEventspackageno,

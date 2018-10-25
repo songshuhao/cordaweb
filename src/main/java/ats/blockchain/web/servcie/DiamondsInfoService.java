@@ -17,7 +17,7 @@ public interface DiamondsInfoService {
 
 	List<DiamondInfoData> submitDiamondList(String userid);
 
-	List<DiamondInfoData> getDiamondInfoData();
+	List<DiamondInfoData> getDiamondInfoData(int pageNum,int pageSize);
 
 	List<DiamondInfoData> getDiamondInfoHistory(String giano, String basketno);
 	

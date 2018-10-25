@@ -88,7 +88,7 @@
     </ul>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){
+/* $(document).ready(function(){
 	  $(".btn1").click(function(){
 	    $("p").slideToggle();
 	  });
@@ -96,5 +96,5 @@ $(document).ready(function(){
 	function onMenuClick(aMenu) {
 		var urlPath = window.location.pathname;
 		alert(urlPath);
-	}
+	} */
 </script>
