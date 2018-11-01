@@ -4,7 +4,6 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +29,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.util.ResourceUtils;
 
 import com.csvreader.CsvReader;
 import com.google.common.collect.Lists;
@@ -41,7 +39,6 @@ import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.config.DiamondApplicationRunner;
-import ats.blockchain.web.model.UserInfo;
 import net.corda.core.contracts.StateAndRef;
 
 /**

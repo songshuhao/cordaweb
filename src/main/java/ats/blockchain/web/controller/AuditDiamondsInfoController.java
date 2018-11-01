@@ -31,7 +31,7 @@ public class AuditDiamondsInfoController extends BaseController
 {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Resource
-	private PackageInfoService packageInfoServcie;
+	private PackageInfoService packageInfoService;
 	
 	@RequestMapping("/audit/auditList")
 	public String findBasketList()
@@ -63,7 +63,7 @@ public class AuditDiamondsInfoController extends BaseController
 			}
 		}
 		packageInfo.setStatus(status);
-		boolean result = packageInfoServcie.auditPackageInfo(packageInfo);
+		boolean result = packageInfoService.auditPackageInfo(packageInfo);
 		String msg = "Add Success!";
 		if(!result)
 		{
@@ -94,7 +94,7 @@ public class AuditDiamondsInfoController extends BaseController
 			}
 		}
 		String userid = (String) request.getSession().getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list = packageInfoServcie.getPackageStateWithoutRedeemByStatus(userid,redeemOwnerId, statusList.toArray(new String[statusList.size()]));
+		List<PackageInfo> list = packageInfoService.getPackageStateWithoutRedeemByStatus(userid,redeemOwnerId, statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -111,7 +111,7 @@ public class AuditDiamondsInfoController extends BaseController
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step,userid);
+			List<PackageInfo> list = packageInfoService.submitPackageInfo(baseinfoList,step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud be check[";

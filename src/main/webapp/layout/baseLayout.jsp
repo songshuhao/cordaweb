@@ -26,7 +26,8 @@
     <script src="<%=basePath %>/static/js/jquery-1.11.3.min.js"></script>
     <script src="<%=basePath %>/static/js/bootstrap/bootstrap.min.js"></script>
     <script src="<%=basePath %>/static/js/bootstrap/bootstrap-table.js"></script>	    
-    <script src="<%=basePath %>/static/js/jquery.dataTables.min.js"></script>
+   <%--  <script src="<%=basePath %>/static/js/jquery.dataTables.min.js"></script> --%>
+    <script src="<%=basePath %>/static/js/bootstrap/bootstrap-table-export_new.js"></script>
     <script src="<%=basePath %>/static/js/jquery.metisMenu.js"></script>
     <script src="<%=basePath %>/static/js/layout-scripts.js"></script>  
     <script src="<%=basePath %>/static/js/bootstrap/bootstrapValidator.js"></script>

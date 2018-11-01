@@ -1,16 +1,20 @@
 package ats.blockchain.web.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -115,4 +119,113 @@ public class FileUtils {
 		strbuf.append(".txt");
 		return (strbuf.toString());
 	}
+	
+	public static void main(String[] args)
+	{
+		String filePath = "E:\\project\\180723AOC-BChain\\20 SourceCode\\webdiamond\\src\\main\\resources\\templates\\basketinfo.csv";
+		System.out.println(filePath.substring(filePath.lastIndexOf(File.separator)+1, filePath.length()));
+	}
+	
+	
+	/**
+	 * @author shuhao.song
+	 * @param response
+	 * @param filePath 文件路径
+	 * @param contentType 文件类型
+	 * @throws UnsupportedEncodingException
+	 */
+	 public static void exportFile(HttpServletResponse response, String filePath, String contentType) throws UnsupportedEncodingException
+	 {
+		 File file = new File(filePath);
+		 String fileName = filePath.substring(filePath.lastIndexOf(File.separator)+1, filePath.length());
+		 response.setContentType(contentType);
+		 response.setHeader("Content-Disposition","attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+		 InputStream in = null;
+		 OutputStream out = null;
+		 try
+		{
+			 in = new FileInputStream(filePath);  
+		      int len = 0;  
+		      byte[] buffer = new byte[1024];
+		      response.setCharacterEncoding("UTF-8");  
+		      out = response.getOutputStream();
+		      while ((len = in.read(buffer)) > 0) 
+		      {  
+		          out.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });  
+		          out.write(buffer, 0, len);  
+		      }
+		      
+		} catch (Exception e)
+		{
+			// TODO: handle exception
+		}finally {
+			if(in != null)
+			{
+				try
+				{
+					in.close();
+				} catch (IOException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if(out != null)
+			{
+				try
+				{
+					out.close();
+				} catch (IOException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			//待执行
+			if(file.exists())
+			{
+				file.delete();
+			}
+		}
+	 }
+	 
+	 public static void exportFile(HttpServletResponse response, InputStream inputStream, String fileName,String contentType) throws UnsupportedEncodingException
+	 {
+		 response.setContentType(contentType);
+		 response.setHeader("Content-Disposition",  
+			      "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+		 InputStream in = inputStream;
+		 try
+		{
+			 
+		      int len = 0;  
+		      byte[] buffer = new byte[1024];
+		      response.setCharacterEncoding("UTF-8");  
+		      OutputStream out = response.getOutputStream();
+		      while ((len = in.read(buffer)) > 0) 
+		      {  
+		          out.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });  
+		          out.write(buffer, 0, len);  
+		      }
+		      
+		} catch (Exception e)
+		{
+			// TODO: handle exception
+		}finally {
+			if(in != null)
+			{
+				try
+				{
+					in.close();
+				} catch (IOException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		 
+	 }
+	
+	
 }

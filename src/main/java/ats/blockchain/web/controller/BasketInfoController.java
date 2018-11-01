@@ -1,11 +1,15 @@
 package ats.blockchain.web.controller;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.alibaba.fastjson.JSON;
 
 import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.model.PagedObjectDTO;
 import ats.blockchain.web.servcie.PackageInfoService;
@@ -33,7 +38,7 @@ import ats.blockchain.web.utils.ResultUtil;
 public class BasketInfoController extends BaseController {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Resource
-	private PackageInfoService basketInfoServcie;
+	private PackageInfoService packageInfoService;
 	private final String aoc = "AOC";
 
 	@RequestMapping("/addBasketInfo")
@@ -64,10 +69,10 @@ public class BasketInfoController extends BaseController {
 		String seqNo = basketinfo.getSeqNo();
 		if (StringUtils.isBlank(seqNo)) {
 			logger.debug("addPackageState seqNo :{},basketno : {}", seqNo,basketinfo.getBasketno());
-			rs = basketInfoServcie.addPackageInfo(basketinfo);
+			rs = packageInfoService.addPackageInfo(basketinfo);
 		} else {
 			logger.debug("editPackageState seqNo :{},basketno : {}", seqNo,basketinfo.getBasketno());
-			rs = basketInfoServcie.editPackageInfo(basketinfo);
+			rs = packageInfoService.editPackageInfo(basketinfo);
 		}
 		return rs;
 	}
@@ -79,13 +84,23 @@ public class BasketInfoController extends BaseController {
 		mac.setViewName("basketList");
 		return mac;
 	}
+	
+	@RequestMapping("/checkPackageNo")
+	@ResponseBody
+	public String checkPackageNo(String basketno,String seqno,String userid) {
+		logger.debug("BasketInfoController: checkPackageNo---->basketno:" + basketno + ",seqno" + seqno+",userid" + userid);
+		Map<String, Object> rs = new HashMap<String, Object>();
+		rs = packageInfoService.checkPackageNo(userid, seqno, basketno);
+		return ResultUtil.parseMap(rs);
+	}
+	
 
 	@RequestMapping("/getBasketList")
 	@ResponseBody
 	public PagedObjectDTO getBasketListClient(@RequestParam int pageNumber, int pageSize, HttpSession session) {
 		PagedObjectDTO dto = new PagedObjectDTO();
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list = basketInfoServcie.getPackageInfoByStatus(userid,
+		List<PackageInfo> list = packageInfoService.getPackageInfoByStatus(userid,
 				new String[] { PackageState.PKG_CREATE });
 		dto.setRows(list);
 		dto.setTotal((long) list.size());
@@ -96,7 +111,7 @@ public class BasketInfoController extends BaseController {
 	@ResponseBody
 	public String submitBasketList(HttpSession session) {
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list = basketInfoServcie.submitPackageByStatus(PackageState.PKG_CREATE, userid);
+		List<PackageInfo> list = packageInfoService.submitPackageByStatus(PackageState.PKG_CREATE, userid);
 		if (AOCBeanUtils.isNotEmpty(list)) {
 			String message = "these data shoud be check[";
 			for (int i = 0; i < list.size(); i++) {
@@ -169,4 +184,105 @@ public class BasketInfoController extends BaseController {
 
 		return resultStr;
 	}
+	
+	
+	/**
+	 * 导出公共方法
+	 * @author shuhao.song
+	 * @param request
+	 * @param response
+	 * @param step 步骤
+	 * @return
+	 * @throws IOException
+	 * 获取step,设置status，查询导出list，调用封装csv接口，response set流进行下载。
+	 */
+	@RequestMapping(value = "/createExportData")
+	@ResponseBody
+	public String createExportData(HttpServletRequest request,HttpServletResponse response,String step) throws IOException
+	{
+		String userid = (String) request.getSession().getAttribute(Constants.SESSION_USER_ID);
+		String fileName = "basketinfo.csv";
+		String filePath = "E:\\project\\180723AOC-BChain\\20 SourceCode\\webdiamond\\src\\main\\resources\\templates\\basketinfo.csv";
+		Map<String,Object> result = new HashMap<String, Object>();
+		List<String> statusList = new ArrayList<String>();
+		if(step.equals(Constants.AOC_TO_SUPPLIER))
+		{
+			statusList.add(PackageState.PKG_CREATE);
+			List<PackageInfo> list = packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+			
+		}else if(step.equals(Constants.SUPPLIER_TO_AOC))
+		{
+			statusList.add(PackageState.PKG_ISSUE);
+			statusList.add(PackageState.DMD_CREATE);
+			List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.AOC_TO_GIA))
+		{
+			statusList.add(PackageState.DMD_ISSUE);
+			statusList.add(PackageState.AOC_REQ_LAB_VERIFY);
+			List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.GIA_TO_AOC))
+		{
+			statusList.add(PackageState.AOC_SUBMIT_LAB_VERIFY);
+			statusList.add(PackageState.LAB_ADD_VERIFY);
+			List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+			
+		}else if(step.equals(Constants.AOC_TO_VAULT))
+		{
+			statusList.add(PackageState.LAB_VERIFY_PASS);
+			statusList.add(PackageState.AOC_REQ_VAULT_VERIFY);
+			List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.VAULT_TO_AOC))
+		{
+			statusList.add(PackageState.AOC_SUBMIT_VAULT_VERIFY);
+			statusList.add(PackageState.VAULT_ADD_VERIFY);
+			List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.AOC_TO_VAULT_OWNER))
+		{
+			statusList.add(PackageState.VAULT_VERIFY_PASS);
+			statusList.add(PackageState.AUDIT_VERIFY_PASS);
+			statusList.add(PackageState.AUDIT_VERIFY_NOPASS);
+			statusList.add(PackageState.DMD_REQ_CHG_OWNER);
+			statusList.add(PackageState.DMD_CHANGE_OWNER_PASS);
+			List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.VAULT_OWNER_TO_AOC))
+		{
+			statusList.add(PackageState.DMD_SUBMIT_CHG_OWNER);
+			List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.AOC_TO_AUDIT))
+		{
+			statusList.add(PackageState.VAULT_VERIFY_PASS);
+			statusList.add(PackageState.DMD_CHANGE_OWNER_PASS);
+			statusList.add(PackageState.AUDIT_VERIFY_PASS);
+			statusList.add(PackageState.AUDIT_VERIFY_NOPASS);
+			List<PackageInfo> list = packageInfoService.getPackageStateWithoutRedeemByStatus(userid,redeemOwnerId, statusList.toArray(new String[statusList.size()]));
+		}else if(step.equals(Constants.AUDIT_TO_AOC))
+		{
+			statusList.add(PackageState.AOC_REQ_AUDIT_VERIFY);
+			statusList.add(PackageState.AUDIT_ADD_VERIFY);
+			List<PackageInfo> list = packageInfoService.getPackageStateWithoutRedeemByStatus(userid,redeemOwnerId, statusList.toArray(new String[statusList.size()]));
+		}else
+		{
+			logger.error("Step error");
+			return ResultUtil.fail("Step error");
+		}
+		result.put("state", "success");
+		result.put("filePath", filePath);
+		return JSON.toJSONString(result);
+	}
+	
+	
+	/**
+	 * @author shuhao.song
+	 * @param response
+	 * @param filePath 文件路径 ，默认csv，后续如果需要在扩展
+	 * @throws UnsupportedEncodingException
+	 */
+	@RequestMapping(value = "/downloadExportData")
+	@ResponseBody
+	public void downloadExportData(HttpServletResponse response,String filePath) throws UnsupportedEncodingException
+	{
+		String contentTye="application/csv;charset=UTF-8";
+		FileUtils.exportFile(response, filePath, contentTye);
+	}
+
 }

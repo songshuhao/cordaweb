@@ -115,6 +115,9 @@
                 	////console.log(data);
                     return data.rows;
                 },
+                /**导出*/
+                showExport: true,
+                exportTypes :[ 'csv'],
                 columns: [
                 	{
         				checkbox:"true",

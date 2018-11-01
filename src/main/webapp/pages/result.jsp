@@ -74,6 +74,50 @@
 	}
 	
 	
+	
+	//export fuction,use some bootsrap-table-export style
+	//add by shuhao.song
+    function exportData()
+    {
+    	var index = layer.load();
+    	var param = {"step":step};
+    	$.ajax({
+			url:"<%=basePath %>/basket/createExportData",
+			method:"post",
+			data:param,
+			dataType:"json",
+			success:function(data){
+				console.log(data);		
+				layer.close(index);
+				if(data.state=="success"){
+					downloadData(data);
+				}
+				if(data.state=="fail"){
+					messageShow(data,"#addModal",false)
+				}
+			},
+			error:function(){
+				layer.close(index);
+				messageShow(null,"#addModal",false)
+			}
+		});
+    }
+	
+	function downloadData(data)
+	{
+		console.log(data);
+    	var url="<%=basePath %>/basket/downloadExportData";
+	    var form = $("<form></form>");
+	    var input1 = $("<input type='hidden' name='filePath'/>");
+	    input1.attr('value',data.filePath);
+	    form.attr('action',url);
+	    form.attr('method','post');
+	    form.append(input1);
+	    form.appendTo("body");
+	    form.css('display','none');
+	    //console.log(form);
+	    form.submit().remove();
+	}
 	/**
 	data：return data
 	modalId：hidden div，id or null

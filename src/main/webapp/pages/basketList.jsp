@@ -122,7 +122,10 @@
 		
 		
 <script type="text/javascript">
-    $(function(){
+
+	var step = "ats";
+    
+	$(function(){
        var oTable = TableInit();
        oTable.Init();
        formValidate();
@@ -162,6 +165,9 @@
                 responseHandler: function(data){
                     return data.rows;
                 },
+                /**导出*/
+                showExport: true,
+                exportTypes :[ 'csv'],
                 columns: [
                     {
                         title: 'Number',//标题  可不加
@@ -276,6 +282,7 @@
     	$("#importModal").modal('show');
     }
     
+    
     function importCsv()
     {
     	var $form = $("#importForm");
@@ -345,7 +352,11 @@
  
 	//新增用户
 	function add(){
-		
+		var seqNo=$("#seqNo").val();
+		if(seqNo !='' && null != seqNo)
+		{
+			$('#addForm').bootstrapValidator('enableFieldValidators', 'basketno', false);
+		}
 		var $form = $("#addForm");
 
         var data = $form.data('bootstrapValidator');
@@ -435,7 +446,23 @@
                             },regexp: {//自定义校验
                                 regexp: /^[A-Za-z0-9]+$/,//匹配由数字和26个英文字母组成的字符串
                                 message: 'Value should be number and letter!'
-                            }
+                            },remote:{
+                        	   message: "Package code already exists",
+                        	   delay: 1000,
+                        	   type:'POST',
+                        	   url:'<%=basePath %>/basket/checkPackageNo',
+                        	   data: function(validator,$field, value) {
+                                       return {
+                                    	   basketno:$("#basketno").val(),
+                                    	   seqno:$("#seqNo").val(),
+                                    	   userid:$("#userid").val()
+                                       };
+                        		},
+                        	   //dataType:"json",
+                        	   dataFilter:function(data,type){
+                        		   return data;
+                               } ,
+                           }
                         }
                     },
           	   diamondsnumber: {//名称校验

@@ -11,7 +11,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import ats.blockchain.web.model.UserInfo;
 
 /**
- * session 超时重登陆
+ * session 超时及输入非法地址重登陆
  * add by shuhao.song
  * @author Administrator
  *

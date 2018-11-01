@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Sets;
 
 import ats.blockchain.cordapp.diamond.util.Constants;
+import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.bean.PackageInfo;
 
 public class PackageCache {
@@ -29,7 +30,7 @@ public class PackageCache {
 	 * key: seqNo<br>
 	 * value: PackageInfo
 	 */
-	private ConcurrentMap<String, PackageInfo> pkgCache = new ConcurrentSkipListMap<String, PackageInfo>();
+	private ConcurrentMap<String, PackageInfo> pkgCache = new ConcurrentHashMap<String, PackageInfo>();
 
 	/**
 	 * 缓存所有basketno 用于校验篮子是否重复
@@ -93,6 +94,20 @@ public class PackageCache {
 		synchronized (packageSet) {
 			return packageSet.contains(basketno);
 		}
+	}
+	/**
+	 * 该seqno对应的basketno 是否改变
+	 * @param seqno
+	 * @param basketno
+	 * @return true: basketno 改变，false basketno不变
+	 * @throws DiamondWebException
+	 */
+	public boolean checkPackagenoChange(String seqno,String basketno) {
+		if(pkgCache.containsKey(seqno)) {
+			String old = pkgCache.get(seqno).getBasketno();
+			return !old.equals(basketno);
+		}
+		return true;
 	}
 
 	public PackageInfo getPackage(String seqNo, String status) {

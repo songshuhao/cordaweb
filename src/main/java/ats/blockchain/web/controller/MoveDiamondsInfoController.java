@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +28,7 @@ public class MoveDiamondsInfoController extends BaseController
 {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Resource
-	private PackageInfoService packageInfoServcie;
+	private PackageInfoService packageInfoService;
 	
 	@RequestMapping("/move/moveList")
 	public String findBasketList()
@@ -61,7 +60,7 @@ public class MoveDiamondsInfoController extends BaseController
 			}
 		}
 		packageInfo.setStatus(status);
-		boolean result = packageInfoServcie.vaultAddPackageInfo(packageInfo);
+		boolean result = packageInfoService.vaultAddPackageInfo(packageInfo);
 		String msg = "Add Success!";
 		if(!result)
 		{
@@ -90,7 +89,7 @@ public class MoveDiamondsInfoController extends BaseController
 			}
 		}
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -105,7 +104,7 @@ public class MoveDiamondsInfoController extends BaseController
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(step,userid);
+			List<PackageInfo> list = packageInfoService.submitPackageInfo(step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud be check[";

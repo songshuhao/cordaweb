@@ -33,7 +33,7 @@ public class DiamondsHistoryController extends BaseController {
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Resource
-	private PackageInfoService packageInfoServcie;
+	private PackageInfoService packageInfoService;
 
 	@RequestMapping("/historyList")
 	public String findBasketList() {
@@ -64,11 +64,11 @@ public class DiamondsHistoryController extends BaseController {
 		List<PackageInfo> pkgList = null;
 		long total =0l;
 		if(StringUtils.isNotBlank(search)) {
-			pkgList = packageInfoServcie.getPackageInfoById(pageNumber, pageSize, search);
-			total =  packageInfoServcie.getPackageInfoNumById(search);
+			pkgList = packageInfoService.getPackageInfoById(pageNumber, pageSize, search);
+			total =  packageInfoService.getPackageInfoNumById(search);
 		}else {
-			pkgList = packageInfoServcie.getPackageInfo(pageNumber, pageSize);
-			total = packageInfoServcie.getPackageInfoNum();
+			pkgList = packageInfoService.getPackageInfo(pageNumber, pageSize);
+			total = packageInfoService.getPackageInfoNum();
 		}
 		
 		compare.setAsc("asc".equals(order));
@@ -83,7 +83,7 @@ public class DiamondsHistoryController extends BaseController {
 	@RequestMapping("/getDiamondDetails")
 	@ResponseBody
 	public String getDiamondDetails(@RequestParam int pageNumber, int pageSize, String basketno) throws JSONException {
-		List<PackageAndDiamond> packageInfos = packageInfoServcie.getPackageAndDiamondById(basketno);
+		List<PackageAndDiamond> packageInfos = packageInfoService.getPackageAndDiamondById(basketno);
 		List<DiamondInfoData> diamondsinfos = packageInfos.get(0).getDiamondList();
 		PackageInfo basketinfo = packageInfos.get(0).getPkgInfo();
 		JSONObject result = new JSONObject();

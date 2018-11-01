@@ -188,6 +188,7 @@
 		</div>
 <script type="text/javascript">
 
+	var step = "sta";//supplier to aoc
     $(function(){
        var oTable = TableInit();
        oTable.Init();
@@ -244,6 +245,9 @@
                 	////console.log(data.rows);
                     return data.rows;
                 },
+                /**导出*/
+                showExport: true,
+                exportTypes :[ 'csv'],
                 columns: [
                 	{
                         title: 'Number',//标题  可不加
@@ -339,7 +343,6 @@
     };
     
     function search() {
-    	//console.log(111111111111111);
     	$('#tableListForContacts').bootstrapTable('refresh');
     }
     

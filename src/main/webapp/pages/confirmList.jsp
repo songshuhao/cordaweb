@@ -110,6 +110,9 @@
                 	////console.log(data);
                     return data.rows;
                 },
+                /**导出*/
+                showExport: true,
+                exportTypes :[ 'csv'],
                 columns: [
                     {
                         title: 'Number',//标题  可不加
@@ -185,7 +188,7 @@
    	}
     }
     
-    var step = "atg";
+    var step = "atg";//aoc to gia
     function queryParams(params) {
     	return {
     		limit : this.limit, // 页面大小

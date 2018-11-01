@@ -122,6 +122,9 @@
                 	//console.log(data);
                     return data.rows;
                 },
+                /**导出*/
+                showExport: true,
+                exportTypes :[ 'csv'],
                 columns: [
                     {
                         title: 'Number',//标题  可不加

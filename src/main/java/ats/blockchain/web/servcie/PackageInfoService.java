@@ -98,5 +98,7 @@ public interface PackageInfoService {
 	long getPackageInfoNum();
 
 	long getPackageInfoNumById(String... basketNo);
+
+	Map<String, Object> checkPackageNo(String userid, String seqno, String basketno);
 	
 }

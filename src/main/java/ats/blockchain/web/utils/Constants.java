@@ -38,6 +38,9 @@ public class Constants {
 	public static final String ROLE_AUDIT="OU=Auditor";
 	
 	//flowStep
+	public static final String AOC_TO_SUPPLIER="ats";
+	public static final String SUPPLIER_TO_AOC="sta";
+	
 	public static final String AOC_TO_GIA="atg";
 	public static final String GIA_TO_AOC="gta";
 	

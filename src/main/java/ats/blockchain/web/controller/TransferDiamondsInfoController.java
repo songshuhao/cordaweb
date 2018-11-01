@@ -34,7 +34,7 @@ public class TransferDiamondsInfoController extends BaseController
 	@Autowired
 	private DiamondsinfoMapper diamondsinfoMapper;*/
 	@Resource
-	private PackageInfoService packageInfoServcie;
+	private PackageInfoService packageInfoService;
 	
 	
 	@RequestMapping("/transfer/transferList")
@@ -67,7 +67,7 @@ public class TransferDiamondsInfoController extends BaseController
 			}
 		}
 		packageInfo.setStatus(status);
-		boolean result = packageInfoServcie.transferPackageInfo(packageInfo);
+		boolean result = packageInfoService.transferPackageInfo(packageInfo);
 		String msg = "Add Success!";
 		if(!result)
 		{
@@ -100,7 +100,7 @@ public class TransferDiamondsInfoController extends BaseController
 			}
 		}
 		String userid= (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -117,7 +117,7 @@ public class TransferDiamondsInfoController extends BaseController
 		List<PackageInfo> baseinfoList = basketViewObject.getPackageInfos();
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(baseinfoList,step,userid);
+			List<PackageInfo> list = packageInfoService.submitPackageInfo(baseinfoList,step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud be check[";

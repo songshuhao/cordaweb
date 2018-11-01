@@ -299,7 +299,7 @@ public class DiamondCache {
 	}
 
 	/**
-	 * 
+	 * 该tradeid对应的giano 是否改变
 	 * @param tradeid
 	 * @param giano
 	 * @return true: giano 改变，false giano不变

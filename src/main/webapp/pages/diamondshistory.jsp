@@ -9,7 +9,7 @@
 	String basePath = request.getContextPath();
 %>
 <!-- 新增的模态框，在修改中将获取一行的值放入input中，改变一些参数继续使用 -->
-<div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="showHistoryModal" tabindex="-1" role="dialog">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
@@ -30,7 +30,7 @@ function DiamondsHistoryInit() {
     //初始化Table
     var url = "<%=basePath %>/history/getDiamondsHistoryList";
     oTableInit.Init = function() {
-    	$("#tableListForHistory").bootstrapTable('destroy'); 
+    	//$("#tableListForHistory").bootstrapTable('destroy'); 
         $('#tableListForHistory').bootstrapTable({
             url: url,
             cache:false,

@@ -28,7 +28,7 @@ public class ConfimDiamondsInfoController extends BaseController
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Resource
-	private PackageInfoService packageInfoServcie;
+	private PackageInfoService packageInfoService;
 	
 	@RequestMapping("/confirm/confirmList")
 	public String findBasketList()
@@ -61,7 +61,7 @@ public class ConfimDiamondsInfoController extends BaseController
 		}
 		packageInfo.setStatus(status);
 		//packageInfo.setGiaapproveddate(DateFormatUtils.format(packageInfo.getGiaapproveddate(), "-"));
-		boolean result = packageInfoServcie.labConfirmPackageInfo(packageInfo);
+		boolean result = packageInfoService.labConfirmPackageInfo(packageInfo);
 		String msg = "Add Success!";
 		if(!result)
 		{
@@ -90,7 +90,7 @@ public class ConfimDiamondsInfoController extends BaseController
 		}
 		
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<PackageInfo> list =packageInfoServcie.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
+		List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
@@ -107,7 +107,7 @@ public class ConfimDiamondsInfoController extends BaseController
 
 		if(StringUtils.isNotBlank(step))
 		{
-			List<PackageInfo> list = packageInfoServcie.submitPackageInfo(step,userid);
+			List<PackageInfo> list = packageInfoService.submitPackageInfo(step,userid);
 			if(AOCBeanUtils.isNotEmpty(list))
 			{
 				String message = "these data shoud check[";

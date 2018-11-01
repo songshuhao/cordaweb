@@ -1,6 +1,7 @@
 package ats.blockchain.web.servcie.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -483,6 +484,18 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		List<PackageInfo> pkgList = cache.getPackageByStatus(status);
 	
 		return pkgList;
+	}
+
+	@Override
+	public Map<String, Object> checkPackageNo(String userid, String seqno, String basketno) {
+		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+		boolean flag = cache.checkPackagenoChange(seqno, basketno);
+		
+		flag = flag ? !cache.containsPackage(basketno): true;
+		Map<String, Object> rs = new HashMap<String, Object>();
+		rs.put("valid", flag);
+		logger.debug("checkPackageNo ,tradeid: {} ,giano:{} ,result: {}",seqno, basketno,flag);
+		return rs;
 	}
 
 }
