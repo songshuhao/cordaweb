@@ -9,13 +9,13 @@
 %>
 
 <jsp:include page="diamodsdetail.jsp"></jsp:include>
-<jsp:include page="result.jsp"></jsp:include>
+<jsp:include page="common.jsp"></jsp:include>
 <section class="content table-content">
 	<form class="form-inline" >
 	<!-- 工具栏 -->
 	<div id="toolbar">
-<!-- 					<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input> -->
-			<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
+		<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+		<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 	</div>
 	<!-- bootstrapTable -->
 	</form>
@@ -72,7 +72,7 @@
     $(function(){
        var oTable = TableInit();
        oTable.Init();
-       
+       importValidate();
        $("form.required-validate").each(function() {
            var $form = $(this);
            $form.bootstrapValidator();
@@ -117,7 +117,7 @@
                 },
                 /**导出*/
                 showExport: true,
-                exportTypes :[ 'csv'],
+                exportTypes :[ 'excel'],
                 columns: [
                 	{
         				checkbox:"true",

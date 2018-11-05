@@ -8,14 +8,14 @@
 			+ path;*/
 	String basePath = request.getContextPath();
 %>
-<jsp:include page="result.jsp"></jsp:include>
+<jsp:include page="common.jsp"></jsp:include>
 <section class="content table-content">
 	<form class="form-inline" >
 	<!-- 工具栏 -->
 	<div id="toolbar">
-			<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>
-			<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
-			<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
+		<input type="button" value="Add" id="addBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>
+		<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+		<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 	</div>
 	<!-- bootstrapTable -->
 	</form>
@@ -95,32 +95,6 @@
 			</div>
 		</div>
 		
-		<!-- 上传篮子的模态框 -->
-		<div class="modal fade" id="importModal" tabindex="-1" role="dialog">
-			<div class="modal-dialog" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h3>Import PackageInfo</h3>
-					</div>
-					<div class="modal-body">
-						<form id="importForm" action="<%=basePath %>/basket/importBasketInfo" class="form-horizontal required-validate" method="post" enctype="multipart/form-data">
-							<div class="form-group">
-								<label for="upfile" class="col-sm-4 control-label">Package File:</label>
-								<div class="col-sm-6">
-									<input type="file" name="files" class="form-control" id="upfile" data-bv-notempty/>
-								</div>
-							</div>
-						</form>
-					</div>
-					<div class="modal-footer">
-						<input type="button" id="importCsv" onclick="importCsv()" class="btn btn-primary" value="Add" />  
-						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-					</div>
-				</div>				
-			</div>
-		</div>
-		
-		
 <script type="text/javascript">
 
 	var step = "ats";
@@ -129,6 +103,7 @@
        var oTable = TableInit();
        oTable.Init();
        formValidate();
+       importValidate();
        $("form.required-validate").each(function() {
            // 修复bootstrap validator重复向服务端提交bug
            var $form = $(this);
@@ -167,7 +142,7 @@
                 },
                 /**导出*/
                 showExport: true,
-                exportTypes :[ 'csv'],
+                exportTypes :[ 'excel'],
                 columns: [
                     {
                         title: 'Number',//标题  可不加
@@ -200,7 +175,7 @@
                         valign: 'middle',
                     },
                     {
-                        title: 'Num of Diamonds',
+                        title: 'Num Of Diamonds',
                         field: 'diamondsnumber',
                         align: 'center',
                         valign: 'middle',
@@ -239,27 +214,6 @@
         return oTableInit;
     };
     
-    $('#addModal').on('shown.bs.modal',function(e){
-    	//$('#basketno').focus();
-    });
- 
-  //Modal验证销毁重构
-    $('#addModal').on('hidden.bs.modal', function() {
-    	document.getElementById("addForm").reset();
-    	$("#addForm").data('bootstrapValidator').destroy();
-    	$('#addForm').data('bootstrapValidator',null);
-    	formValidate();
-    	/*非自定义情况 $('#addForm').bootstrapValidator(); */
-    });
-	
-  //Modal验证销毁重构
-    $('#importModal').on('hidden.bs.modal', function() {
-    	document.getElementById("importForm").reset();
-    	$("#importForm").data('bootstrapValidator').destroy();
-    	$('#importForm').data('bootstrapValidator',null);
-    	$('#importForm').bootstrapValidator();
-    	
-    });
     
     function queryParams(params) {
     	return {
@@ -277,53 +231,7 @@
     	$('#tableListForContacts').bootstrapTable('refresh', {url: url});
     }
     
-    function openImport()
-    {
-    	$("#importModal").modal('show');
-    }
-    
-    
-    function importCsv()
-    {
-    	var $form = $("#importForm");
-
-        var data = $form.data('bootstrapValidator');
-        if (data) {
-        // 修复记忆的组件不验证
-            data.validate();
-
-            if (!data.isValid()) {
-                return false;
-            }
-        }
-        var index = layer.load();
-    	var formData = new FormData($("#importForm")[0]);
-        $.ajax({
-            //接口地址
-            url: '<%=basePath %>/basket/importBasketInfo' ,
-            type: 'POST',
-            dataType:'json',
-            data: formData,
-            //async: false,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success:function(data){
-          	  	layer.close(index);
-          	  	
- 				if(data.state=="success"){
- 					messageShow(data,"#importModal",false)
- 				}
- 				if(data.state=="fail"){
- 					messageShow(data,"#importModal",false)
- 				}
- 			},
- 			error:function(){
- 				layer.close(index);
- 				messageShow(null,"#importModal",false)
- 			}
-        });
-    }
+   
     
     function submit()
     {
@@ -395,7 +303,7 @@
 	
 	 function operateFormat(value, row, index) {
 		 var status = value;
-		 ////console.log(status);
+		 //console.log(status);
 		  if(status=='0'){
 			 return '<input type="button" value="Modify" id="modifyBtn" data-toggle="modal" data-target="#addModal" class="btn btn-primary"></input>';
 		 }
@@ -559,8 +467,14 @@
                  },
              },
          });
-		 
-		 var importForm = $("#importForm");
-		 importForm.bootstrapValidator();
 	 }
+	 
+	    //Modal验证销毁重构
+	    $('#addModal').on('hidden.bs.modal', function() {
+	    	document.getElementById("addForm").reset();
+	    	$("#addForm").data('bootstrapValidator').destroy();
+	    	$('#addForm').data('bootstrapValidator',null);
+	    	formValidate();
+	    	/*非自定义情况 $('#addForm').bootstrapValidator(); */
+	    });
 </script>

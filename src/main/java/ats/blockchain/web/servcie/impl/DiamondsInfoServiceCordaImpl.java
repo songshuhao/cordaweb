@@ -45,6 +45,7 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 	private DiamondTradeApi diamondApi;
 	private static Logger logger = LoggerFactory.getLogger(DiamondsInfoServiceCordaImpl.class);
 
+	
 	@PostConstruct
 	public void init() {
 		diamondApi = cordaApi.getTradediamondinf();
@@ -268,5 +269,4 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 		logger.debug("checkGiano ,tradeid: {} ,giano:{} ,result: {}",tradeid, giano,flag);
 		return rs;
 	}
-
 }

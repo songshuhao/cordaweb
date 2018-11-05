@@ -15,9 +15,9 @@
 			<div class="modal-header">
 				<h3>Diamonds Detail</h3>
 			</div>
-			<div class="modal-body">
+			<div class="modal-body pre-scrollable">
 				<div class="form-group">
-								<label for="inputBasketNo" class="col-sm-5 control-label">Package Code:</label>
+								<label for="basketno1" class="col-sm-5 control-label">Package Code:</label>
 								<div class="col-sm-3">
 									<input type="text" name="basketno1" class="col-sm-3 form-control" id="basketno1" readonly="readonly"/>
 								</div>
@@ -217,7 +217,7 @@
    			basketNo = row.basketno;
    			var oTable = DiamondsHistoryInit();
    		    oTable.Init();
-   			$("#addModal").modal('show');
+   			$("#showHistoryModal").modal('show');
    			
     		}
     	};

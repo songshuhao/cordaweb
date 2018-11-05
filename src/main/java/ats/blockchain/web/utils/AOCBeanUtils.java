@@ -294,6 +294,7 @@ public class AOCBeanUtils {
 			logger.warn("csv file is empty.");
 			return Collections.emptyList();
 		}
+		logger.debug("begin read file: {}",csvFile);
 		CsvReader reader = new CsvReader(new FileReader(csvFile), ',');
 		return parseCsv(clazz, reader);
 	}
@@ -310,6 +311,7 @@ public class AOCBeanUtils {
 			return Collections.emptyList();
 		}
 		while (reader.readRecord()) {
+			logger.debug("read record:{}",reader.getRawRecord());
 			String[] row = reader.getValues();
 			T t = clazz.newInstance();
 			for (int i = 0; i < count; i++) {
@@ -342,7 +344,6 @@ public class AOCBeanUtils {
 			logger.warn("Can not get csv file");
 			return Collections.emptyList();
 		}
-
 		InputStreamReader isReader = new InputStreamReader(inputStream);
 		CsvReader csvReader =new CsvReader(isReader, ',');
 		return parseCsv(clazz, csvReader);
@@ -361,7 +362,9 @@ public class AOCBeanUtils {
 			obj = Boolean.valueOf(value);
 		} else if (Long.TYPE.equals(type) || Long.class.equals(type)) {
 			obj = Long.valueOf(value);
-		}  else {
+		}  else if("String[]".equals(type.getSimpleName())){
+			obj =value.split(",");
+		}else {
 			obj = value;
 		}
 		return obj;
@@ -388,7 +391,8 @@ public class AOCBeanUtils {
 		pkgInf.setSuppliercode(data.getSuppliercode() != null ? data.getSuppliercode().getName().toString() : "");
 		pkgInf.setAuditor(data.getAuditor() != null ? data.getAuditor().getName().toString() : "");
 //			pkgInf.setOwner(data.getOwner()!=null?data.getOwner().getName().toString():"");
-		pkgInf.setOwner(data.getOwner());
+		pkgInf.setOwner(AOCBeanUtils.decodeData(data.getStatus(), data.getOwner()));
+		pkgInf.setOwnmgr(AOCBeanUtils.decodeData(data.getStatus(), data.getOwnmgr()));
 		pkgInf.setVault(data.getVault() != null ? data.getVault().getName().toString() : "");
 		pkgInf.setGradlab(data.getGradlab() != null ? data.getGradlab().getName().toString() : "");
 		pkgInf.setUuid(String.format("%1$x_%2$x", data.getLinearId().getId().getMostSignificantBits(),
@@ -415,6 +419,21 @@ public class AOCBeanUtils {
 			isEmpty = false;
 		}
 		return isEmpty;
+	}
+	
+	public static String decodeData(String status,String data)
+	{
+		List<String> statusList = new ArrayList<String>();
+		statusList.add(PackageState.VAULT_VERIFY_PASS);
+		statusList.add(PackageState.AUDIT_VERIFY_PASS);
+		statusList.add(PackageState.AUDIT_VERIFY_NOPASS);
+		statusList.add(PackageState.DMD_REQ_CHG_OWNER);
+		statusList.add(PackageState.DMD_CHANGE_OWNER_PASS);
+		if(statusList.contains(status) && StringUtils.isNotBlank(data))
+		{
+			data = Base64Utils.decode(data);
+		}
+		return data;
 	}
 
 	public static <T> boolean isNotEmpty(Collection<T> list) {

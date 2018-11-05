@@ -101,4 +101,17 @@ public interface PackageInfoService {
 
 	Map<String, Object> checkPackageNo(String userid, String seqno, String basketno);
 	
+	/**
+	 * 
+	 * <p>Title: getPackageInfoByStatus</p>  
+	 * <p>Description: aoc查询拥有者接口，需要解密owner,其余接口若有需要也可以使用</p>
+	 * @author shuhao.song
+	 * @date 2018年11月5日  
+	 * @param userid
+	 * @param status
+	 * @param step
+	 * @return
+	 */
+	List<PackageInfo> getPackageInfoByStatus(String userid, String step,String... status);
+	
 }

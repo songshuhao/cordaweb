@@ -9,13 +9,13 @@
 	String basePath = request.getContextPath();
 %>
 	<jsp:include page="diamodsdetail.jsp"></jsp:include>
-	<jsp:include page="result.jsp"></jsp:include>
+	<jsp:include page="common.jsp"></jsp:include>
 	<section class="content table-content">
 		<form class="form-inline" >
 		<!-- 工具栏 -->
 		<div id="toolbar">
-				<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
-				<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
+			<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+			<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 		</div>
 		<!-- bootstrapTable -->
 		</form>
@@ -33,7 +33,7 @@
 					<div class="modal-header">
 						<h3>Add DiamondsInfo</h3>
 					</div>
-					<div class="modal-body">
+					<div class="modal-body pre-scrollable">
 						<form id="addForm" action="<%=basePath %>/diamonds/addDiamondsInfo" method="post" class="form-horizontal required-validate">
 								<input type="hidden" id="userid" name="userid" value="${userInfo.userId}"/>
 								<input type="hidden" id="suppliercode" name="suppliercode" />
@@ -193,6 +193,7 @@
        var oTable = TableInit();
        oTable.Init();
        formValidate();
+       importValidate();
        $("form.required-validate").each(function() {
            var $form = $(this);
            $form.bootstrapValidator();
@@ -247,7 +248,7 @@
                 },
                 /**导出*/
                 showExport: true,
-                exportTypes :[ 'csv'],
+                exportTypes :[ 'excel'],
                 columns: [
                 	{
                         title: 'Number',//标题  可不加
@@ -508,8 +509,6 @@
 		
 		var index = layer.load();
 		//console.log(param);
-		//alert(111);
-		//debugger;
 		$.ajax({
 			url:"<%=basePath %>/diamond/deleteDiamondInfo",
 			method:"post",
@@ -530,67 +529,12 @@
 			}
 		});
     }
-	
-	function openImport()
-    {
-    	$("#importModal").modal('show');
-    }
-    
-    function importCsv()
-    {
-    	var $form = $("#importForm");
-
-        var data = $form.data('bootstrapValidator');
-        if (data) {
-        // 修复记忆的组件不验证
-            data.validate();
-
-            if (!data.isValid()) {
-                return false;
-            }
-        }
-        var index = layer.load();
-    	var formData = new FormData($("#importForm")[0]);
-    	//console.table(formData);
-        $.ajax({
-            //接口地址
-            url: '<%=basePath %>/diamond/importDiamondsInfo' ,
-            type: 'POST',
-            dataType:'json',
-            data: formData,
-            //async: false,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success:function(data){
-				layer.close(index);
- 				if(data.state=="success"){
- 					messageShow(data,"#importModal",false)
- 				}
- 				if(data.state=="fail"){
- 					messageShow(data,"#importModal",false)
- 				}
- 			},
- 			error:function(){
- 				layer.close(index);
- 				messageShow(null,"#importModal",false)
- 			}
-        });
-    }
-    
   //Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
     	resetAddModal();
         $("#addForm").data('bootstrapValidator').destroy();
     	$('#addForm').data('bootstrapValidator',null);
     	formValidate();
-    });
-	
-  //Modal验证销毁重构
-    $('#importModal').on('hidden.bs.modal', function() {
-    	$("#importForm").data('bootstrapValidator').destroy();
-    	$('#importForm').data('bootstrapValidator',null);
-    	$('#importForm').bootstrapValidator();
     });
   
     function formValidate()
@@ -699,9 +643,6 @@
                 }, */
             },
         });
-		 
-		 var importForm = $("#importForm");
-		 importForm.bootstrapValidator();
 	 }
 
 </script>

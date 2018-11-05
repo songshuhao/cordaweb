@@ -9,7 +9,7 @@
 	String basePath = request.getContextPath();
 %>
 <jsp:include page="diamodsdetail.jsp"></jsp:include>
-<jsp:include page="result.jsp"></jsp:include>
+<jsp:include page="common.jsp"></jsp:include>
 	<section class="content table-content">
 		<form class="form-inline" >
 		<!-- 工具栏 -->

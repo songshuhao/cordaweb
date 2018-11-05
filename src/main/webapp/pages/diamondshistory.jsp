@@ -15,7 +15,7 @@
 			<div class="modal-header">
 				<h3>Diamonds History</h3>
 			</div>
-			<div class="modal-body">
+			<div class="modal-body pre-scrollable">
 				<table id="tableListForHistory"></table>
 			</div>
 			<div class="modal-footer">

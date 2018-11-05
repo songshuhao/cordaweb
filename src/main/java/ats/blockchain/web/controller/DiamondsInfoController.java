@@ -10,6 +10,7 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -131,9 +132,10 @@ public class DiamondsInfoController extends BaseController {
 			return ResultUtil.fail("Can not get session");
 		}
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
+		String step = "";
 		List<DiamondInfoData> diamondsinfos = null;
 		try {
-			diamondsinfos = FileUtils.getFile(request, "diamondsinfo", "files",DiamondInfoData.class);
+			diamondsinfos = FileUtils.getFile(request, htmlfileName,DiamondInfoData.class);
 			if (AOCBeanUtils.isEmpty(diamondsinfos)) {
 				return ResultUtil.fail("import file is empty.");
 			}

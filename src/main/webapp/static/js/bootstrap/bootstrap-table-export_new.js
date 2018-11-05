@@ -15,7 +15,7 @@
         txt: 'TXT',
         sql: 'SQL',
         doc: 'MS-Word',
-        excel: 'MS-Excel',
+        excel: 'Export to MS-Excel',
         xlsx: 'MS-Excel (OpenXML)',
         powerpoint: 'MS-Powerpoint',
         pdf: 'PDF'

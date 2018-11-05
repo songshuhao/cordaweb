@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 //import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.corda.impl.DiamondTradeApi;
 import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
+import ats.blockchain.web.utils.Base64Utils;
 import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.ResultUtil;
 import ats.blockchain.web.utils.StringUtil;
@@ -281,7 +283,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 					logger.debug("submitPackageInfo {} {} ", pkgState.getBasketno(),pkgState.getStatusDesc(),pkgState.getOwner());
 					try {
 						diamondApi.reqVaultVerifyDiamond(pkgState.getBasketno(), PackageState.AOC_SUBMIT_VAULT_VERIFY,
-								pkgState.getVault().toString(), pkgState.getOwner());
+								pkgState.getVault().toString(),Base64Utils.encode(pkgState.getOwner()));
 						cache.remove(pkgState.getSeqNo(), pkgState.getStatus());
 					} catch (DiamondWebException e) {
 						logger.error("submitPackageInfo error:", e);
@@ -378,7 +380,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				logger.debug("submit change owner baksetno : {} ,package: {}", packageInfo);
 				try {
-					diamondApi.submitChangeOwnerDiamond(packageInfo.getBasketno(), packageInfo.getVault(),packageInfo.getOwner());
+					diamondApi.submitChangeOwnerDiamond(packageInfo.getBasketno(), packageInfo.getVault(),Base64Utils.encode(packageInfo.getOwner()));
 					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
@@ -496,6 +498,35 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		rs.put("valid", flag);
 		logger.debug("checkPackageNo ,tradeid: {} ,giano:{} ,result: {}",seqno, basketno,flag);
 		return rs;
+	}
+
+	@Override
+	public List<PackageInfo> getPackageInfoByStatus(String userid, String step, String... status)
+	{
+
+		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateByStatus(status);
+		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
+		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+		padList.forEach( p -> {
+			PackageInfo packageInfo = p.getPkgInfo();
+			if(null != packageInfo && step.equals(Constants.AOC_TO_VAULT_OWNER))
+			{
+				if(StringUtils.isNotBlank(packageInfo.getOwner()))
+				{
+					packageInfo.setOwner(Base64Utils.decode(packageInfo.getOwner()));
+				}
+				if(StringUtils.isNotBlank(packageInfo.getOwnmgr()))
+				{
+					packageInfo.setOwnmgr(Base64Utils.decode(packageInfo.getOwnmgr()));
+				}
+				logger.debug("Owner---->" + packageInfo.getOwner()+",Ownmgr---->" + packageInfo.getOwnmgr());
+			}
+			cache.update(packageInfo);
+		});
+		
+		List<PackageInfo> pkgList = cache.getPackageByStatus(status);
+		return pkgList;
+	
 	}
 
 }

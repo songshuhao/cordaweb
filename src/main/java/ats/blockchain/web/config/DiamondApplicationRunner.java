@@ -1,5 +1,6 @@
 package ats.blockchain.web.config;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import ats.blockchain.web.bean.ExportConfig;
 import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.model.Product;
 import ats.blockchain.web.model.UserInfo;
@@ -36,6 +38,8 @@ public class DiamondApplicationRunner implements ApplicationRunner
 	
 	@Value("${product.path}")
 	private String productPath;
+	@Value("${exportConfig.path}")
+	private String exportConfigPath;
 	
 	@Autowired
 	private CordaApi cordaApi;
@@ -58,6 +62,7 @@ public class DiamondApplicationRunner implements ApplicationRunner
 	private static Map<String,String> vaultMap = new HashMap<String, String>();
 	
 	private static Map<String,String> allUserMap = new HashMap<String, String>();
+	private static Map<String,ExportConfig> exportCfgMap = new HashMap<String, ExportConfig>();
 	
 	public static Map<String, String> getSupplierMap()
 	{
@@ -102,6 +107,13 @@ public class DiamondApplicationRunner implements ApplicationRunner
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
+		initUserInfo();
+		initProduct();
+		initExportConfig();
+		initNodeInfoList();
+	}
+
+	private void initUserInfo() throws IOException, InstantiationException, IllegalAccessException {
 		Resource userResource = resourceLoader.getResource(userPath);
 		InputStream userStream = userResource.getInputStream();
 		try {
@@ -115,6 +127,9 @@ public class DiamondApplicationRunner implements ApplicationRunner
 				userStream.close();
 			}
 		}
+	}
+
+	private void initProduct() throws IOException, InstantiationException, IllegalAccessException {
 		Resource productResource = resourceLoader.getResource(productPath);
 		InputStream productStream = productResource.getInputStream();
 		try {
@@ -128,11 +143,23 @@ public class DiamondApplicationRunner implements ApplicationRunner
 				productStream.close();
 			}
 		}
-		
-		this.getNodeInfoList();
 	}
 	
-	public List<NodeInfo> getNodeInfoList()
+	private void initExportConfig() throws InstantiationException, IllegalAccessException, IOException {
+		Resource res = resourceLoader.getResource(exportConfigPath);
+		InputStream in = res.getInputStream();
+		try {
+			List<ExportConfig> list = AOCBeanUtils.getObjectFromCsv(in, ExportConfig.class);
+			exportCfgMap = list.stream().collect(Collectors.toMap(ExportConfig::getStep, e->e,(key1,key2)->key2));
+		}finally {
+			if(in!=null) {
+				in.close();
+			}
+		}
+	}
+	
+	
+	public List<NodeInfo> initNodeInfoList()
 	{
 		nodeInfoList = cordaApi.getTradediamondinf().getNodeInfos();
 		for(NodeInfo nodeInfo : nodeInfoList)
@@ -170,5 +197,9 @@ public class DiamondApplicationRunner implements ApplicationRunner
 				break;
 			}
 		}
+	}
+
+	public static Map<String, ExportConfig> getExportConfig() {
+		return exportCfgMap;
 	}
 }

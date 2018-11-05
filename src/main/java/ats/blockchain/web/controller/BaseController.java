@@ -28,6 +28,8 @@ public class BaseController
 	@Value("${corda.redeemOwnerId}")
 	public String redeemOwnerId;
 	
+	public  final String htmlfileName = "files";
+	
 	private List<UserInfo> userList;
 	private UserInfo currentUserInfo;
 	

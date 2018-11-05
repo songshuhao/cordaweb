@@ -20,6 +20,7 @@ public class DateFormatUtils {
 	  public static String DATE_FORMAT = "yyyy-MM-dd";
 	  
 	  public static String DATE_FORMAT_yyyyMMdd = "yyyyMMdd";
+	  public static String DATE_FORMAT_y2ms = "yyyyMMdd_HHmmssS";
 	 
 	  public static String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 	 
