@@ -43,7 +43,7 @@ public class SQLTest {
 		test_exe_procedure(false);*/
 	}
 
-	private void test_query()
+	public void test_query()
 	{
 		System.out.println("test_query...");	
 		Integer EMPNO =7788;
@@ -52,7 +52,7 @@ public class SQLTest {
 		return;
 	}
 
-	private void test_insert()
+	public void test_insert()
 	{
 		System.out.println("test_insert...");	
 		Employee emp = new Employee();
@@ -67,19 +67,19 @@ public class SQLTest {
 		dataMapper.test_insert(emp);
 	}
 
-	private void test_update()
+	public void test_update()
 	{
 		System.out.println("test_update...");	
 		dataMapper.test_update(7979, 555.25);
 	}
 
-	private void test_delete()
+	public void test_delete()
 	{
 		System.out.println("test_delete...");
 		dataMapper.test_delete(7979);
 	}
 
-	private void test_multi_insert()
+	public void test_multi_insert()
 	{
 		System.out.println("test_multi_insert...");	
 		Employee emp1 = new Employee();
@@ -119,7 +119,7 @@ public class SQLTest {
 		dataMapper.test_multi_insert(empList);
 	}
 
-	private void test_multi_query()
+	public void test_multi_query()
 	{
 		System.out.println("test_multi_query...");	
 		int[] DEPTNOArr = { 20, 30 };
@@ -128,7 +128,7 @@ public class SQLTest {
 		return;		
 	}
 
-	private void test_multi_delete()
+	public void test_multi_delete()
 	{
 		System.out.println("test_multi_delete...");	
 		List<Integer> EMPNOList = new ArrayList<Integer>();		
@@ -138,7 +138,8 @@ public class SQLTest {
 		return;		
 	}
 
-	private void test_exe_procedure(boolean bTestProcedure1)
+	@SuppressWarnings("unchecked")
+	public void test_exe_procedure(boolean bTestProcedure1)
 	{
 		int in_PAGE = 3;
 		int in_ROWS =5;

@@ -49,8 +49,10 @@
         <div id="page-wrapper" >
             <div id="page-inner">
             	<tiles:insertAttribute name="body"/>
-			</div>
-             <!-- /. PAGE INNER  -->
+            </div>
+             <div>
+            	<tiles:insertAttribute name="footer"/>
+            </div>
         </div>
          <!-- /. PAGE WRAPPER  -->
     </div>

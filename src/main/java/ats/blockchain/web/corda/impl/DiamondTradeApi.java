@@ -98,26 +98,26 @@ public class DiamondTradeApi {
 	 * @return
 	 */
 	public List<StateAndRef<PackageState>> getAllPackageState(List<UniqueIdentifier> linearid) {
-		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, linearid,
-				Vault.StateStatus.ALL, null);
-		
+		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, linearid, Vault.StateStatus.ALL,
+				null);
+
 		return (rpcops.vaultQueryByCriteria(criteria, PackageState.class).getStates());
 	}
+
 	/**
 	 * 根据uuid 查询所有状态的package信息
 	 * 
 	 * @param linearid
 	 * @return
 	 */
-	public List<StateAndRef<PackageState>> getAllPackageStateByPage(int pageNum,int pageSize,List<UniqueIdentifier> linearid) {
-		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, linearid,
-				Vault.StateStatus.ALL, null);
-		
-		PageSpecification page = new PageSpecification(pageNum,pageSize);
+	public List<StateAndRef<PackageState>> getAllPackageStateByPage(int pageNum, int pageSize,
+			List<UniqueIdentifier> linearid) {
+		QueryCriteria criteria = new QueryCriteria.LinearStateQueryCriteria(null, linearid, Vault.StateStatus.ALL,
+				null);
+
+		PageSpecification page = new PageSpecification(pageNum, pageSize);
 		return (rpcops.vaultQueryByWithPagingSpec(PackageState.class, criteria, page).getStates());
 	}
-	
-	
 
 	/**
 	 * 根据状态查询符合条件的状态为未消费的package
@@ -125,6 +125,7 @@ public class DiamondTradeApi {
 	 * @param status
 	 * @return
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<StateAndRef<PackageState>> getPackageStateByStatus(@Nonnull String... status) {
 		List<String> asList = Arrays.asList(status);
 		logger.debug("getPackageStateByStatus :{}", asList);
@@ -139,33 +140,36 @@ public class DiamondTradeApi {
 		logger.debug("getPackageStateByStatus {} query result size:{} ", asList, list.size());
 		return list;
 	}
-	
+
 	/**
 	 * 根据状态查询符合条件的状态为未消费的package<br>
 	 * redeemOwnerId 不为空，则根据Owner查询不包含该redeemOwnerId 的记录<br>
 	 * 为空则不加Owner条件查询
+	 * 
 	 * @param redeemOwnerId
 	 * @param status
 	 * @return
 	 */
-	public List<StateAndRef<PackageState>> getPackageStateWithoutRedeemByStatus(String redeemOwnerId,@Nonnull String... status) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<StateAndRef<PackageState>> getPackageStateWithoutRedeemByStatus(String redeemOwnerId,
+			@Nonnull String... status) {
 		List<String> asList = Arrays.asList(status);
 		logger.debug("getPackageStateByStatus :{}", asList);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
-		
+
 		Field statusField = getField(PackageSchemaV1.PersistentPackageState.class, "status");
-		CriteriaExpression exp = Builder.in(statusField, asList);
+		CriteriaExpression<?, Boolean> exp = Builder.in(statusField, asList);
 		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
 		QueryCriteria cc = null;
-		if(StringUtils.isNotBlank(redeemOwnerId)) {
+		if (StringUtils.isNotBlank(redeemOwnerId)) {
 			Field ownField = getField(PackageSchemaV1.PersistentPackageState.class, "owner");
 			CriteriaExpression expOwn = Builder.notEqual(ownField, redeemOwnerId);
 			QueryCriteria critOwn = new QueryCriteria.VaultCustomQueryCriteria(expOwn);
 			cc = generalCriteria.and(crit).and(critOwn);
-		}else {
+		} else {
 			cc = generalCriteria.and(crit);
 		}
-		
+
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
 
 		List<StateAndRef<PackageState>> list = result.getStates();
@@ -179,6 +183,7 @@ public class DiamondTradeApi {
 	 * @param status
 	 * @return
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<StateAndRef<PackageState>> getPackageStateByStatus(Vault.StateStatus consumedStatus,
 			@Nonnull String... status) {
 		List<String> asList = Arrays.asList(status);
@@ -201,7 +206,9 @@ public class DiamondTradeApi {
 	 * @param status
 	 * @return
 	 */
-	public List<StateAndRef<PackageState>> getPackageStateById(Vault.StateStatus consumedStatus,@Nonnull String... basketNo) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<StateAndRef<PackageState>> getPackageStateById(Vault.StateStatus consumedStatus,
+			@Nonnull String... basketNo) {
 		List<String> asList = Arrays.asList(basketNo);
 		logger.debug("getPackageStateById :{}", asList);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.CONSUMED);
@@ -213,21 +220,25 @@ public class DiamondTradeApi {
 		List<StateAndRef<PackageState>> list = result.getStates();
 		List<UniqueIdentifier> uList = Lists.newArrayList();
 		list.stream().forEach(p -> uList.add(p.getState().getData().getLinearId()));
-		
+
 		List<StateAndRef<PackageState>> uResult = getAllPackageState(uList);
-		
+
 		logger.debug("getPackageStateById {} query result size:{} ", asList, uResult.size());
 		return uResult;
 	}
-/**
- * 根据篮子id查询符合条件的状态为consumedStatus的package
- * @param pageNumber
- * @param pageSize
- * @param consumedStatus
- * @param basketNo
- * @return
- */
-	public List<StateAndRef<PackageState>> getPackageStatePageById(int pageNumber ,int pageSize,Vault.StateStatus consumedStatus,@Nonnull String... basketNo) {
+
+	/**
+	 * 根据篮子id查询符合条件的状态为consumedStatus的package
+	 * 
+	 * @param pageNumber
+	 * @param pageSize
+	 * @param consumedStatus
+	 * @param basketNo
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<StateAndRef<PackageState>> getPackageStatePageById(int pageNumber, int pageSize,
+			Vault.StateStatus consumedStatus, @Nonnull String... basketNo) {
 		List<String> asList = Arrays.asList(basketNo);
 		logger.debug("getPackageStateById :{}", asList);
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(consumedStatus);
@@ -236,46 +247,50 @@ public class DiamondTradeApi {
 		QueryCriteria crit = new QueryCriteria.VaultCustomQueryCriteria(exp);
 		QueryCriteria cc = generalCriteria.and(crit);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(cc, PackageState.class);
-	
-//		Page<PackageState> result = rpcops.vaultQueryByWithPagingSpec(PackageState.class, cc, page);
-		
+
+		// Page<PackageState> result =
+		// rpcops.vaultQueryByWithPagingSpec(PackageState.class, cc, page);
+
 		List<StateAndRef<PackageState>> list = result.getStates();
 		List<UniqueIdentifier> uList = Lists.newArrayList();
 		list.stream().forEach(p -> uList.add(p.getState().getData().getLinearId()));
-		
-		List<StateAndRef<PackageState>> uResult = getAllPackageStateByPage(pageNumber,pageSize,uList);
-		
+
+		List<StateAndRef<PackageState>> uResult = getAllPackageStateByPage(pageNumber, pageSize, uList);
+
 		logger.debug("getPackageStateById {} query result size:{} ", asList, uResult.size());
 		return uResult;
 	}
+
 	/**
 	 * 查询所有钻石
+	 * 
 	 * @return
 	 */
-	public List<StateAndRef<PackageState>> getAllPackageState(){
+	public List<StateAndRef<PackageState>> getAllPackageState() {
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
 		Page<PackageState> result = rpcops.vaultQueryByCriteria(generalCriteria, PackageState.class);
 		List<StateAndRef<PackageState>> list = result.getStates();
 		logger.debug("getAllPackageState query result size:{} ", list.size());
 		return list;
 	}
-	
-	public List<StateAndRef<PackageState>> getAllPackageState(int pageNum,int pageSize){
+
+	public List<StateAndRef<PackageState>> getAllPackageState(int pageNum, int pageSize) {
 		QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
-		PageSpecification page = new PageSpecification(pageNum,pageSize);
-		
+		PageSpecification page = new PageSpecification(pageNum, pageSize);
+
 		Page<PackageState> result = rpcops.vaultQueryByWithPagingSpec(PackageState.class, generalCriteria, page);
 		List<StateAndRef<PackageState>> list = result.getStates();
 		logger.debug("getAllPackageState query result size:{} ", list.size());
 		return list;
 	}
-	
+
 	/**
 	 * 根据篮子id查询符合条件的状态为UNCONSUMED的package
 	 * 
 	 * @param status
 	 * @return
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<StateAndRef<PackageState>> getPackageStateById(@Nonnull String... basketNo) {
 		List<String> asList = Arrays.asList(basketNo);
 		logger.debug("getPackageStateById :{}", asList);
@@ -334,6 +349,7 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public String createPackage(String supplier, PackageState pkgInfo, String state) throws DiamondWebException {
 		if (pkgInfo == null) {
 			return null;
@@ -375,7 +391,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.error("Failure to " + stateStr, ex);
-			throw new DiamondWebException(ex.getMessage(),ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -387,7 +403,8 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String issueDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist) throws DiamondWebException {
+	public String issueDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist)
+			throws DiamondWebException {
 		logger.debug("issueDiamond aoc: {} ,basketno : {}", aoc, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
@@ -408,7 +425,7 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to issue diamond:", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
@@ -423,7 +440,8 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException { logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {},status : {}", lab, basketno,status);
+	public String reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException {
+		logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {},status : {}", lab, basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(lab);
 		final Party labIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (labIdentity == null)
@@ -443,12 +461,13 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to reqLabVerify diamond:", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
 	/**
 	 * Lab响应认证请求
+	 * 
 	 * @param pkgInfo
 	 * @return
 	 * @throws DiamondWebException
@@ -480,16 +499,21 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
-	
+
 	/**
-	 * aoc请求vault确认钻石信息 
-	 * @param basketno 待确认钻石
-	 * @param status AOC_REQ_VAULT_VERIFY|AOC_SUBMIT_VAULT_VERIFY
-	 * @param vault 请求vault
-	 * @param owner 钻石拥有者
+	 * aoc请求vault确认钻石信息
+	 * 
+	 * @param basketno
+	 *            待确认钻石
+	 * @param status
+	 *            AOC_REQ_VAULT_VERIFY|AOC_SUBMIT_VAULT_VERIFY
+	 * @param vault
+	 *            请求vault
+	 * @param owner
+	 *            钻石拥有者
 	 * @return
 	 * @throws DiamondWebException
 	 */
@@ -516,12 +540,13 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
-	
+
 	/**
 	 * vault 响应aoc确认请求
+	 * 
 	 * @param pkgInfo
 	 * @return
 	 * @throws DiamondWebException
@@ -553,15 +578,17 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond vault:{}", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
 	/**
 	 * aoc向vault发起钻石拥有者更改确认请求
+	 * 
 	 * @param basketno
 	 * @param vault
-	 * @param owner 新拥有者
+	 * @param owner
+	 *            新拥有者
 	 * @return
 	 * @throws DiamondWebException
 	 */
@@ -586,13 +613,13 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
-
 	/**
 	 * vault 响应钻石拥有者更改请求
+	 * 
 	 * @param basketno
 	 * @param aoc
 	 * @return
@@ -623,12 +650,13 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
 	/**
 	 * aoc 请求auditor 审计
+	 * 
 	 * @param auditor
 	 * @param basketno
 	 * @return
@@ -653,13 +681,15 @@ public class DiamondTradeApi {
 			strbuf.append(" supplied by ");
 			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
 			return (strbuf.toString());
-		}  catch (Exception ex) {
+		} catch (Exception ex) {
 			logger.warn("Failure to audit diamond:", ex);
-			throw new  DiamondWebException(ex.getMessage(), ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
+
 	/**
 	 * auditor 响应审计请求
+	 * 
 	 * @param basketno
 	 * @param aoc
 	 * @param auditdate
@@ -700,12 +730,13 @@ public class DiamondTradeApi {
 
 	/**
 	 * 钻石提取请求
+	 * 
 	 * @param vault
 	 * @param basketno
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String redeemDiamond( String basketno,String vault) throws DiamondWebException {
+	public String redeemDiamond(String basketno, String vault) throws DiamondWebException {
 		logger.debug("redeemDiamond vault: {} ,basketno : {}", vault, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(vault);
 		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
@@ -726,12 +757,13 @@ public class DiamondTradeApi {
 			return (strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to redeem diamond:", ex.getMessage());
-			throw new DiamondWebException(ex.getMessage(),ex);
+			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
 
 	/**
 	 * 响应钻石提取
+	 * 
 	 * @param basketno
 	 * @param aoc
 	 * @return

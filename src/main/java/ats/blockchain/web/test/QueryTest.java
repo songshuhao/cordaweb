@@ -21,7 +21,7 @@ import net.corda.core.utilities.NetworkHostAndPort;
 
 public class QueryTest {
 
-	public static void main(String[] args) {
+	public  void main(String[] args) {
 		CordaRPCConnection cordarpcconn = null;
 		CordaRPCOps cordarpcops = null;
 		String username = "AOC";
@@ -63,9 +63,9 @@ public class QueryTest {
 		        CriteriaExpression basketnoIndex = Builder.equal(basketno, "qls001");
 		        QueryCriteria basketnoCriteria = new QueryCriteria.VaultCustomQueryCriteria(basketnoIndex);
 		        
-//		        Field status = PackageSchemaV1.PersistentPackageState.class.getDeclaredField("status");
-//		        CriteriaExpression statusIndex = Builder.equal(status, "1");
-//		        QueryCriteria statusCriteria = new QueryCriteria.VaultCustomQueryCriteria(statusIndex);
+		        Field status = PackageSchemaV1.PersistentPackageState.class.getDeclaredField("status");
+		        CriteriaExpression statusIndex = Builder.equal(status, "1");
+		        QueryCriteria statusCriteria = new QueryCriteria.VaultCustomQueryCriteria(statusIndex);
 		        
 		        QueryCriteria criteria = generalCriteria.and(basketnoCriteria);
 		        List<StateAndRef<PackageState>> results = cordarpcops.vaultQueryByCriteria(criteria,PackageState.class).getStates();

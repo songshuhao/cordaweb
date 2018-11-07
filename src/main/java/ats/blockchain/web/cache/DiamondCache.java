@@ -2,13 +2,10 @@ package ats.blockchain.web.cache;
 
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -43,21 +40,17 @@ public class DiamondCache {
 	 * 缓存钻石tradeid 和giano 的对应关系， 用于更新giano时候 将原giano 从diamondSet中移除
 	 */
 	private Map<String, String> tradeIdGiaMap = new ConcurrentHashMap<String, String>();
-	/**
-	 * 缓存giano 与 baksetno 的对应关系，用于更新钻石所属篮子的时候将钻石从原篮子中移除
-	 */
-	private Map<String, String> giaBasketnoMap = new HashMap<String, String>();
 
-	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	// private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 	public void add(PackageAndDiamond pad) {
 		PackageInfo pkg = pad.getPkgInfo();
 		String status = pkg.getStatus();
 		String basketno = pkg.getBasketno();
-		if(diamondCache.containRow(basketno)) {
+		if (diamondCache.containRow(basketno)) {
 			return;
 		}
-		
+
 		diamondCache.put(basketno, status, pad);
 		List<DiamondInfoData> list = pad.getDiamondList();
 		if (list == null) {
@@ -85,22 +78,23 @@ public class DiamondCache {
 		PackageAndDiamond pad1 = diamondCache.getValue(basketno, status);
 		List<DiamondInfoData> list = pad1.getDiamondList();
 		List<DiamondInfoData> tmp = Lists.newArrayList();
-		if (list!= null) {
+		if (list != null) {
 			tmp.addAll(list);
 		}
 		String tradeid = StringUtil.getDiamondSeqno();
 		diamond.setTradeid(tradeid);
 		diamond.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
 		tmp.add(diamond);
-		
-		logger.debug("add diamond  {} ,status {} to package {}", diamond.getGiano(),status, pad1.getPkgInfo().getBasketno());
+
+		PackageInfo stat = pad1.getPkgInfo();
+		check(stat, tmp);
+		logger.debug("add diamond  {} ,status {} to package {}", diamond.getGiano(), status,
+				pad1.getPkgInfo().getBasketno());
 		synchronized (diamondSet) {
 			String giano = diamond.getGiano();
 			diamondSet.add(giano);
 			updateTradeIdGiaMap(tradeid, giano);
 		}
-		PackageInfo stat = pad1.getPkgInfo();
-		check(stat,tmp);
 		pad1.setDiamondList(tmp);
 		int dlSize = tmp.size();
 		int basketSize = stat.getDiamondsnumber();
@@ -113,7 +107,8 @@ public class DiamondCache {
 				d.setStatus(newStatus);
 				d.setStatusDesc(stat.getStatusDesc());
 			});
-			logger.info("package is full {},change status from  {}  to {}",basketno,Constants.PKG_STATE_MAP.get(oldStatus),stat.getStatusDesc());
+			logger.info("package is full {},change status from  {}  to {}", basketno,
+					Constants.PKG_STATE_MAP.get(oldStatus), stat.getStatusDesc());
 			diamondCache.remove(basketno, oldStatus);
 			diamondCache.put(basketno, newStatus, pad1);
 			logger.debug("update package: {}", pad1);
@@ -126,19 +121,26 @@ public class DiamondCache {
 	 * @param diamond
 	 * @throws DiamondWebException
 	 */
-
 	public void update(DiamondInfoData diamond) throws DiamondWebException {
 		String status = diamond.getStatus();
 		String basketno = diamond.getBasketno();
 		PackageAndDiamond oldPad = diamondCache.getValue(basketno, status);
 		List<DiamondInfoData> list = oldPad.getDiamondList();
 		List<DiamondInfoData> tmp = Lists.newArrayList();
-		if (list!= null) {
+		if (list != null) {
 			tmp.addAll(list);
 		}
+
 		diamond.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
-		tmp.add(diamond);
-		check(oldPad.getPkgInfo(),tmp);
+		for (int j = 0; j < list.size(); j++) {
+			DiamondInfoData d = list.get(j);
+			if (diamond.getTradeid().equals(d.getTradeid())) {
+				tmp.remove(j);
+				tmp.add(diamond);
+				break;
+			}
+		}
+		check(oldPad.getPkgInfo(), tmp);
 		oldPad.setDiamondList(tmp);
 		synchronized (diamondSet) {
 			for (DiamondInfoData p : tmp) {
@@ -158,7 +160,43 @@ public class DiamondCache {
 	}
 
 	/**
-	 * 删除篮子中的钻石
+	 * 删除篮子中所有钻石（出错时删除,需要更新diamondSet）
+	 * 
+	 * @param basketno
+	 * @param status
+	 */
+	public void removeDiamond(String basketno, String status) {
+		PackageAndDiamond pad = diamondCache.getValue(basketno, status);
+		String oldStatus = pad.getPkgInfo().getStatus();
+		List<DiamondInfoData> diamondList = pad.getDiamondList();
+		if (diamondList == null) {
+			logger.warn("package {} has no diamond,won't remove diamond.", basketno);
+			return;
+		}
+		synchronized (diamondSet) {
+			for (DiamondInfoData d : diamondList) {
+				diamondSet.remove(d.getGiano());
+			}
+		}
+		diamondList.clear();
+		// package中钻石数发生变化，更新package状态
+		int diamondSize = diamondList.size();
+		PackageInfo pkgInfo = pad.getPkgInfo();
+		int orginalSize = pkgInfo.getDiamondsnumber();
+		String pkgIssue = PackageState.PKG_ISSUE;
+		String statusDesc = Constants.PKG_STATE_MAP.get(PackageState.PKG_ISSUE);
+		pkgInfo.setStatus(pkgIssue);
+		pkgInfo.setStatusDesc(statusDesc);
+		// 如果原来存满钻石，则需要把原来状态(DMD_CREATE)缓存中移除并将新的package 加入缓存
+		if (diamondSize == orginalSize) {
+
+			diamondCache.remove(basketno, oldStatus);
+			diamondCache.put(basketno, pkgIssue, pad);
+		}
+	}
+
+	/**
+	 * 删除篮子中的钻石（出错时删除,需要更新diamondSet）
 	 * 
 	 * @param basketno
 	 * @param status
@@ -166,6 +204,7 @@ public class DiamondCache {
 	 */
 	public void removeDiamond(String basketno, String status, String tradeid) {
 		PackageAndDiamond pad = diamondCache.getValue(basketno, status);
+		String oldStatus = pad.getPkgInfo().getStatus();
 		List<DiamondInfoData> diamondList = pad.getDiamondList();
 		if (diamondList == null) {
 			logger.warn("package {} has no diamond,won't remove diamond.", basketno);
@@ -198,7 +237,7 @@ public class DiamondCache {
 				d.setStatusDesc(statusDesc);
 			});
 
-			diamondCache.remove(basketno, status);
+			diamondCache.remove(basketno, oldStatus);
 			diamondCache.put(basketno, pkgIssue, pad);
 		}
 
@@ -219,7 +258,8 @@ public class DiamondCache {
 		return list;
 	}
 
-	private static void check(@Nonnull PackageInfo stat,@Nonnull List<DiamondInfoData> orginalList) throws DiamondWebException {
+	private static void check(@Nonnull PackageInfo stat, @Nonnull List<DiamondInfoData> orginalList)
+			throws DiamondWebException {
 		int dlSize = orginalList.size();
 		int basketSize = stat.getDiamondsnumber();
 		if (dlSize > basketSize) {
@@ -231,8 +271,16 @@ public class DiamondCache {
 		BigDecimal totalWeight = stat.getTotalweight();
 
 		for (DiamondInfoData d : orginalList) {
-			BigDecimal size = d.getSize();
 			String giano = d.getGiano();
+			if (StringUtils.isBlank(giano)) {
+				throw new DiamondWebException("diamond GIA cert id can't be empty.");
+			}
+
+			BigDecimal size = d.getSize();
+			if (size == null) {
+				throw new DiamondWebException("diamond size can't be empty.");
+			}
+
 			if (size.compareTo(minWeight) < 0) {
 				throw new DiamondWebException("diamond " + giano + " weight: " + size.toPlainString()
 						+ " is less than minweight:" + minWeight.toPlainString());
@@ -264,28 +312,6 @@ public class DiamondCache {
 	private void updateTradeIdGiaMap(String tradeid, String giano) {
 		logger.debug("updateTradeIdGiaMap tradeId: {} ,giano: {}", tradeid, giano);
 		tradeIdGiaMap.put(tradeid, giano);
-
-	}
-
-	/**
-	 * 更改giano 时更新 package 中钻石信息
-	 * 
-	 * @param status
-	 * @param basketno
-	 * @param giano
-	 */
-	private void updateDiamondInPackage(String status, String basketno, String giano) {
-		logger.debug("updateDiamondInPackage giano: {}, status:{},basketno: {}", giano, status, basketno);
-
-		if (giaBasketnoMap.containsKey(giano)) {
-			String bskno = giaBasketnoMap.get(giano);
-			PackageAndDiamond opad = this.getDiamond(bskno, status);
-			List<DiamondInfoData> ol = opad.getDiamondList();
-			List<DiamondInfoData> tmp = ol.stream().filter(d -> !giano.equals(d.getGiano()))
-					.collect(Collectors.toList());
-			opad.setDiamondList(tmp);
-		}
-		giaBasketnoMap.put(giano, basketno);
 	}
 
 	public void setGiaCache(Set<String> giaList) {
@@ -300,6 +326,7 @@ public class DiamondCache {
 
 	/**
 	 * 该tradeid对应的giano 是否改变
+	 * 
 	 * @param tradeid
 	 * @param giano
 	 * @return true: giano 改变，false giano不变

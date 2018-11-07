@@ -3,6 +3,7 @@ package ats.blockchain.web.controller;
 import java.util.Enumeration;
 import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -16,9 +17,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
 
+import ats.blockchain.web.AppVersion;
 import ats.blockchain.web.config.DiamondApplicationRunner;
 import ats.blockchain.web.model.UserInfo;
 import ats.blockchain.web.utils.Constants;
+import ats.blockchain.web.utils.Md5Utils;
 import ats.blockchain.web.utils.ResultUtil;
 
 @Controller
@@ -40,6 +43,9 @@ public class LoginController extends BaseController {
 	public String logon(@RequestParam("userid") String userid, @RequestParam("password") String password,
 			HttpServletRequest request) throws JSONException {
 		HttpSession session = request.getSession(false);
+		 ServletContext sc = request.getServletContext();
+		 String version = AppVersion.getVersionFromMainfest(sc);
+		 logger.debug("version {}",version);
 		String result ="";
 		
 		if (session != null) {
@@ -50,13 +56,14 @@ public class LoginController extends BaseController {
 		session = request.getSession(true);
 		if (checkLogin(userid,password)) {
 			session.setAttribute("supplierMap", DiamondApplicationRunner.getSupplierMap());
-			session.setAttribute("giaMap", DiamondApplicationRunner.getGiaLMap());
+			session.setAttribute("giaMap", DiamondApplicationRunner.getGiaMap());
 			session.setAttribute("vaultMap", DiamondApplicationRunner.getVaultMap());
 			session.setAttribute("redeemOwnerId", redeemOwnerId);
 			session.setAttribute("userInfo", this.getCurrentUserInfo());
 			session.setAttribute("productMap", this.getProductMap());
 			session.setAttribute("productMapJson", JSON.toJSON(this.getProductMap()));
 			session.setAttribute(Constants.SESSION_USER_ID, userid);
+			session.setAttribute("webVersion", webVersion);
 			result = ResultUtil.msg(true, "login success");
 		} else {
 			result = ResultUtil.fail("logon failed: username or password is wrong");
@@ -85,8 +92,9 @@ public class LoginController extends BaseController {
 		List<UserInfo> userList = this.getUserList();
 		for(UserInfo info : userList)
 		{
-			if(info.getUserId().equals(userName) && info.getPassword().equals(password))
+			if(info.getUserId().equals(userName) && info.getPassword().equalsIgnoreCase(Md5Utils.encryptPassword(userName+password)))
 			{
+				logger.debug("userId:" + userName +",password:" +info.getPassword());
 				isCheck = true;
 				this.setCurrentUserInfo(info);
 				break;

@@ -17,13 +17,16 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class DateFormatUtils {
 	
-	  public static String DATE_FORMAT = "yyyy-MM-dd";
+	  public static final String DATE_FORMAT = "yyyy-MM-dd";
 	  
-	  public static String DATE_FORMAT_yyyyMMdd = "yyyyMMdd";
-	  public static String DATE_FORMAT_y2ms = "yyyyMMdd_HHmmssS";
+	  public static final  String DATE_FORMAT_yyyyMMdd = "yyyyMMdd";
+	  public static final String DATE_FORMAT_y2ms = "yyyyMMdd_HHmmssS";
 	 
-	  public static String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	  public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	  public static final String TIME_FORMAT = "HH:mm:ss";
 	 
+	  
+	  
 	  public static String DATE_FORMAT_CHINESE = "yyyy年M月d日";
      
     private static final ThreadLocal<Map<String,SimpleDateFormat>> DATE_FORMAT_HOLDER = new ThreadLocal<Map<String,SimpleDateFormat>>(){

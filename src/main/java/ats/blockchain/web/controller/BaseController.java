@@ -28,7 +28,10 @@ public class BaseController
 	@Value("${corda.redeemOwnerId}")
 	public String redeemOwnerId;
 	
-	public  final String htmlfileName = "files";
+	@Value("${project.build.timestamp}")
+	public String webVersion;
+	
+	public static final String htmlfileName = "files";
 	
 	private List<UserInfo> userList;
 	private UserInfo currentUserInfo;
@@ -76,6 +79,7 @@ public class BaseController
 	{
 		String user = cordaApi.getTradediamondinf().getCurrUser();
 		String role = "";
+		String nodeName = "";
 		if(!StringUtils.isBlank(user))
 		{
 			String[] userArray = user.split(",");
@@ -87,8 +91,17 @@ public class BaseController
 					break;
 				}
 			}
+			for(String info : userArray)
+			{
+				if(info.contains("O="))
+				{
+					nodeName = info.split("[=]")[1];
+					break;
+				}
+			}
 			currentUserInfo.setRole(role);
 			currentUserInfo.setMyLegalName(user);
+			currentUserInfo.setNodeName(nodeName);
 		}else
 		{
 			throw new IllegalArgumentException("cordaApi userInfo is null:");

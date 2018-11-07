@@ -20,7 +20,7 @@
 	</form>
 	<div class="row">
 		 <div class="col-md-12">
-		   <table id="tableListForContacts"></table>
+		   <table id="tableListForData"></table>
 		 </div>
 	</div>
 </section>
@@ -87,7 +87,7 @@
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function() {
-            $('#tableListForContacts').bootstrapTable({
+            $('#tableListForData').bootstrapTable({
                 url: "<%=basePath %>/transfer/getBasketList",
                 cache:false,
                 pagination: true, //分页
@@ -194,12 +194,12 @@
     };
     
     function search() {
-    	$('#tableListForContacts').bootstrapTable('refresh');
+    	$('#tableListForData').bootstrapTable('refresh');
     }
     
     function submit()
     {
-    	var selectLsit= $("#tableListForContacts").bootstrapTable('getSelections');  
+    	var selectLsit= $("#tableListForData").bootstrapTable('getSelections');  
         if(selectLsit.length<=0){
         	var data = {"state":"fail","message":"Please select one or more data"};
         	messageShow(data,null,false);

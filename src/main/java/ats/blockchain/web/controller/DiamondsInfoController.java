@@ -4,18 +4,22 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.bean.DiamondInfoData;
@@ -108,20 +112,30 @@ public class DiamondsInfoController extends BaseController {
 		logger.debug("submitDiamondList begin");
 		// 1，查询需要提交的basket信息
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		List<DiamondInfoData> list = diamondsInfoService.submitDiamondList(userid);
+		List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(userid,PackageState.PKG_ISSUE);
 		if (AOCBeanUtils.isNotEmpty(list)) {
 			String message = "These bakset is not fill to the full diamonds[";
 			for (int i = 0; i < list.size(); i++) {
 				if (message.indexOf(list.get(i).getBasketno()) == -1) {
 					message = message + list.get(i).getBasketno() + ":";
 				}
-
 			}
 			message = message + "]";
 			return ResultUtil.msg(false, message);
 		}
+		list = diamondsInfoService.submitDiamondList(userid);
 		logger.debug("submitDiamondList end");
-		return ResultUtil.msg(true, "Submit success");
+		if (AOCBeanUtils.isNotEmpty(list)) {
+			StringBuilder message =new StringBuilder();
+			message.append("These diamond submit failed:[");
+			list.forEach(d->message.append(d.getGiano()).append(":"));
+			String msg = message.substring(0, message.length()-1);
+			msg = msg +"]";
+			return ResultUtil.msg(false, msg);
+		}else {
+			return ResultUtil.msg(true, "Submit success");
+		}
+		
 	}
 
 	@RequestMapping(value = "/importDiamondsInfo")
@@ -132,7 +146,7 @@ public class DiamondsInfoController extends BaseController {
 			return ResultUtil.fail("Can not get session");
 		}
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
-		String step = "";
+//		String step = "";
 		List<DiamondInfoData> diamondsinfos = null;
 		try {
 			diamondsinfos = FileUtils.getFile(request, htmlfileName,DiamondInfoData.class);
@@ -144,6 +158,8 @@ public class DiamondsInfoController extends BaseController {
 			DiamondCache cache = CacheFactory.Instance.getDiamondCache(userid);
 			boolean result = true;
 			StringBuilder sb = new StringBuilder(128);
+			Set<String> failSet = Sets.newHashSet();
+			Map<String,List<DiamondInfoData>> failMap = Maps.newHashMap();
 			sb.append("Import error:\n");
 			for (DiamondInfoData diamondInfoData : diamondsinfos) {
 				diamondInfoData.setUserid(userid);
@@ -183,17 +199,32 @@ public class DiamondsInfoController extends BaseController {
 				BeanUtils.copyProperties(prod, diamondInfoData);
 
 				Map<String, Object> rs = diamondsInfoService.addDiamondInfo(diamondInfoData);
+				List<DiamondInfoData> failList= null;
+				if(failMap.containsKey(basketno)) {
+					failList= failMap.get(basketno);
+				}else {
+					failList = Lists.newArrayList();
+					failMap.put(basketno, failList);
+				}
+				failList.add(diamondInfoData);
 				
 				if (!ResultUtil.isSuccess(rs)) {
 					sb.append(giano).append(":").append(ResultUtil.getMessage(rs)).append("\n");
+					failSet.add(diamondInfoData.getBasketno());
 					result = false;
 					continue;
 				}
 			}
+			if(failSet.size()>0) {
+				failMap.forEach((k,v)-> {
+					v.forEach(d->diamondsInfoService.deleteDiamondInfo(d));
+				});
+			}
+			
 			return ResultUtil.msg(result, result ? "Import Success!" : sb.toString());
 		} catch (Exception e) {
 			logger.error("DiamondsInfoController--->importDiamondsInfo：" ,e);
-			return ResultUtil.fail("import diamonds failed.");
+			return ResultUtil.fail("import diamonds failed:"+e.getMessage());
 		}
 	}
 

@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ats.blockchain</groupId>
@@ -22,7 +21,6 @@
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.0.0.RELEASE</version>
 	</parent>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -34,7 +32,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-log4j2</artifactId>
@@ -103,6 +100,10 @@
 			<version>1.2.3</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/cn.easyproject/ojdbc7 -->
+		<!--<dependency> <groupId>cn.easyproject</groupId> <artifactId>ojdbc7</artifactId> 
+			<version>12.1.0.2.0</version> </dependency> -->
+
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -122,6 +123,16 @@
 					<artifactId>commons-collections</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.15</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.15</version>
 		</dependency>
 
 		<!-- <dependency> <groupId>com.fasterxml.jackson.core</groupId> <artifactId>jackson-core</artifactId> 
@@ -162,7 +173,25 @@
 			<artifactId>fastjson</artifactId>
 			<version>1.2.47</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.15</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.15</version>
+		</dependency>
 	</dependencies>
+
+	<scm>
+		<connection>scm:svn:https://192.168.2.9:8443/svn/r1/atreasury/ATS_PORJECT/10 Document/01 Input/AOC/180723AOC-BChain/20 SourceCode/webdiamond</connection>
+		<developerConnection>scm:svn:https://192.168.2.9:8443/svn/r1/atreasury/ATS_PORJECT/10 Document/01 Input/AOC/180723AOC-BChain/20 SourceCode/webdiamond</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://192.168.2.9:8443/svn/r1/atreasury/ATS_PORJECT/10 Document/01 Input/AOC/180723AOC-BChain/20 SourceCode/webdiamond</url>
+	</scm>
+
 	<build>
 		<finalName>webdiamond</finalName>
 		<plugins>
@@ -173,6 +202,9 @@
 					<source>1.8</source>
 					<target>1.8</target>
 					<encoding>UTF-8</encoding>
+					<compilerArgs>
+						<arg>-parameters</arg>
+					</compilerArgs>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -182,6 +214,50 @@
 					<fork>true</fork>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doCheck>false</doCheck>
+					<doUpdate>true</doUpdate>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<alikoubeiserver-svn-version>${buildNumber}</alikoubeiserver-svn-version>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<svn-version>${buildNumber}</svn-version>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 	<distributionManagement>

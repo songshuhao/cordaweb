@@ -64,7 +64,7 @@ public class BasketInfoController extends BaseController {
 		String supLegalName = null;
 		try {
 			aocLegalName = getUserLegalName(aoc);
-			supLegalName = getUserLegalName(basketinfo.getSuppliercode());
+			supLegalName =basketinfo.getSuppliercode();
 		} catch (Exception e) {
 			String message = e.getMessage();
 			return ResultUtil.failMap(message);
@@ -143,9 +143,7 @@ public class BasketInfoController extends BaseController {
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<PackageInfo> basketinfos = null;
 		try {
-			request.setAttribute("step", "");
 			basketinfos = FileUtils.getFile(request, htmlfileName, PackageInfo.class);
-			logger.debug("step:"+request.getAttribute("step"));
 		} catch (Exception e) {
 			logger.error("importBasketInfo error", e);
 			return ResultUtil.fail("file is invaild.");
@@ -216,6 +214,9 @@ public class BasketInfoController extends BaseController {
 			logger.error("can not get export config :{}", step);
 			return ResultUtil.fail("can not get export config");
 		}
+		
+		String fileType= request.getParameter("fileType");
+		fileType = ".xls";
 		String filePath = "";
 		Map<String, Object> result = new HashMap<String, Object>();
 		ExportConfig cfg = exportCfgMap.get(step);
@@ -225,7 +226,7 @@ public class BasketInfoController extends BaseController {
 			if (step.equals(Constants.SUPPLIER_TO_AOC)) {
 				List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(userid, statusList);
 				logger.info("export diamond step:{} ,result size: {}",step,list.size());
-				filePath = FileUtils.generateExportFile(tmpFilePath, diamondPrefix, header, list);
+				filePath = FileUtils.generateExportFile(tmpFilePath, diamondPrefix, header, list,fileType);
 				logger.info("export diamond step:{} ,save to file: {}",step,filePath);
 			} else {
 				List<PackageInfo> list = null;
@@ -235,7 +236,7 @@ public class BasketInfoController extends BaseController {
 					list = packageInfoService.getPackageInfoByStatus(userid, statusList);
 				}
 				logger.info("export package step:{} ,result size: {}",step,list.size());
-				filePath = FileUtils.generateExportFile(tmpFilePath, packagePrefix, header, list);
+				filePath = FileUtils.generateExportFile(tmpFilePath, packagePrefix, header, list,fileType);
 				logger.info("export package step:{} ,save to file: {}",step,filePath);
 			}
 			result.put("state", "success");
@@ -257,8 +258,8 @@ public class BasketInfoController extends BaseController {
 	@RequestMapping(value = "/downloadExportData")
 	@ResponseBody
 	public void downloadExportData(HttpServletResponse response, String filePath) throws IOException {
-		String contentTye = "application/csv;charset=UTF-8";
-		FileUtils.exportFile(response, filePath, contentTye);
+		String contentType = "application/octet-stream;charset=UTF-8";
+		FileUtils.exportFile(response, filePath, contentType);
 	}
 
 }

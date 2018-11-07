@@ -21,7 +21,7 @@
 	</form>
 	<div class="row">
 		 <div class="col-md-12">
-		   <table id="tableListForContacts"></table>
+		   <table id="tableListForData"></table>
 		 </div>
 	</div>
 </section>
@@ -60,7 +60,7 @@
 								<div class="col-sm-5">
 									<select id="suppliercode" class="form-control" name="suppliercode">
 									  <c:forEach items="${supplierMap }" var="supplier">
-											<option value="${supplier.key }">
+											<option value="${supplier.value }">
 												${supplier.key }
 											</option>
 										</c:forEach>
@@ -120,7 +120,7 @@
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function() {
-            $('#tableListForContacts').bootstrapTable({
+            $('#tableListForData').bootstrapTable({
                 url: "<%=basePath %>/basket/getBasketList",
                 cache:false,
                 pagination: true, //分页
@@ -228,7 +228,7 @@
     function search() {
     	
     	var url = "<%=basePath %>/basket/getBasketList";
-    	$('#tableListForContacts').bootstrapTable('refresh', {url: url});
+    	$('#tableListForData').bootstrapTable('refresh', {url: url});
     }
     
    
@@ -451,10 +451,11 @@
                             	 var diamondsnumber = $("#diamondsnumber").val();
                             	 //console.log("totalweight:" + totalweight);
                             	 //console.log("diamondsnumber:" + diamondsnumber);
+                            	 //console.log("value*diamondsnumber:" + (value*diamondsnumber).toFixed(10));
                             	 if(value > totalweight)
                             	 {
                             		 return false; 
-                            	 }else if(value*diamondsnumber > totalweight)
+                            	 }else if((value*diamondsnumber).toFixed(10) > (totalweight*1).toFixed(10))
                             	 {
                             		return false;	 
                             	 }else

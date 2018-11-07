@@ -201,7 +201,6 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 			}
 		}
 		return dList;
-
 	}
 
 	@Override
@@ -268,5 +267,13 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 		rs.put("valid", flag);
 		logger.debug("checkGiano ,tradeid: {} ,giano:{} ,result: {}",tradeid, giano,flag);
 		return rs;
+	}
+
+	@Override
+	public Map<String, Object> deleteDiamondInfo(String userid, String basketno, String status) {
+		logger.info("deleteDiamondInfo userid:{} basketno: {} status: {}",userid,basketno,status);
+		DiamondCache cache = CacheFactory.Instance.getDiamondCache(userid);
+		cache.removeDiamond(basketno, status);
+		return ResultUtil.msgMap(true, "delete diamond success");
 	}
 }

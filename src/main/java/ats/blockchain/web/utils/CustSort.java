@@ -25,6 +25,7 @@ public class CustSort<T> implements Comparator<T>{
 		this.sortField = sortField;
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public  static <T>  int compare(T o1, T o2,String sortField) {
 		ClassMethods clazzMethod = ClassMethodFactory.Instance.getClassMethods(o1.getClass());
 		

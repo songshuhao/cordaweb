@@ -290,15 +290,31 @@ public class AOCBeanUtils {
 	 */
 	public static <T> List<T> getObjectFromCsv(String csvFile, Class<T> clazz)
 			throws IOException, InstantiationException, IllegalAccessException {
+		return getObjectFromCsv(csvFile, clazz, StringUtil.COMMACHAR);
+	}
+
+	/**
+	 * 从csv获取内容并转换为对象
+	 * 
+	 * @param csvFile
+	 * @param clazz
+	 * @param delimiter 分隔符
+	 * @return
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
+	public static <T> List<T> getObjectFromCsv(String csvFile, Class<T> clazz,char delimiter)
+			throws IOException, InstantiationException, IllegalAccessException {
 		if (StringUtils.isBlank(csvFile)) {
 			logger.warn("csv file is empty.");
 			return Collections.emptyList();
 		}
 		logger.debug("begin read file: {}",csvFile);
-		CsvReader reader = new CsvReader(new FileReader(csvFile), ',');
+		CsvReader reader = new CsvReader(new FileReader(csvFile),delimiter);
 		return parseCsv(clazz, reader);
 	}
-
+	
 	private static <T> List<T> parseCsv(Class<T> clazz, CsvReader reader)
 			throws IOException, InstantiationException, IllegalAccessException {
 		ClassMethods clazzMethod = ClassMethodFactory.Instance.getClassMethods(clazz);
@@ -340,12 +356,26 @@ public class AOCBeanUtils {
 	 */
 	public static <T> List<T> getObjectFromCsv(InputStream inputStream, Class<T> clazz)
 			throws IOException, InstantiationException, IllegalAccessException {
+		return getObjectFromCsv(inputStream, clazz,StringUtil.COMMACHAR);
+	}
+	/**
+	 * 从csv获取内容并转换为对象
+	 * @param inputStream
+	 * @param clazz
+	 * @param delimiter
+	 * @return
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
+	public static <T> List<T> getObjectFromCsv(InputStream inputStream, Class<T> clazz,char delimiter)
+			throws IOException, InstantiationException, IllegalAccessException {
 		if (inputStream == null) {
 			logger.warn("Can not get csv file");
 			return Collections.emptyList();
 		}
 		InputStreamReader isReader = new InputStreamReader(inputStream);
-		CsvReader csvReader =new CsvReader(isReader, ',');
+		CsvReader csvReader =new CsvReader(isReader, delimiter);
 		return parseCsv(clazz, csvReader);
 	}
 

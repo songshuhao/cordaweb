@@ -18,6 +18,8 @@ public class UserInfo implements Serializable
 	private String role;
 	
 	private String myLegalName;
+	
+	private String nodeName;
 
 	public String getUserId()
 	{
@@ -68,6 +70,14 @@ public class UserInfo implements Serializable
 	{
 		this.myLegalName = myLegalName;
 	}
-	
-	
+
+	public String getNodeName()
+	{
+		return nodeName;
+	}
+
+	public void setNodeName(String nodeName)
+	{
+		this.nodeName = nodeName;
+	}
 }

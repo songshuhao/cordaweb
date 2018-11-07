@@ -9,7 +9,7 @@ import java.util.Base64;
  * @author shuhao.song
  * @version 1.0
  */
-public abstract class Base64Utils {
+public class Base64Utils {
  
 	/**
 	 * 字符编码
@@ -30,6 +30,23 @@ public abstract class Base64Utils {
 		try
 		{
 			in = Base64.getEncoder().encode(data.getBytes(ENCODING));
+			out = new String(in, ENCODING);
+		} catch (UnsupportedEncodingException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+ 
+		return out;
+	}
+	
+	public static String encode(byte[] data){
+		 
+		byte[] in = null;
+		String out = null;
+		try
+		{
+			in = Base64.getEncoder().encode(data);
 			out = new String(in, ENCODING);
 		} catch (UnsupportedEncodingException e)
 		{

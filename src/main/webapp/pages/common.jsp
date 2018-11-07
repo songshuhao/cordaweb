@@ -59,7 +59,7 @@
 							<div class="form-group">
 								<label for="upfile" class="col-sm-4 control-label">Import File:</label>
 								<div class="col-sm-6">
-									<input type="file" name="files" class="form-control" id="upfile" accept=".xls,.csv,.xlsx"/>
+									<input type="file" name="files" class="form-control" id="upfile" accept=".xls,.xlsx"/>
 								</div>
 							</div>
 						</form>
@@ -228,6 +228,10 @@
         var index = layer.load();
     	var formData = new FormData($("#importForm")[0]);
     	formData.append("step", step);
+    	var urlArr = $("#upfile").val().split("\\");
+    	var fileName = urlArr[urlArr.length-1];
+    	formData.append("fileName",fileName);
+    	//console.log(fileName);
     	var url = getImportUrlByStep(step); 
         $.ajax({
             //接口地址
@@ -309,7 +313,7 @@
                            	 var arr = ["xls","xlsx"];
                            	 //var arr = ["csv","xls","xlsx"];
                            	 //取出上传文件的扩展名
-                           	 console.log(value);
+                           	 //console.log(value);
                            	 var index = value.lastIndexOf(".");
                            	 var ext = value.substr(index+1);
                            	 //循环比较

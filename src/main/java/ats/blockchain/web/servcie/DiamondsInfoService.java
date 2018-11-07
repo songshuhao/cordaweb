@@ -1,6 +1,5 @@
 package ats.blockchain.web.servcie;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +12,7 @@ public interface DiamondsInfoService {
 	Map<String, Object> editDiamondInfo(DiamondInfoData di);
 
 	Map<String, Object> deleteDiamondInfo(DiamondInfoData di);
+	Map<String, Object> deleteDiamondInfo(String userid,String basketno,String status);
 
 	List<DiamondInfoData> getDiamondInfoByStatus(String userid, String... status);
 

@@ -57,7 +57,7 @@ public class DiamondApplicationRunner implements ApplicationRunner
 	
 	private static Map<String,String> supplierMap = new HashMap<String, String>();
 	
-	private static Map<String,String> giaLMap = new HashMap<String, String>();
+	private static Map<String,String> giaMap = new HashMap<String, String>();
 	
 	private static Map<String,String> vaultMap = new HashMap<String, String>();
 	
@@ -69,9 +69,9 @@ public class DiamondApplicationRunner implements ApplicationRunner
 		return supplierMap;
 	}
 
-	public static Map<String, String> getGiaLMap()
+	public static Map<String, String> getGiaMap()
 	{
-		return giaLMap;
+		return giaMap;
 	}
 
 	public static Map<String, String> getVaultMap()
@@ -174,7 +174,7 @@ public class DiamondApplicationRunner implements ApplicationRunner
 					setUserIdMap(user,supplierMap);
 				}else if(user.contains(Constants.ROLE_LAB))
 				{
-					setUserIdMap(user,giaLMap);
+					setUserIdMap(user,giaMap);
 				}else if(user.contains(Constants.ROLE_VAULT))
 				{
 					setUserIdMap(user,vaultMap);

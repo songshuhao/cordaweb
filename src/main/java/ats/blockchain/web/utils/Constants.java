@@ -53,4 +53,9 @@ public class Constants {
 	public static final String AOC_TO_AUDIT="atau";
 	public static final String AUDIT_TO_AOC="auta";
 	
+	public static final String FILE_TYPE_CSV=".csv";
+	public static final String FILE_TYPE_XLS=".xls";
+	public static final String FILE_TYPE_XLSX=".xlsx";
+	
+	
 }
