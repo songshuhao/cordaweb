@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -102,6 +103,9 @@ public class PackageCache {
 	 * @throws DiamondWebException
 	 */
 	public boolean checkPackagenoChange(String seqno,String basketno) {
+		if(seqno==null) {
+			return false;
+		}
 		if(pkgCache.containsKey(seqno)) {
 			String old = pkgCache.get(seqno).getBasketno();
 			return !old.equals(basketno);
@@ -121,7 +125,27 @@ public class PackageCache {
 				.collect(Collectors.toList());
 		return list;
 	}
+	/**
+	 *  界面点击删除，需要同步删除packageSet，seqNoBskNoMap
+	 * @param seqNo
+	 * @param status
+	 */
+	public void removePackage(String seqNo, String status) {
+		remove(seqNo, status);
+		synchronized (packageSet) {
+			if(seqNoBskNoMap.containsKey(seqNo)) {
+				String basketno = seqNoBskNoMap.remove(seqNo);
+				packageSet.remove(basketno);
+			}
+		}
+	}
 
+	/**
+	 * 提交corda成功后删除
+	 * @param seqNo
+	 * @param status
+	 * @return
+	 */
 	public PackageInfo remove(String seqNo, String status) {
 		logger.debug("remove seqNo: {} ,status: {} from package cache.",seqNo,status);
 		PackageInfo p = pkgCache.get(seqNo);

@@ -36,6 +36,8 @@ public class PackageInfo implements Serializable {
 	private String result;
 	private String status;
 	private String statusDesc;
+	//判断owner是否在页面被修改
+	private String isChange = "false";
 
 	public String getSeqNo() {
 		return seqNo;
@@ -285,6 +287,16 @@ public class PackageInfo implements Serializable {
 		this.userid = userid;
 	}
 
+	public String getIsChange()
+	{
+		return isChange;
+	}
+
+	public void setIsChange(String isChange)
+	{
+		this.isChange = isChange;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -350,6 +362,8 @@ public class PackageInfo implements Serializable {
 		builder.append(status);
 		builder.append(", statusDesc=");
 		builder.append(statusDesc);
+		builder.append(", isChange=");
+		builder.append(isChange);
 		builder.append("]");
 		return builder.toString();
 	}

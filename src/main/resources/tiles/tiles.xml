@@ -57,5 +57,8 @@
 	<definition name="transfervaultList" extends="baseLayout">
 		<put-attribute name="body" value="/pages/transfervaultList.jsp"/>
 	</definition>
+	<definition name="errorpage" extends="baseLayout">
+		<put-attribute name="body" value="/pages/error.jsp"/>
+	</definition>
 	
 </tiles-definitions>

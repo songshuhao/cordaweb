@@ -13,7 +13,7 @@
 	<form class="form-inline" >
 	<!-- 工具栏 -->
 	<div id="toolbar">
-		<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+		<!-- <input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input> -->
 		<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 	</div>
 	<!-- bootstrapTable -->
@@ -52,7 +52,6 @@
 								<label for="owner" class="col-sm-2 control-label">Owner ID:</label>
 								<div class="col-sm-7">
 									<input type="text" name="owner" class="form-control" id="owner" placeholder="Owner ID:" data-bv-notempty/>
-									<input type="hidden" name="ownmgr" id="ownmgr"/>
 								</div>
 							</div>
 						</form>
@@ -175,6 +174,7 @@
 			$("#basketno").val(row.basketno);
 			$("#vault").val(row.vault);
 			//$("#ownmgr").val(row.owner);
+			//console.log(row);
 			$("#seqNo").val(row.seqNo);
    		}
    	};
@@ -199,12 +199,18 @@
     
     function submit()
     {
-    	var selectLsit= $("#tableListForData").bootstrapTable('getSelections');  
+    	var selectLsit= $("#tableListForData").bootstrapTable('getSelections');
         if(selectLsit.length<=0){
         	var data = {"state":"fail","message":"Please select one or more data"};
-        	messageShow(data,null,false);
+        	messageShow(data,null,true);
        }else
    	   {
+    	   if(!checkOwnerisChanged(selectLsit))
+    	   {
+    		   var data = {"state":"fail","message":"Please modify all the owner by selected data. "};
+           		messageShow(data,null,true);
+    		   return false;
+    	   }
     	   var index = layer.load();
     	   var param = {"packageInfos":selectLsit,"step":step};
     	   param = JSON.stringify(param);
@@ -259,7 +265,9 @@
 		
         var index = layer.load();
 		var param = $("#addForm").serializeArray();
+		param.push({"name":"isChange","value":"true"});
 		param.push({"name":"step","value":step});
+		//console.log(param);
 		$.ajax({
 			url:"<%=basePath %>/transfer/updateBasketInfo",
 			method:"post",
@@ -279,6 +287,23 @@
 				messageShow(null,"#addModal",false)
 			}
 		});
+	}
+	
+	function checkOwnerisChanged(selectLsit)
+	{
+		var flag = true;
+		//console.log(selectLsit);
+		for (i=0; i<selectLsit.length; i++)
+		{
+			//console.log(selectLsit[i]);
+			if(selectLsit[i].isChange=='false')
+			{
+				flag = false;
+				return flag;
+			}	
+		}
+		return flag;
+		
 	}
 
 </script>

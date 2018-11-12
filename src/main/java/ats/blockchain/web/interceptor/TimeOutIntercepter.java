@@ -1,14 +1,26 @@
 package ats.blockchain.web.interceptor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import ats.blockchain.web.model.UserInfo;
+import ats.blockchain.web.utils.AOCBeanUtils;
 
 /**
  * session 超时及输入非法地址重登陆
@@ -29,10 +41,23 @@ public class TimeOutIntercepter implements HandlerInterceptor
         this.allowUrls = allowUrls;
     }
     
-    @Override
+    private List<String> allUrls;
+    
+    public List<String> getAllUrls()
+	{
+		return allUrls;
+	}
+
+	public void setAllUrls(List<String> allUrls)
+	{
+		this.allUrls = allUrls;
+	}
+
+	@Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception
     {
     	logger.debug("preHandle - {}", request.getRequestURI());
+    	logger.debug("preHandle - {}", request.getParameterMap());
     	
     	String requestUrl = request.getRequestURI().replace(request.getContextPath(), "");
     	
@@ -44,6 +69,26 @@ public class TimeOutIntercepter implements HandlerInterceptor
                 }
             }
         }
+        
+        if(AOCBeanUtils.isEmpty(allUrls))
+        {
+        	initAllUrl(request);
+        }else
+        {
+        	if(allUrls.contains(requestUrl)){
+                return true;
+            }else 
+            {
+            	if(isAjaxRequest(request))
+            	{
+            		response.setHeader("sessionstatus", "timeout"); 
+            	}else
+            	{
+            		response.sendRedirect(request.getContextPath() + defaultUrl);
+    			}
+            	return false;
+			}
+		}
         HttpSession session = request.getSession(false);
         if(null != session && null != session.getAttribute("userInfo"))
         {
@@ -75,5 +120,25 @@ public class TimeOutIntercepter implements HandlerInterceptor
         result = (headerX != null  && headerX.equalsIgnoreCase("XMLHttpRequest"));
         return  result;     
          
+    }
+    
+    
+    //获取所有url，进行非法url校验，如果校验不通过，跳转到登录界面
+    public List<String> initAllUrl(HttpServletRequest request)
+    {
+    	allUrls = new ArrayList<String>();
+    	WebApplicationContext wac = (WebApplicationContext) request.getAttribute(DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE);//获取上下文对象
+    	RequestMappingHandlerMapping bean = wac.getBean(RequestMappingHandlerMapping.class);//通过上下文对象获取RequestMappingHandlerMapping实例对象
+    	Map<RequestMappingInfo, HandlerMethod> handlerMethods = bean.getHandlerMethods();
+    	for (RequestMappingInfo rmi : handlerMethods.keySet()) 
+    	{
+    		PatternsRequestCondition prc = rmi.getPatternsCondition();
+    		Set<String> patterns = prc.getPatterns();
+    		for (String uStr : patterns) 
+    		{
+    			allUrls.add(uStr);
+    		}
+    	}
+		return allUrls;
     }
 }

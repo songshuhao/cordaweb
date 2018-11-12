@@ -41,11 +41,8 @@ public class LoginController extends BaseController {
 	@RequestMapping(value = "/logon", method = { RequestMethod.POST })
 	@ResponseBody
 	public String logon(@RequestParam("userid") String userid, @RequestParam("password") String password,
-			HttpServletRequest request) throws JSONException {
+			HttpServletRequest request){
 		HttpSession session = request.getSession(false);
-		 ServletContext sc = request.getServletContext();
-		 String version = AppVersion.getVersionFromMainfest(sc);
-		 logger.debug("version {}",version);
 		String result ="";
 		
 		if (session != null) {

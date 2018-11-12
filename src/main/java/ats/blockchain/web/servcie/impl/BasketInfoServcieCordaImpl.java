@@ -81,6 +81,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		pkgInf.setStatus(PackageState.PKG_CREATE);
 		pkgInf.setStatusDesc(ats.blockchain.cordapp.diamond.util.Constants.PKG_STATE_MAP.get(PackageState.PKG_CREATE));
 		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
+		
 		cache.add(pkgInf);
 		logger.debug("{} package update to cache.", pkgInf.getBasketno());
 		return ResultUtil.msgMap(true,"edit package success");
@@ -360,6 +361,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				old.setOwner(pkgInf.getOwner());
 				old.setVault(pkgInf.getVault());
 				old.setStatus(status);
+				old.setIsChange("true");
 				flag = true;
 			}
 		} catch (Exception e) {
@@ -496,7 +498,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 		flag = flag ? !cache.containsPackage(basketno): true;
 		Map<String, Object> rs = new HashMap<String, Object>();
 		rs.put("valid", flag);
-		logger.debug("checkPackageNo ,tradeid: {} ,giano:{} ,result: {}",seqno, basketno,flag);
+		logger.debug("checkPackageNo ,seqNo: {} ,basketno:{} ,result: {}",seqno, basketno,flag);
 		return rs;
 	}
 

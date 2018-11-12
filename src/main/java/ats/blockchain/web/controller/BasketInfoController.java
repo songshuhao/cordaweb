@@ -64,7 +64,7 @@ public class BasketInfoController extends BaseController {
 		String supLegalName = null;
 		try {
 			aocLegalName = getUserLegalName(aoc);
-			supLegalName =basketinfo.getSuppliercode();
+			supLegalName = basketinfo.getSuppliercode();
 		} catch (Exception e) {
 			String message = e.getMessage();
 			return ResultUtil.failMap(message);
@@ -74,11 +74,19 @@ public class BasketInfoController extends BaseController {
 		logger.debug("BasketInfoController: getUserLegalName for supplier{}", supLegalName);
 		basketinfo.setSuppliercode(supLegalName);
 		String seqNo = basketinfo.getSeqNo();
+		String userid =basketinfo.getUserid();
+		String basketno = basketinfo.getBasketno();
+		rs = packageInfoService.checkPackageNo(userid, seqNo, basketno);
+		if(!(boolean) rs.getOrDefault("valid", false)) {
+			logger.error("addPackageState error: package duplicate {}",basketno);
+			return ResultUtil.failMap(" package no duplicate :"+basketno);
+		}
 		if (StringUtils.isBlank(seqNo)) {
-			logger.debug("addPackageState seqNo :{},basketno : {}", seqNo, basketinfo.getBasketno());
+			logger.debug("addPackageState seqNo :{},basketno : {}", seqNo, basketno);
 			rs = packageInfoService.addPackageInfo(basketinfo);
 		} else {
-			logger.debug("editPackageState seqNo :{},basketno : {}", seqNo, basketinfo.getBasketno());
+			logger.debug("editPackageState seqNo :{},basketno : {}", seqNo, basketno);
+			
 			rs = packageInfoService.editPackageInfo(basketinfo);
 		}
 		return rs;
@@ -208,15 +216,14 @@ public class BasketInfoController extends BaseController {
 	@ResponseBody
 	public String createExportData(HttpServletRequest request, HttpServletResponse response, String step) {
 		String userid = (String) request.getSession().getAttribute(Constants.SESSION_USER_ID);
-		logger.debug("createExportData userid: {},step: {}",userid,step);
+		logger.debug("createExportData userid: {},step: {}", userid, step);
 		Map<String, ExportConfig> exportCfgMap = DiamondApplicationRunner.getExportConfig();
 		if (!exportCfgMap.containsKey(step)) {
 			logger.error("can not get export config :{}", step);
 			return ResultUtil.fail("can not get export config");
 		}
-		
-		String fileType= request.getParameter("fileType");
-		fileType = ".xls";
+
+		String fileType = ".xls";
 		String filePath = "";
 		Map<String, Object> result = new HashMap<String, Object>();
 		ExportConfig cfg = exportCfgMap.get(step);
@@ -225,9 +232,11 @@ public class BasketInfoController extends BaseController {
 		try {
 			if (step.equals(Constants.SUPPLIER_TO_AOC)) {
 				List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(userid, statusList);
-				logger.info("export diamond step:{} ,result size: {}",step,list.size());
-				filePath = FileUtils.generateExportFile(tmpFilePath, diamondPrefix, header, list,fileType);
-				logger.info("export diamond step:{} ,save to file: {}",step,filePath);
+				//只导出需要添加的钻石（tradeid 为空的数据）
+//				list = list.stream().filter(d -> StringUtils.isBlank(d.getTradeid())).collect(Collectors.toList());
+				logger.info("export diamond step:{} ,result size: {}", step, list.size());
+				filePath = FileUtils.generateExportFile(tmpFilePath, diamondPrefix, header, list, fileType);
+				logger.info("export diamond step:{} ,save to file: {}", step, filePath);
 			} else {
 				List<PackageInfo> list = null;
 				if (step.equals(Constants.AOC_TO_AUDIT) || step.equals(Constants.AUDIT_TO_AOC)) {
@@ -235,9 +244,9 @@ public class BasketInfoController extends BaseController {
 				} else {
 					list = packageInfoService.getPackageInfoByStatus(userid, statusList);
 				}
-				logger.info("export package step:{} ,result size: {}",step,list.size());
-				filePath = FileUtils.generateExportFile(tmpFilePath, packagePrefix, header, list,fileType);
-				logger.info("export package step:{} ,save to file: {}",step,filePath);
+				logger.info("export package step:{} ,result size: {}", step, list.size());
+				filePath = FileUtils.generateExportFile(tmpFilePath, packagePrefix, header, list, fileType);
+				logger.info("export package step:{} ,save to file: {}", step, filePath);
 			}
 			result.put("state", "success");
 			result.put("filePath", filePath);

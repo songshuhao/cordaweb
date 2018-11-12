@@ -557,15 +557,15 @@
                                message: '附属品名称不能为空'
                            }, */
                            stringLength: {
-                        	   min: 8,
-                               max: 13,
-                               message: 'length should be 13 digit!'
+                        	   min: 9,
+                               max: 9,
+                               message: 'length should be 9 digit!'
                            },regexp: {//自定义校验
                                regexp: /^[A-Za-z0-9]+$/,//匹配由数字和26个英文字母组成的字符串
                                message: 'Value should be number and letter!'
                            },remote:{
                         	   message: "Gia number already exists",
-                        	   delay: 1000,
+                        	   //delay: 1000,
                         	   type:'POST',
                         	   url:'<%=basePath %>/diamond/checkGiaNo',
                         	   data: function(validator,$field, value) {

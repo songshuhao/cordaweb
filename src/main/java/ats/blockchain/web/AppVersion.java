@@ -29,10 +29,10 @@ public class AppVersion {
 		return sb.toString();
 	}
 
-	public static final String getVersionFromMainfest(Object obj) {
+	public static final String getVersionFromMainfest(String path) {
 		StringBuilder sb = new StringBuilder();
-		System.out.println(obj.getClass().getClassLoader().getResource("").getPath());
-		InputStream ins = obj.getClass().getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");
+		
+		InputStream ins = ClassLoader.getSystemResourceAsStream(path+"META-INF/MANIFEST.MF");
 		Manifest m;
 		try {
 			m = new Manifest(ins);

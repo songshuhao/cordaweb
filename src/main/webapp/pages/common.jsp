@@ -41,6 +41,7 @@
 		        </div>
 		        <div class="modal-body" style="text-align: center;">
 		            <p style="color:red" id="failedMessage">Fail</p>
+		            <p style="color:red" id="importMessage"></p>
 		        </div>
 		    </div>
 		  </div>
@@ -200,6 +201,16 @@
 		  {
 			  var showMessage = data.message.replace(/\n/g,'</br>');
 			  $("#failedMessage").html(showMessage);
+			  if(!isSubmit)
+			  {
+				  if(modalId.indexOf("importModal")>0)
+				  {
+					  $("#importMessage").html("Please check the import data or try to export again!");
+				  }else
+				  {
+					  $("#importMessage").html("");
+				  }
+			  }
 		  }
 		  $("#opFailedModal").modal('show').on('hidden.bs.modal', function() {
 		    	search();

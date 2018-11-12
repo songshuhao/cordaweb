@@ -14,7 +14,7 @@
 	<form class="form-inline" >
 	<!-- 工具栏 -->
 	<div id="toolbar">
-		<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+		<!-- <input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input> -->
 		<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 	</div>
 	<!-- bootstrapTable -->
@@ -55,7 +55,7 @@
 							<div class="form-group">
 								<label for="auditdate" class="col-sm-2 control-label">Audit Date:</label>
 								<div class="col-sm-7">
-									<input type="text" name="auditdate" class="form-control" id="auditdate" placeholder="Audit Date" data-bv-notempty/>
+									<input type="text" name="auditdate" class="form-control" id="auditdate" placeholder="Audit Date"/>
 								</div>
 							</div>
 						</form>
@@ -73,6 +73,7 @@
        var oTable = TableInit();
        oTable.Init();
        importValidate();
+       formValidate();
        $("form.required-validate").each(function() {
            var $form = $(this);
            $form.bootstrapValidator();
@@ -88,7 +89,12 @@
     
     laydate.render({
   	   elem: '#auditdate',
-       });
+  	   done: function(value, date){
+  		  $("#addForm").data('bootstrapValidator')
+       	 .updateStatus('auditdate', 'NOT_VALIDATED',null)
+       	 .validateField('auditdate');
+  	   }
+   });
  
     function TableInit() {
         var oTableInit = new Object();
@@ -195,16 +201,16 @@
 			//console.log(row);
 			$("#basketno").val(row.basketno);
 			$("#auditdate").val(row.auditdate);
-			$("#result").attr("value",row.result);
+			$("#result").val(row.result);
 			$("#seqNo").val(row.seqNo);
 			$("#conf").text("Add");
    		},	
    		'click #modifyBtn': function(e, value, row, index) {
 			resetAddModal();
 			//console.log(row);
-			$$("#basketno").val(row.basketno);
+			$("#basketno").val(row.basketno);
 			$("#auditdate").val(row.auditdate);
-			$("#result").attr("value",row.result);
+			$("#result").val(row.result);
 			
 			$("#seqNo").val(row.seqNo);
 			$("#conf").text("Modify");
@@ -280,17 +286,17 @@
 	
 	//Modal验证销毁重构
     $('#addModal').on('hidden.bs.modal', function() {
+    	resetAddModal();
     	$("#addForm").data('bootstrapValidator').destroy();
     	$('#addForm').data('bootstrapValidator',null);
-    	$('#addForm').bootstrapValidator();
+    	//$('#addForm').bootstrapValidator();
+    	formValidate();
     });
 	
 	//新增用户
 	function add(){
-		
 		var $form = $("#addForm");
-
-        var data = $form.data('bootstrapValidator');
+		var data = $form.data('bootstrapValidator');
         if (data) {
         // 修复记忆的组件不验证
             data.validate();
@@ -322,5 +328,29 @@
 			}
 		});
 	}
+	
+	 function formValidate()
+	 {
+		 var addForm = $("#addForm");
+		 addForm.bootstrapValidator({//根据自己的formid进行更改
+			 //live: 'disabled',//验证时机，enabled是内容有变化就验证（默认），disabled和submitted是提交再验证
+             message: 'This value is not valid',//默认提示信息
+             feedbackIcons: {//提示图标
+                 valid: 'glyphicon glyphicon-ok',
+                 invalid: 'glyphicon glyphicon-remove',
+                 validating: 'glyphicon glyphicon-refresh'
+             },
+             fields: {
+            	 auditdate: {//名称校验
+                        message: 'This value is not valid',
+                        validators: {//验证条件
+                            notEmpty: {
+                                message: 'This value is not valid'
+                            },
+                    	},
+             	},
+             },
+         });
+	 }
 
 </script>

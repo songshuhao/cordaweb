@@ -14,7 +14,7 @@
 	<form class="form-inline" >
 	<!-- 工具栏 -->
 	<div id="toolbar">
-		<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+		<!-- <input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input> -->
 		<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 	</div>
 	<!-- bootstrapTable -->
@@ -196,7 +196,7 @@
    		'click #modifyBtn': function(e, value, row, index) {
 			resetAddModal();
 			$("#basketno").val(row.basketno);
-			$("#vault").attr("value",row.vault);
+			$("#vault").val(row.vault);
 			$("#result").val(row.result);
 			$("#owner").val(row.owner);
 			

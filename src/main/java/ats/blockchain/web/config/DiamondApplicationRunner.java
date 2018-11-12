@@ -2,9 +2,12 @@ package ats.blockchain.web.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import ats.blockchain.cordapp.diamond.util.StateInfo;
+import ats.blockchain.cordapp.diamond.util.StringUtil;
 import ats.blockchain.web.bean.ExportConfig;
 import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.model.Product;
@@ -201,5 +206,28 @@ public class DiamondApplicationRunner implements ApplicationRunner
 
 	public static Map<String, ExportConfig> getExportConfig() {
 		return exportCfgMap;
+	}
+	
+	public static Map<String,StateInfo> stateInfoMap = new HashMap<String,StateInfo> ();
+	
+	public static Set<String> finalStatus = new HashSet<String>();
+	
+	public void initPreState() {
+		List<StateInfo> list = null;
+		try {
+			InputStream is=ClassLoader.getSystemResourceAsStream("status.properties");
+			list = StringUtil.getObjectFromCsv(is , StateInfo.class);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| IOException e) {
+		}
+		
+		if(list!=null) {
+			for(StateInfo s :list) {
+				stateInfoMap.put(s.getStatus(),s);
+				if(s.isFinalStatus()) {
+					finalStatus.add(s.getStatus());
+				}
+			}
+		}
 	}
 }

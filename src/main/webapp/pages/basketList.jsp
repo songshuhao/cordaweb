@@ -312,22 +312,24 @@
 	 
 	 //binding event shuhao.song
 	 window.operateEvents = {
- 			'click #modifyBtn': function(e, value, row, index) {
-	 			$("#suppliercode").attr("value",row.suppliercode);
-				$("#basketno").val(row.basketno);
-				$("#diamondsnumber").val(row.diamondsnumber);
-				$("#totalweight").val(row.totalweight);
-				$("#mimweight").val(row.mimweight);
-				$(".modal-header > h3").text("Modify PackageInfo");
-				$("#conf").text("Modify");
-				$("#seqNo").val(row.seqNo);				
-	 		},
-	 		'click #addBtn': function(e, value, row, index) {
-	 			$("#seqNo").val(row.seqNo);
-	 			$(".modal-header > h3").text("Add PackageInfo");
-				$("#conf").text("Add");
-	 		}
-	 	};
+			'click #modifyBtn': function(e, value, row, index) {
+ 			$("#suppliercode").val(row.suppliercode);
+ 			$("#productcode").val(row.productcode);
+			$("#basketno").val(row.basketno);
+			$("#diamondsnumber").val(row.diamondsnumber);
+			$("#totalweight").val(row.totalweight);
+			$("#mimweight").val(row.mimweight);
+			$(".modal-header > h3").text("Modify PackageInfo");
+			$("#conf").text("Modify");
+			$("#seqNo").val(row.seqNo);
+ 		},
+ 	};
+	 
+ 	$("#addBtn").click(function(){
+		$(".modal-header > h3").text("Add PackageInfo");
+		$("#seqNo").val("");
+		$("#conf").text("Add");
+	});
 	 
 	 function formValidate()
 	 {
@@ -356,7 +358,7 @@
                                 message: 'Value should be number and letter!'
                             },remote:{
                         	   message: "Package code already exists",
-                        	   delay: 1000,
+                        	   //delay: 1000,
                         	   type:'POST',
                         	   url:'<%=basePath %>/basket/checkPackageNo',
                         	   data: function(validator,$field, value) {

@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
@@ -513,5 +514,49 @@ public class AOCBeanUtils {
 		String rs = b?"success":msg.toString();
 		
 		return ResultUtil.msgMap(b, rs);
+	}
+	
+	
+	public static void checkDiamond(@Nonnull PackageInfo stat, @Nonnull List<DiamondInfoData> orginalList)
+			throws DiamondWebException {
+		int dlSize = orginalList.size();
+		int basketSize = stat.getDiamondsnumber();
+		if (dlSize > basketSize) {
+			throw new DiamondWebException("diamond in package is over the limit.");
+		}
+
+		BigDecimal total = BigDecimal.ZERO;
+		final BigDecimal minWeight = stat.getMimweight();
+		BigDecimal totalWeight = stat.getTotalweight();
+
+		for (DiamondInfoData d : orginalList) {
+			String giano = d.getGiano();
+			if (StringUtils.isBlank(giano)) {
+				throw new DiamondWebException("diamond GIA cert id can't be empty.");
+			}
+
+			BigDecimal size = d.getSize();
+			if (size == null) {
+				throw new DiamondWebException("diamond size can't be empty.");
+			}
+
+			if (size.compareTo(minWeight) < 0) {
+				throw new DiamondWebException("diamond " + giano + " weight: " + size.toPlainString()
+						+ " is less than minweight:" + minWeight.toPlainString());
+			}
+
+			total = total.add(size);
+		}
+		if (total.compareTo(totalWeight) > 0) {
+			throw new DiamondWebException("package " + stat.getBasketno() + " total weight:" + total.toPlainString()
+			+ " is great than totalweight:" + totalWeight.toPlainString());
+		}
+
+		if (dlSize == basketSize) {
+			if (total.compareTo(totalWeight) < 0) {
+				throw new DiamondWebException("package " + stat.getBasketno() + " total weight:" + total.toPlainString()
+						+ " is less than totalweight:" + totalWeight.toPlainString());
+			}
+		}
 	}
 }

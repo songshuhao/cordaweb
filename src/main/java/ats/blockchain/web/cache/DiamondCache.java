@@ -1,13 +1,10 @@
 package ats.blockchain.web.cache;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -22,6 +19,7 @@ import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageAndDiamond;
 import ats.blockchain.web.bean.PackageInfo;
+import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.StringUtil;
 
 public class DiamondCache {
@@ -77,17 +75,17 @@ public class DiamondCache {
 		String basketno = diamond.getBasketno();
 		PackageAndDiamond pad1 = diamondCache.getValue(basketno, status);
 		List<DiamondInfoData> list = pad1.getDiamondList();
-		List<DiamondInfoData> tmp = Lists.newArrayList();
-		if (list != null) {
-			tmp.addAll(list);
+		if (list == null) {
+			list = Lists.newArrayList();
+			pad1.setDiamondList(list);
 		}
+		list.add(diamond);
+		
 		String tradeid = StringUtil.getDiamondSeqno();
 		diamond.setTradeid(tradeid);
 		diamond.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
-		tmp.add(diamond);
 
 		PackageInfo stat = pad1.getPkgInfo();
-		check(stat, tmp);
 		logger.debug("add diamond  {} ,status {} to package {}", diamond.getGiano(), status,
 				pad1.getPkgInfo().getBasketno());
 		synchronized (diamondSet) {
@@ -95,15 +93,14 @@ public class DiamondCache {
 			diamondSet.add(giano);
 			updateTradeIdGiaMap(tradeid, giano);
 		}
-		pad1.setDiamondList(tmp);
-		int dlSize = tmp.size();
+		int dlSize = list.size();
 		int basketSize = stat.getDiamondsnumber();
 		if (dlSize == basketSize) {
 			String oldStatus = stat.getStatus();
 			String newStatus = PackageState.DMD_CREATE;
 			stat.setStatus(newStatus);
 			stat.setStatusDesc(Constants.PKG_STATE_MAP.get(stat.getStatus()));
-			tmp.stream().forEach(d -> {
+			list.stream().forEach(d -> {
 				d.setStatus(newStatus);
 				d.setStatusDesc(stat.getStatusDesc());
 			});
@@ -125,10 +122,15 @@ public class DiamondCache {
 		String status = diamond.getStatus();
 		String basketno = diamond.getBasketno();
 		PackageAndDiamond oldPad = diamondCache.getValue(basketno, status);
+		if (oldPad == null) {
+			throw new DiamondWebException("package info is out of date.");
+		}
 		List<DiamondInfoData> list = oldPad.getDiamondList();
 		List<DiamondInfoData> tmp = Lists.newArrayList();
 		if (list != null) {
 			tmp.addAll(list);
+		} else {
+			throw new DiamondWebException("diamond in package is out of date.");
 		}
 
 		diamond.setStatusDesc(Constants.PKG_STATE_MAP.get(status));
@@ -140,7 +142,7 @@ public class DiamondCache {
 				break;
 			}
 		}
-		check(oldPad.getPkgInfo(), tmp);
+		AOCBeanUtils.checkDiamond(oldPad.getPkgInfo(), tmp);
 		oldPad.setDiamondList(tmp);
 		synchronized (diamondSet) {
 			for (DiamondInfoData p : tmp) {
@@ -204,10 +206,14 @@ public class DiamondCache {
 	 */
 	public void removeDiamond(String basketno, String status, String tradeid) {
 		PackageAndDiamond pad = diamondCache.getValue(basketno, status);
+		if (pad == null) {
+			logger.warn("no package {} ,status {} in cache,won't remove diamond.", basketno, status);
+			return;
+		}
 		String oldStatus = pad.getPkgInfo().getStatus();
 		List<DiamondInfoData> diamondList = pad.getDiamondList();
 		if (diamondList == null) {
-			logger.warn("package {} has no diamond,won't remove diamond.", basketno);
+			logger.warn("package {} status {} has no diamond,won't remove diamond.", basketno, status);
 			return;
 		}
 		List<DiamondInfoData> list = Lists.newArrayList();
@@ -256,49 +262,6 @@ public class DiamondCache {
 			list.addAll(diamondCache.getValuesByColumn(s));
 		}
 		return list;
-	}
-
-	private static void check(@Nonnull PackageInfo stat, @Nonnull List<DiamondInfoData> orginalList)
-			throws DiamondWebException {
-		int dlSize = orginalList.size();
-		int basketSize = stat.getDiamondsnumber();
-		if (dlSize > basketSize) {
-			throw new DiamondWebException("diamond in package is over the limit.");
-		}
-
-		BigDecimal total = BigDecimal.ZERO;
-		final BigDecimal minWeight = stat.getMimweight();
-		BigDecimal totalWeight = stat.getTotalweight();
-
-		for (DiamondInfoData d : orginalList) {
-			String giano = d.getGiano();
-			if (StringUtils.isBlank(giano)) {
-				throw new DiamondWebException("diamond GIA cert id can't be empty.");
-			}
-
-			BigDecimal size = d.getSize();
-			if (size == null) {
-				throw new DiamondWebException("diamond size can't be empty.");
-			}
-
-			if (size.compareTo(minWeight) < 0) {
-				throw new DiamondWebException("diamond " + giano + " weight: " + size.toPlainString()
-						+ " is less than minweight:" + minWeight.toPlainString());
-			}
-
-			total = total.add(size);
-			if (total.compareTo(totalWeight) > 0) {
-				throw new DiamondWebException("package " + stat.getBasketno() + " total weight:" + total.toPlainString()
-						+ " is great than totalweight:" + totalWeight.toPlainString());
-			}
-		}
-
-		if (dlSize == basketSize) {
-			if (total.compareTo(totalWeight) < 0) {
-				throw new DiamondWebException("package " + stat.getBasketno() + " total weight:" + total.toPlainString()
-						+ " is less than totalweight:" + totalWeight.toPlainString());
-			}
-		}
 	}
 
 	/**

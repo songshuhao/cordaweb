@@ -74,6 +74,10 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 			logger.debug("addDiamondInfo to package : {}", di);
 			cache.add(di);
 			return ResultUtil.msgMap(true, "success");
+		}catch (DiamondWebException e) {
+			logger.error("addDiamondInfo basketNo " + basketno + " error:", e);
+			String message = e.getMessage();
+			return ResultUtil.failMap(message);
 		} catch (Exception e) {
 			logger.error("addDiamondInfo basketNo " + basketno + " error:", e);
 			String message = e.getMessage();

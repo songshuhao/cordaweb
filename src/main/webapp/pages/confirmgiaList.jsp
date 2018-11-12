@@ -14,7 +14,7 @@
 	<form class="form-inline" >
 	<!-- 工具栏 -->
 	<div id="toolbar">
-			<input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input>
+			<!-- <input type="button" value="Import" id="importBtn" data-toggle="modal" class="btn btn-primary" onclick="openImport()"></input> -->
 			<input type="button" value="Submit" id="submitBtn" data-toggle="modal" data-target="#submitModal" class="btn btn-primary" onclick="submit()"></input>
 	</div>
 	<!-- bootstrapTable -->
@@ -101,6 +101,11 @@
     
     laydate.render({
  	   elem: '#giaapproveddate',
+ 	  	done: function(value, date){
+  		  $("#addForm").data('bootstrapValidator')
+       	 .updateStatus('giaapproveddate', 'NOT_VALIDATED',null)
+       	 .validateField('giaapproveddate');
+  	   }
       });
  
     function TableInit() {
@@ -205,8 +210,8 @@
    		'click #modifyBtn': function(e, value, row, index) {
 			resetAddModal();
 			$("#basketno").val(row.basketno);
-			$("#gradlab").attr("value",row.gradlab);
-			$("#result").attr("value",row.result);
+			$("#gradlab").val(row.gradlab);
+			$("#result").val(row.result);
 			$("#reverification").val(row.reverification);
 			$("#giaapproveddate").val(row.giaapproveddate);
 			
