@@ -230,12 +230,13 @@ public class BasketInfoController extends BaseController {
 		String[] header = cfg.getHeader();
 		String[] statusList = cfg.getStatus();
 		try {
+			String filename = cfg.getFilename();
 			if (step.equals(Constants.SUPPLIER_TO_AOC)) {
 				List<DiamondInfoData> list = diamondsInfoService.getDiamondInfoByStatus(userid, statusList);
 				//只导出需要添加的钻石（tradeid 为空的数据）
 //				list = list.stream().filter(d -> StringUtils.isBlank(d.getTradeid())).collect(Collectors.toList());
 				logger.info("export diamond step:{} ,result size: {}", step, list.size());
-				filePath = FileUtils.generateExportFile(tmpFilePath, diamondPrefix, header, list, fileType);
+				filePath = FileUtils.generateExportFile(tmpFilePath, filename, header, list, fileType);
 				logger.info("export diamond step:{} ,save to file: {}", step, filePath);
 			} else {
 				List<PackageInfo> list = null;
@@ -245,7 +246,7 @@ public class BasketInfoController extends BaseController {
 					list = packageInfoService.getPackageInfoByStatus(userid, statusList);
 				}
 				logger.info("export package step:{} ,result size: {}", step, list.size());
-				filePath = FileUtils.generateExportFile(tmpFilePath, packagePrefix, header, list, fileType);
+				filePath = FileUtils.generateExportFile(tmpFilePath, filename, header, list, fileType);
 				logger.info("export package step:{} ,save to file: {}", step, filePath);
 			}
 			result.put("state", "success");

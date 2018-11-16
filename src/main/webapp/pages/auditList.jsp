@@ -143,7 +143,7 @@
     	var selectLsit= $("#tableListForData").bootstrapTable('getSelections');  
         if(selectLsit.length<=0){  
         	var data = {"state":"fail","message":"Please select one or more data"};
-        	messageShow(data,null,false);
+        	messageShow(data,null,true);
        }else
    	   {
     	   

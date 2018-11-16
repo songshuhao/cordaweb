@@ -1,5 +1,6 @@
 package ats.blockchain.web.interceptor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -73,53 +74,44 @@ public class TimeOutIntercepter implements HandlerInterceptor
         if(AOCBeanUtils.isEmpty(allUrls))
         {
         	initAllUrl(request);
-        }else
-        {
-        	if(allUrls.contains(requestUrl)){
-                return true;
-            }else 
-            {
-            	if(isAjaxRequest(request))
-            	{
-            		response.setHeader("sessionstatus", "timeout"); 
-            	}else
-            	{
-            		response.sendRedirect(request.getContextPath() + defaultUrl);
-    			}
-            	return false;
-			}
-		}
+        }
+        
         HttpSession session = request.getSession(false);
-        if(null != session && null != session.getAttribute("userInfo"))
-        {
-        	UserInfo userInfo = (UserInfo) session.getAttribute("userInfo");
+    	if(allUrls.contains(requestUrl) && null != session && null != session.getAttribute("userInfo"))
+    	{
+    		UserInfo userInfo = (UserInfo) session.getAttribute("userInfo");
         	if(StringUtils.isNoneBlank(userInfo.getUserId()))
         	{
         		return true;
         	}else
         	{
-        		response.sendRedirect(request.getContextPath() + defaultUrl);
-            	return false;
+            	return errorHanding(request, response);
         	}
-        }else
+        }else 
         {
-        	if(isAjaxRequest(request))
-        	{
-        		response.setHeader("sessionstatus", "timeout"); 
-        	}else
-        	{
-        		response.sendRedirect(request.getContextPath() + defaultUrl);
-			}
-        	return false;
-        }
+        	return errorHanding(request, response);
+		}
+        
     }
     
-    public static boolean isAjaxRequest(HttpServletRequest request){
+    public boolean isAjaxRequest(HttpServletRequest request){
         boolean result = false;
         String headerX = request.getHeader("X-Requested-With");
         result = (headerX != null  && headerX.equalsIgnoreCase("XMLHttpRequest"));
         return  result;     
          
+    }
+    
+    public boolean errorHanding(HttpServletRequest request,HttpServletResponse response) throws IOException
+    {
+    	if(isAjaxRequest(request))
+    	{
+    		response.setHeader("sessionstatus", "timeout"); 
+    	}else
+    	{
+    		response.sendRedirect(request.getContextPath() + defaultUrl);
+		}
+    	return false;
     }
     
     
@@ -139,6 +131,7 @@ public class TimeOutIntercepter implements HandlerInterceptor
     			allUrls.add(uStr);
     		}
     	}
+    	logger.debug("RequestMappingHandlerMapping Url:" + allUrls);
 		return allUrls;
     }
 }

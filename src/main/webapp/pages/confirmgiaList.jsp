@@ -202,9 +202,11 @@
     window.operateEvents = {
 		'click #addBtn': function(e, value, row, index) {
 			resetAddModal();
+			var now=new Date();
 			$("#basketno").val(row.basketno);
 			$("#gradlab").val(row.gradlab);
 			$("#seqNo").val(row.seqNo);
+			$("#giaapproveddate").val(now.getFullYear()+"-"+now.getMonth()+"-"+now.getDate());
 			$("#conf").text("Add");
    		},	
    		'click #modifyBtn': function(e, value, row, index) {

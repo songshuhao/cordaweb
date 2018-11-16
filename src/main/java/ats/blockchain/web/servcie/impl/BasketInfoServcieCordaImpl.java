@@ -7,7 +7,6 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 //import org.slf4j.Logger;
@@ -180,7 +179,6 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	@Override
 	public long getPackageInfoNumById(String... basketNo) {
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateById(basketNo);
-	
 		return (long) list.size();
 	}
 	
@@ -214,7 +212,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				old.setReverification(pkgInf.getReverification());
 				old.setGiaapproveddate(pkgInf.getGiaapproveddate());
 				old.setStatus(status);
-				old.setGiacontrolno("1");
+				//old.setGiacontrolno("1");
 			} else {
 				return flag;
 			}
@@ -237,12 +235,13 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			pkgStateList = cache.getPackageByStatus(PackageState.DMD_ISSUE);
 			if (AOCBeanUtils.isNotEmpty(pkgStateList)) {
 				// 校验未add的数据
+				failedList.addAll(pkgStateList);
 			} else {
 				cachedList = cache.getPackageByStatus(PackageState.AOC_REQ_LAB_VERIFY);
 				for (PackageInfo pkgState : cachedList) {
 					logger.debug("submitPackageInfo {}", pkgState.getBasketno());
 					try {
-						diamondApi.reqLabVerifyDiamond(pkgState.getBasketno(), PackageState.AOC_SUBMIT_LAB_VERIFY,
+						diamondApi.reqLabVerifyDiamond(pkgState.getBasketno(),  pkgState.getStatus(),
 								pkgState.getGradlab().toString());
 						cache.remove(pkgState.getSeqNo(), pkgState.getStatus());
 					} catch (DiamondWebException e) {
@@ -255,6 +254,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			pkgStateList =  cache.getPackageByStatus(PackageState.AOC_SUBMIT_LAB_VERIFY);
 			if (AOCBeanUtils.isNotEmpty(pkgStateList)) {
 				// 校验未add的数据
+				failedList.addAll(pkgStateList);
 			} else {
 				cachedList = cache.getPackageByStatus(PackageState.LAB_ADD_VERIFY);
 				for (PackageInfo pkgState : cachedList) {
@@ -278,6 +278,8 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 			pkgStateList = cache.getPackageByStatus(PackageState.LAB_VERIFY_PASS);
 			if (AOCBeanUtils.isNotEmpty(pkgStateList)) {
 				// 校验未add的数据
+				logger.debug("submitPackageInfo {}", pkgStateList);
+				failedList.addAll(pkgStateList);
 			} else {
 				cachedList = cache.getPackageByStatus(PackageState.AOC_REQ_VAULT_VERIFY);
 				for (PackageInfo pkgState : cachedList) {
@@ -338,7 +340,9 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				packageInfoCache.setAoc(DiamondApplicationRunner.getAllUserMap().get("AOC"));
 				packageInfoCache.setStatus(status);
 				flag = true;
-			} 
+			} else {
+				return flag;
+			}
 
 		} catch (Exception e) {
 			logger.error("vaultAddPackageInfo error  :"+pkgInf.getBasketno(), e);
@@ -382,7 +386,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				logger.debug("submit change owner baksetno : {} ,package: {}", packageInfo);
 				try {
-					diamondApi.submitChangeOwnerDiamond(packageInfo.getBasketno(), packageInfo.getVault(),Base64Utils.encode(packageInfo.getOwner()));
+					diamondApi.submitChangeOwnerDiamond(packageInfo.getBasketno(), packageInfo.getVault(),Base64Utils.encode(packageInfo.getOwner()),packageInfo.getStatus());
 					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
@@ -397,7 +401,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				logger.debug("change owner response basketno: {} ,package: {}",packageInfo.getBasketno(), packageInfo);
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				try {
-					diamondApi.changeOwnerResp(packageInfo.getBasketno(), packageInfo.getAoc());
+					diamondApi.changeOwnerResp(packageInfo.getBasketno(), packageInfo.getAoc(),packageInfo.getStatus());
 					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
@@ -411,7 +415,7 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 				logger.debug("submitPackageInfo aoc to audit basketno:{} , package:{}", packageInfo);
 				PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 				try {
-					diamondApi.auditDiamond(auditor, packageInfo.getBasketno());
+					diamondApi.auditDiamond(auditor, packageInfo.getBasketno(), packageInfo.getStatus());
 					cache.remove(packageInfo.getSeqNo(), packageInfo.getStatus());
 				} catch (DiamondWebException e) {
 					logger.error("submitPackageInfo error:", e);
@@ -505,25 +509,11 @@ public class BasketInfoServcieCordaImpl implements PackageInfoService {
 	@Override
 	public List<PackageInfo> getPackageInfoByStatus(String userid, String step, String... status)
 	{
-
 		List<StateAndRef<PackageState>> list = diamondApi.getPackageStateByStatus(status);
 		List<PackageAndDiamond> padList = AOCBeanUtils.convertPakageState2PackageInfo(list);
 		PackageCache cache = CacheFactory.Instance.getPackageCache(userid);
 		padList.forEach( p -> {
-			PackageInfo packageInfo = p.getPkgInfo();
-			if(null != packageInfo && step.equals(Constants.AOC_TO_VAULT_OWNER))
-			{
-				if(StringUtils.isNotBlank(packageInfo.getOwner()))
-				{
-					packageInfo.setOwner(Base64Utils.decode(packageInfo.getOwner()));
-				}
-				if(StringUtils.isNotBlank(packageInfo.getOwnmgr()))
-				{
-					packageInfo.setOwnmgr(Base64Utils.decode(packageInfo.getOwnmgr()));
-				}
-				logger.debug("Owner---->" + packageInfo.getOwner()+",Ownmgr---->" + packageInfo.getOwnmgr());
-			}
-			cache.update(packageInfo);
+			cache.update( p.getPkgInfo());
 		});
 		
 		List<PackageInfo> pkgList = cache.getPackageByStatus(status);

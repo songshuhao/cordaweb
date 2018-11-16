@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -69,7 +68,7 @@ public class PackageCache {
 	public void update(PackageInfo pkg) {
 		String seqNo = pkg.getSeqNo();
 		if(pkgCache.containsKey(seqNo)) {
-			logger.debug("package in cache ,don't add again,baksetno: {},staus : {}",pkg.getBasketno(),pkg.getStatusDesc());
+			logger.debug("package in cache ,don't add again,baksetno: {},status : {}",pkg.getBasketno(),pkg.getStatusDesc());
 			return;
 		}
 		logger.debug("update package cache :{}",pkg);
@@ -123,6 +122,7 @@ public class PackageCache {
 		Set<String> set = Sets.newHashSet(status);
 		List<PackageInfo> list = pkgCache.values().stream().filter(p -> set.contains(p.getStatus()))
 				.collect(Collectors.toList());
+		logger.debug("get package by status {},list size: {} ,content: {}",set,list.size(),list);
 		return list;
 	}
 	/**

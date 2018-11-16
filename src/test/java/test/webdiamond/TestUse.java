@@ -3,19 +3,26 @@ package test.webdiamond;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.bag.SynchronizedSortedBag;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.io.DefaultResourceLoader;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
@@ -23,14 +30,18 @@ import com.google.common.collect.Lists;
 import ats.blockchain.cordapp.diamond.data.DiamondsInfo;
 import ats.blockchain.cordapp.diamond.data.PackageState;
 import ats.blockchain.web.DiamondWebException;
+import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.ExportConfig;
 import ats.blockchain.web.bean.PackageInfo;
+import ats.blockchain.web.bean.StateInfo;
+import ats.blockchain.web.config.DiamondApplicationRunner;
+import ats.blockchain.web.corda.CordaApi;
 import ats.blockchain.web.corda.impl.DiamondTradeApi;
-import ats.blockchain.web.model.Basketinfo;
 import ats.blockchain.web.model.Diamondsinfo;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.CustSort;
 import ats.blockchain.web.utils.DateFormatUtils;
+import ats.blockchain.web.utils.ExcelUtil;
 import ats.blockchain.web.utils.ResultUtil;
 import ats.blockchain.web.utils.StringUtil;
 import net.corda.client.rpc.CordaRPCClient;
@@ -38,7 +49,6 @@ import net.corda.client.rpc.CordaRPCClientConfiguration;
 import net.corda.client.rpc.CordaRPCConnection;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.messaging.CordaRPCOps;
-import net.corda.core.node.services.Vault;
 import net.corda.core.utilities.NetworkHostAndPort;
 
 public class TestUse {
@@ -114,21 +124,20 @@ public class TestUse {
 		init(aocUser, aocPwd, aocPort);
 
 		String pkgStr = "{\"aoc\":\"OU=AOC,O=AOC,L=HKSAR,C=CN\",\"basketno\":\"" + basketno
-				+ "\",\"diamondsnumber\":2,\"mimweight\":1,\"productcode\":\"100D1Duo\",\"suppliercode\":\"OU=Supplier,O=SupplierA,L=HKSAR,C=CN\",\"totalweight\":2}";
+				+ "\",\"diamondsnumber\":1,\"mimweight\":1,\"productcode\":\"100D1Duo\",\"suppliercode\":\"OU=Supplier,O=SupplierA,L=HKSAR,C=CN\",\"totalweight\":1}";
 		PackageInfo bk = JSON.parseObject(pkgStr, PackageInfo.class);
 		bk.setSeqNo(StringUtil.getPackageSeqno());
 		PackageState pkg = new PackageState();
 		BeanUtils.copyProperties(bk, pkg);
 
 		String pkgIssue = PackageState.PKG_ISSUE;
-		String is;
 		try {
-			is = api.createPackage(supLegalName, pkg, pkgIssue);
-			System.out.println("issuePackage " + is);
+			 api.createPackage(supLegalName, pkg, pkgIssue);
 		} catch (DiamondWebException e) {
+			e.printStackTrace();
 		}
 
-		// addDiamond();
+//		 addDiamond();
 		// testReqLabVerify();
 	}
 
@@ -143,6 +152,7 @@ public class TestUse {
 		di.setClarity("A");
 		di.setColor("F");
 		di.setSize(BigDecimal.ONE);
+		di.setStatus(PackageState.DMD_CREATE);
 		di.setGiano("g11001");
 		di.setProductcode("100D1Duo");
 		di.setCraftsmandate("2018-10-01");
@@ -151,8 +161,7 @@ public class TestUse {
 		di.setCut("cut");
 		list.add(di);
 		try {
-			String rs = api.issueDiamond(aocLegalName, basketno, list);
-			System.out.println("addDiamond " + rs);
+			api.issueDiamond(aocLegalName, basketno, list);
 		} catch (DiamondWebException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -163,8 +172,7 @@ public class TestUse {
 	public void testReqLabVerify() {
 		init(aocUser, aocPwd, aocPort);
 		try {
-			String rs = api.reqLabVerifyDiamond(basketno, PackageState.AOC_SUBMIT_LAB_VERIFY, labLegalName);
-			System.out.println("Submit ReqLabVerify " + rs);
+			 api.reqLabVerifyDiamond(basketno, PackageState.AOC_SUBMIT_LAB_VERIFY, labLegalName);
 			testRespLabVerify();
 		} catch (DiamondWebException e) {
 			// TODO Auto-generated catch block
@@ -186,8 +194,7 @@ public class TestUse {
 		inf.setReverification("verfied");
 		inf.setGiacontrolno("");
 		try {
-			String rs = api.labVerifyResp(inf);
-			System.out.println(" RespLabVerify " + rs);
+			api.labVerifyResp(inf);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -207,8 +214,7 @@ public class TestUse {
 		inf.setResult("pass");
 		inf.setReverification("verfied");
 		try {
-			String rs = api.labVerifyResp(inf);
-			System.out.println(" RespLabVerify " + rs);
+			api.labVerifyResp(inf);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -219,10 +225,9 @@ public class TestUse {
 		init(aocUser, aocPwd, aocPort);
 		try {
 			// String externalid,String status,String vault,String owner
-			String rs = api.reqVaultVerifyDiamond(basketno, PackageState.AOC_SUBMIT_VAULT_VERIFY, valutLegalName,
+		  api.reqVaultVerifyDiamond(basketno, PackageState.AOC_SUBMIT_VAULT_VERIFY, valutLegalName,
 					"owner111");
-			System.out.println("submit ReqvalutVerify " + rs);
-			testRespVaultVerify();
+//			testRespVaultVerify();
 		} catch (DiamondWebException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -243,20 +248,29 @@ public class TestUse {
 		inf.setResult("pass");
 		inf.setReverification("verfied");
 		try {
-			String rs = api.vaultVerifyResp(inf);
-			System.out.println(rs);
+			 api.vaultVerifyResp(inf);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Test
+	public void testReqChangeOwner() {
+		init(aocUser, aocPwd, aocPort);
+
+		try {
+			 api.submitChangeOwnerDiamond(basketno, valutLegalName, "new owner", PackageState.DMD_SUBMIT_CHG_OWNER);
+		} catch (DiamondWebException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
 	public void testRespChangeOwner() {
 		init(valutUser, valutPwd, valutPort);
 
 		try {
-			String rs = api.changeOwnerResp(basketno, aocLegalName);
-			System.out.println("testRespChangeOwner " + rs);
+			 api.changeOwnerResp(basketno, aocLegalName,PackageState.DMD_CHANGE_OWNER_PASS);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -267,8 +281,7 @@ public class TestUse {
 		init(aocUser, aocPwd, aocPort);
 
 		try {
-			String rs = api.redeemDiamond(basketno, valutLegalName);
-			System.out.println("testRedeemDiamond " + rs);
+			 api.redeemDiamond(basketno, valutLegalName);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -278,8 +291,7 @@ public class TestUse {
 	public void testRespRedeemDiamond() {
 		init(valutUser, valutPwd, valutPort);
 		try {
-			String rs = api.redeemDiamondResp(basketno, aocLegalName);
-			System.out.println("testRespRedeemDiamond " + rs);
+			 api.redeemDiamondResp(basketno, aocLegalName);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -290,8 +302,7 @@ public class TestUse {
 		init(aocUser, aocPwd, aocPort);
 
 		try {
-			String rs = api.auditDiamond(basketno, valutLegalName);
-			System.out.println("testAuditDiamond " + rs);
+			 api.auditDiamond( auditLegalName,basketno,PackageState.AOC_REQ_AUDIT_VERIFY);
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -299,11 +310,10 @@ public class TestUse {
 
 	@Test
 	public void testRespAuditDiamond() {
-		init(valutUser, valutPwd, valutPort);
+		init(auditUser, auditPwd, auditPort);
 		try {
-			String rs = api.auditDiamondResp(basketno, aocUser, "2018-09-26", PackageState.AUDIT_VERIFY_NOPASS,
-					"no pass");
-			System.out.println("testRespAuditDiamond " + rs);
+			 api.auditDiamondResp(basketno, aocUser, "2018-09-26", PackageState.AUDIT_VERIFY_PASS,
+					"pass");
 		} catch (DiamondWebException e) {
 			e.printStackTrace();
 		}
@@ -361,6 +371,18 @@ public class TestUse {
 			System.out.println("Corda RPC protocol version:" + cordarpcconn.getServerProtocolVersion());
 			api = new DiamondTradeApi(cordarpcops);
 			System.out.println("DiamondTradeApi create");
+			DiamondApplicationRunner r = new  DiamondApplicationRunner();
+			r.setCordaApi(new CordaApi() {
+				@Override
+				public DiamondTradeApi getTradediamondinf() {
+					return api;
+				}
+				
+			});
+			r.setResourceLoader(new DefaultResourceLoader());
+			r.setPreStateCheck("classpath:/templates/status.properties");
+			r.initNodeInfoList();
+			r.initPreState();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -400,5 +422,65 @@ public class TestUse {
 			e1.printStackTrace();
 		}
 		
+	}
+	
+	@Test
+	public void testReplace() {
+		String p = "D:\\aaa\\\\bbb";
+		System.out.println(p.replaceAll("[\\\\]", "/"));
+		
+		StringReader sr = new StringReader(p);
+		
+	}
+	
+	@Test
+	public void testPath() {
+		 Path p = Paths.get("./data/aa");
+		 File f = p.toFile();
+		 System.out.println(f.getName());
+		 System.out.println(f.isDirectory());
+		 System.out.println(f.length());
+		 
+	}
+	
+	@Test
+	public void testReadExcelDiamond() {
+		try {
+			InputStream is = new FileInputStream("data/diamond_20181107_162900227.xls");
+			List<DiamondInfoData> list = ExcelUtil.readExcelContent(".xls", is , DiamondInfoData.class);
+			list.forEach(d -> System.out.println(d));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	@Test
+	public void testReadExcelPackage() {
+		try {
+			InputStream is = new FileInputStream("data/diamond_20181107_162900227.xls");
+			List<PackageInfo> list = ExcelUtil.readExcelContent(".xls", is , PackageInfo.class);
+			list.forEach(d -> System.out.println(d));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testReadStateInfo() {
+		
+		InputStream ins = null;
+		try {
+			ins = new FileInputStream("src/main/resources/templates/status.properties");
+			List<StateInfo> list = AOCBeanUtils.getObjectFromCsvByMethod(ins, StateInfo.class);
+			list.forEach(d -> System.out.println(d));
+		} catch (InstantiationException | IllegalAccessException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

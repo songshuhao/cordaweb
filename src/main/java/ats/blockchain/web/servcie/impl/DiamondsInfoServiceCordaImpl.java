@@ -1,5 +1,6 @@
 package ats.blockchain.web.servcie.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -279,5 +280,44 @@ public class DiamondsInfoServiceCordaImpl implements DiamondsInfoService {
 		DiamondCache cache = CacheFactory.Instance.getDiamondCache(userid);
 		cache.removeDiamond(basketno, status);
 		return ResultUtil.msgMap(true, "delete diamond success");
+	}
+
+	
+	@Override
+	public Map<String,List<DiamondInfoData>> getDuplicateDiamondsList(String basketno)
+	{
+		logger.info("getDuplicateDiamondsList basketno: {} ",basketno);
+		Map<String,List<DiamondInfoData>> returnData = new HashMap<String, List<DiamondInfoData>>();
+		List<DiamondInfoData>  sourceList = new ArrayList<DiamondInfoData>();
+		List<DiamondInfoData>  targetList = new ArrayList<DiamondInfoData>();
+		List<DiamondInfoData>  duplicateList = new ArrayList<DiamondInfoData>();
+		List<StateAndRef<PackageState>> list = diamondApi.getAllPackageState();
+		List<PackageAndDiamond> packageAndDiamonds = AOCBeanUtils.convertPakageState2PackageInfo(list);
+		packageAndDiamonds.forEach(p -> {
+			if(p.getPkgInfo().getBasketno().equals(basketno))
+			{
+				if(AOCBeanUtils.isNotEmpty(p.getDiamondList()))
+				{
+					sourceList.addAll(p.getDiamondList());
+				}
+			}else 
+			{
+				if(AOCBeanUtils.isNotEmpty(p.getDiamondList()))
+				{
+					targetList.addAll(p.getDiamondList());
+				}
+			}
+		});
+		sourceList.forEach(source->{
+			duplicateList.clear();
+			targetList.forEach(target->{
+				if(source.getGiano().equals(target.getGiano()))
+				{
+					duplicateList.add(target);
+				}
+			});
+			returnData.put(source.getBasketno()+","+source.getGiano(), duplicateList);
+		});
+		return returnData;
 	}
 }

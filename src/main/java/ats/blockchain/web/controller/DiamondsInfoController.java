@@ -50,7 +50,7 @@ public class DiamondsInfoController extends BaseController {
 			ResultUtil.fail("Add Diamonds failed!");
 		}
 		logger.debug("DiamondsInfoController:diamondsinfo---->" + diamondsinfo.toString());
-
+		
 		String userid = diamondsinfo.getUserid();
 		String basketno = diamondsinfo.getBasketno();
 		DiamondCache cache = CacheFactory.Instance.getDiamondCache(userid);

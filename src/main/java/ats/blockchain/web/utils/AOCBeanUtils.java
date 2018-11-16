@@ -55,7 +55,7 @@ public class AOCBeanUtils {
 
 	private static Logger logger = LoggerFactory.getLogger(AOCBeanUtils.class);
 	private static final String ERR_FMT = "convert field: %s,value: %s to type: %s failed!";
-
+	private static final String methodFormat = "SET%S";
 	/**
 	 * StringToObject
 	 * 
@@ -339,6 +339,7 @@ public class AOCBeanUtils {
 					logger.warn("can't get filed: {}",fieldName);
 					continue;
 				}
+				
 				Object objVal = convertType(value, f.getType());
 				f.set(t, objVal);
 			}
@@ -380,6 +381,49 @@ public class AOCBeanUtils {
 		return parseCsv(clazz, csvReader);
 	}
 
+	public static <T> List<T> getObjectFromCsvByMethod(InputStream inputStream, Class<T> clazz) throws InstantiationException, IllegalAccessException, IllegalArgumentException, IOException, InvocationTargetException{
+		if (inputStream == null) {
+			logger.warn("Can not get csv file");
+			return Collections.emptyList();
+		}
+		InputStreamReader isReader = new InputStreamReader(inputStream);
+		CsvReader csvReader =new CsvReader(isReader);
+		return parseCsvByMethod(clazz, csvReader);
+	}
+	
+	
+	private  static <T> List<T> parseCsvByMethod(Class<T> clazz, CsvReader reader) throws InstantiationException, IllegalAccessException, IllegalArgumentException, IOException, InvocationTargetException {
+		ClassMethods clazzMethod = ClassMethodFactory.Instance.getClassMethods(clazz);
+		List<T> list = new ArrayList<T>();
+		reader.readHeaders();
+		String[] header = reader.getHeaders();
+		int count = reader.getHeaderCount();
+		if (count == 0) {
+			logger.warn("csv file is invaild: no headers.");
+			return Collections.emptyList();
+		}
+		while (reader.readRecord()) {
+			logger.debug("read record:{}",reader.getRawRecord());
+			String[] row = reader.getValues();
+			T t = clazz.newInstance();
+			for (int i = 0; i < count; i++) {
+				String fieldName = header[i];
+				String value = row[i];
+				Method f = clazzMethod.getMethod(String.format(methodFormat, fieldName));
+				if (f == null) {
+					 logger.warn("can't get filed: {}", fieldName);
+					continue;
+				}
+				Object objVal = convertType(value, f.getParameterTypes()[0]);
+				 logger.debug(" method :" + f.getName() + ",value : " + value + " type: "
+						+ f.getParameterTypes()[0].getTypeName() + ",objVal :" + objVal.getClass().getName());
+				f.invoke(t, objVal);
+			}
+			list.add(t);
+		}
+		return list;
+	}
+
 	private static Object convertType(String value, Class<?> type) {
 		Object obj = null;
 		if (value == null) {
@@ -395,7 +439,7 @@ public class AOCBeanUtils {
 			obj = Long.valueOf(value);
 		}  else if("String[]".equals(type.getSimpleName())){
 			obj =value.split(",");
-		}else {
+		} else {
 			obj = value;
 		}
 		return obj;
@@ -558,5 +602,39 @@ public class AOCBeanUtils {
 						+ " is less than totalweight:" + totalWeight.toPlainString());
 			}
 		}
+	}
+	
+	/**
+	 * 前置状态检查
+	 * 
+	 * @param currStatus
+	 * @param preStatus
+	 * @return true 前置状态满足
+	 */
+	public static boolean checkPreState(String currStatus, String preStatus) {
+		return true;
+		/*if (DiamondApplicationRunner.finalStatus.contains(preStatus)) {
+			logger.error("status: {} is final status, can't operate any more.", currStatus);
+			return false;
+		}
+
+		StateInfo inf = DiamondApplicationRunner.stateInfoMap.get(currStatus);
+		if (inf == null) {
+			logger.error("unknown status: {}", currStatus);
+			return false;
+		}
+
+		if (!inf.isEnableCheck()) {
+			logger.debug("status check is disabled: {}", currStatus);
+			return true;
+		}
+
+		logger.debug("checkPreState preStatus: {}, state info : {}", preStatus, inf.getPreStatus());
+		Set<String> definedPreStatus = inf.getPreStatus();
+		if (definedPreStatus == null || definedPreStatus.isEmpty()) {
+			return true;
+		}
+
+		return definedPreStatus.contains(preStatus);*/
 	}
 }

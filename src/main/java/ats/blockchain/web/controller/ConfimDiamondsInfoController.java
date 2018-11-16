@@ -2,6 +2,7 @@ package ats.blockchain.web.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
@@ -15,13 +16,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import ats.blockchain.cordapp.diamond.data.PackageState;
+import ats.blockchain.web.bean.DiamondInfoData;
 import ats.blockchain.web.bean.PackageInfo;
 import ats.blockchain.web.model.PagedObjectDTO;
 import ats.blockchain.web.servcie.PackageInfoService;
 import ats.blockchain.web.utils.AOCBeanUtils;
 import ats.blockchain.web.utils.Constants;
 import ats.blockchain.web.utils.ResultUtil;
-
+/**
+ * AOC 提交钻石给Lab认证
+ * @author Administrator
+ *
+ */
 @Controller
 public class ConfimDiamondsInfoController extends BaseController
 {
@@ -47,7 +53,24 @@ public class ConfimDiamondsInfoController extends BaseController
 	@ResponseBody
 	public String updateBasketInfo(PackageInfo packageInfo,String step)
 	{
-		logger.debug("BasketInfoController:basketinfo---->" + packageInfo.toString());
+		logger.debug("BasketInfoController:packageInfo--->" + packageInfo.toString());
+		//giano校验
+		/*Map<String, List<DiamondInfoData>> duplicateDiamondsMap = diamondsInfoService.getDuplicateDiamondsList(packageInfo.getBasketno());
+		String message = "";
+		if(!duplicateDiamondsMap.isEmpty())
+		{
+			for(Map.Entry<String, List<DiamondInfoData>> entry : duplicateDiamondsMap.entrySet()) 
+			{
+				String[] keyString = entry.getKey().split(",");
+				message = message+"packagetno:" + keyString[0]+",giano:["+keyString[1]+"] is duplicate with:\n";
+				for(DiamondInfoData temp : entry.getValue())
+				{
+					message = message +"packagetno:" +temp.getBasketno()+",giano:["+temp.getGiano()+"]\n";
+				}
+			}
+			return ResultUtil.fail(message);
+		}*/
+		
 		String status = "";
 		if(StringUtils.isNotBlank(step))
 		{
@@ -60,7 +83,6 @@ public class ConfimDiamondsInfoController extends BaseController
 			}
 		}
 		packageInfo.setStatus(status);
-		//packageInfo.setGiaapproveddate(DateFormatUtils.format(packageInfo.getGiaapproveddate(), "-"));
 		boolean result = packageInfoService.labConfirmPackageInfo(packageInfo);
 		String msg = "Add Success!";
 		if(!result)
@@ -92,6 +114,7 @@ public class ConfimDiamondsInfoController extends BaseController
 		String userid = (String) session.getAttribute(Constants.SESSION_USER_ID);
 		List<PackageInfo> list =packageInfoService.getPackageInfoByStatus(userid,statusList.toArray(new String[statusList.size()]));
 		PagedObjectDTO result = new PagedObjectDTO();
+		logger.debug("/confirm/getBasketList ： packagelist:" + list);
 		result.setRows(list = (list == null ? new ArrayList<PackageInfo>() : list));
 		result.setTotal(Long.valueOf(list.size()));
 		return result;

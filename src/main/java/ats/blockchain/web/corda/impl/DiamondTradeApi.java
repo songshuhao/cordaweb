@@ -39,6 +39,8 @@ import ats.blockchain.cordapp.diamond.util.ClassMethodFactory;
 import ats.blockchain.cordapp.diamond.util.Constants;
 import ats.blockchain.web.DiamondWebException;
 import ats.blockchain.web.bean.PackageInfo;
+import ats.blockchain.web.config.DiamondApplicationRunner;
+import ats.blockchain.web.utils.AOCBeanUtils;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
@@ -337,6 +339,15 @@ public class DiamondTradeApi {
 		return (diamondstate);
 	}
 
+	private PackageState getSinglePackageState(String baksetno) {
+		List<StateAndRef<PackageState>> list = getPackageStateById(baksetno);
+		if (list.isEmpty()) {
+			return null;
+		}
+		return list.get(0).getState().getData();
+
+	}
+
 	/**
 	 * package 相关的操作
 	 * 
@@ -350,12 +361,13 @@ public class DiamondTradeApi {
 	 * @throws DiamondWebException
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String createPackage(String supplier, PackageState pkgInfo, String state) throws DiamondWebException {
+	public void createPackage(String supplier, PackageState pkgInfo, String state) throws DiamondWebException {
 		if (pkgInfo == null) {
-			return null;
+			return;
 		}
 		String basketno = pkgInfo.getBasketno();
 		String stateStr = Constants.PKG_STATE_MAP.get(state);
+
 		logger.debug("{} :aoc {}, basketno:{} ,pkgInfo: {} ", stateStr, supplier, basketno, pkgInfo);
 		CordaX500Name x500Name = CordaX500Name.parse(supplier);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
@@ -363,12 +375,12 @@ public class DiamondTradeApi {
 			logger.error("{} supplier not found {}", stateStr, supplier);
 			throw new DiamondWebException(stateStr + " supplier not found");
 		}
-		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((supplierlist == null) || (supplierlist.size() == 0)) {
-			logger.error("{} can't find supplier ", stateStr);
-			throw new DiamondWebException("can't find supplier");
-		}
-		logger.debug("getLegalIdentities {} ", supplierlist.toString());
+		// List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
+		// if ((supplierlist == null) || (supplierlist.size() == 0)) {
+		// logger.error("{} can't find supplier ", stateStr);
+		// throw new DiamondWebException("can't find supplier");
+		// }
+		// logger.debug("getLegalIdentities {} ", supplierlist.toString());
 		try {
 			Class initClass = null;
 			if (PackageState.PKG_ISSUE.equals(state)) {
@@ -387,11 +399,36 @@ public class DiamondTradeApi {
 			strbuf.append(" Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName());
-			return (strbuf.toString());
+			strbuf.append(supplier);
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.error("Failure to " + stateStr, ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
+		}
+	}
+	
+	/**
+	 * 提交corda Package状态检查
+	 * @param basketno
+	 * @param newStatus 新提交的状态
+	 * @throws DiamondWebException
+	 */
+	private  void checkPreStatus(String basketno,String newStatus) throws DiamondWebException {
+		PackageState prePackage = getSinglePackageState(basketno);
+		if (prePackage == null) {
+			logger.error("unknown package: {}",basketno);
+			throw new DiamondWebException("unknown package :" + basketno);
+		}
+
+		String preStatus = prePackage.getStatus();
+		String stateStr = Constants.PKG_STATE_MAP.get(newStatus);
+		String preStatusStr = Constants.PKG_STATE_MAP.get(preStatus);
+
+		if (!AOCBeanUtils.checkPreState(newStatus, preStatus)) {
+			logger.error("package check pre-status failed: {} ,status: {},preStatus: {}",basketno,stateStr,preStatusStr);
+			throw new DiamondWebException("package :" + basketno + " status '"
+					+ preStatusStr + "' is not allow '"
+					+ stateStr+"'");
 		}
 	}
 
@@ -403,16 +440,24 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String issueDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist)
+	public void issueDiamond(String aoc, String basketno, List<DiamondsInfo> diamondinfolist)
 			throws DiamondWebException {
 		logger.debug("issueDiamond aoc: {} ,basketno : {}", aoc, basketno);
+		
+		if(AOCBeanUtils.isEmpty(diamondinfolist)|| diamondinfolist.get(0)==null) {
+			logger.warn("diamond list is empty,won't issue diamond,baksetno: {}",basketno);
+			return;
+		}
+		
+		checkPreStatus(basketno, diamondinfolist.get(0).getStatus());
+		
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((supplierlist == null) || (supplierlist.size() == 0))
-			throw new DiamondWebException("can't find supplier");
+		// List<Party> supplierlist = rpcops.nodeInfo().getLegalIdentities();
+		// if ((supplierlist == null) || (supplierlist.size() == 0))
+		// throw new DiamondWebException("can't find supplier");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondIssueFlow.Initiator.class,
 					aocIdentity, basketno, diamondinfolist);
@@ -421,8 +466,8 @@ public class DiamondTradeApi {
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(supplierlist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
+			strbuf.append(diamondinfolist.get(0).getSuppliercode()).append(" basketno ").append(basketno);
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to issue diamond:", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -440,15 +485,17 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException {
+	public void reqLabVerifyDiamond(String basketno, String status, String lab) throws DiamondWebException {
 		logger.debug("reqLabVerifyDiamond lab: {} ,basketno : {},status : {}", lab, basketno, status);
+		
+		checkPreStatus(basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(lab);
 		final Party labIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (labIdentity == null)
 			throw new DiamondWebException("lab not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("can't find aoc");
+		// List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		// if ((aoclist == null) || (aoclist.size() == 0))
+		// throw new DiamondWebException("can't find aoc");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops
 					.startFlowDynamic(DiamondReqLabVerifyFlow.Initiator.class, basketno, status, labIdentity);
@@ -458,7 +505,7 @@ public class DiamondTradeApi {
 			strbuf.append(stxn.getId());
 			strbuf.append(" verify by ");
 			strbuf.append(labIdentity).append(" basketno ").append(basketno);
-			return (strbuf.toString());
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to reqLabVerify diamond:", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -472,22 +519,22 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String labVerifyResp(PackageInfo pkgInfo) throws DiamondWebException {
+	public void labVerifyResp(PackageInfo pkgInfo) throws DiamondWebException {
 		logger.debug("labVerifyResp {}", pkgInfo.toString());
+		checkPreStatus(pkgInfo.getBasketno(), pkgInfo.getStatus());
 		String aoc = pkgInfo.getAoc();
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> lablist = rpcops.nodeInfo().getLegalIdentities();
-		if ((lablist == null) || (lablist.size() == 0))
-			throw new DiamondWebException("can't find Lab");
-		logger.info(String.format("Diamond %1$s is verify completely by %2$s", pkgInfo.getBasketno(),
-				lablist.get(0).getName().toString()));
+		// List<Party> lablist = rpcops.nodeInfo().getLegalIdentities();
+		// if ((lablist == null) || (lablist.size() == 0))
+		// throw new DiamondWebException("can't find Lab");
+		logger.info("Diamond {} is verify completely by {}", pkgInfo.getBasketno(), pkgInfo.getLocgradlab());
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondLabRespFlow.Initiator.class,
 					pkgInfo.getBasketno(), aocIdentity, pkgInfo.getGiaapproveddate(), pkgInfo.getStatus(),
-					pkgInfo.getResult(), pkgInfo.getReverification(), pkgInfo.getGiacontrolno());
+					pkgInfo.getResult(), pkgInfo.getReverification());
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
@@ -496,7 +543,7 @@ public class DiamondTradeApi {
 			strbuf.append(pkgInfo.getBasketno());
 			strbuf.append(" having verified and sent to ");
 			strbuf.append(aoc);
-			return (strbuf.toString());
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -517,17 +564,18 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String reqVaultVerifyDiamond(String basketno, String status, String vault, String owner)
+	public void reqVaultVerifyDiamond(String basketno, String status, String vault, String owner)
 			throws DiamondWebException {
 		logger.debug("reqVaultVerifyDiamond vault: {} ,basketno : {},status :{},owner: {}", vault, basketno, status,
 				owner);
+		checkPreStatus(basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(vault);
 		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (vaultIdentity == null)
 			throw new DiamondWebException("vault " + vault + " not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("can't find aoc");
+		// List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
+		// if ((aoclist == null) || (aoclist.size() == 0))
+		// throw new DiamondWebException("can't find aoc");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
 					DiamondReqVaultVerifyFlow.Initiator.class, basketno, status, vaultIdentity, owner);
@@ -536,8 +584,8 @@ public class DiamondTradeApi {
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
+			strbuf.append(DiamondApplicationRunner.getAllUserMap().get("AOC")).append(" basketno ").append(basketno);
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -551,18 +599,18 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String vaultVerifyResp(PackageInfo pkgInfo) throws DiamondWebException {
+	public void vaultVerifyResp(PackageInfo pkgInfo) throws DiamondWebException {
 		logger.debug("vaultVerifyResp {}", pkgInfo.toString());
+		checkPreStatus(pkgInfo.getBasketno(), pkgInfo.getStatus());
 		String aoc = pkgInfo.getAoc();
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((vaultlist == null) || (vaultlist.size() == 0))
-			throw new DiamondWebException("can't find vaultor");
-		logger.info(String.format("Diamond %1$s is verify completely by %2$s", pkgInfo.getBasketno(),
-				vaultlist.get(0).getName().toString()));
+		// List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
+		// if ((vaultlist == null) || (vaultlist.size() == 0))
+		// throw new DiamondWebException("can't find vaultor");
+		logger.info("Diamond {} is verify completely by {}", pkgInfo.getBasketno(), pkgInfo.getVault());
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
 					DiamondVaultRespFlow.Initiator.class, pkgInfo.getBasketno(), aocIdentity, pkgInfo.getStatus(),
@@ -575,7 +623,7 @@ public class DiamondTradeApi {
 			strbuf.append(pkgInfo.getBasketno());
 			strbuf.append(" having verified and sent to ");
 			strbuf.append(aoc);
-			return (strbuf.toString());
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond vault:{}", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -592,15 +640,13 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String submitChangeOwnerDiamond(String basketno, String vault, String owner) throws DiamondWebException {
+	public void submitChangeOwnerDiamond(String basketno, String vault, String owner,String status) throws DiamondWebException {
 		logger.debug("reqChangeOwnerDiamond vault: {} ,basketno : {},owner : {}", vault, basketno, owner);
+		checkPreStatus(basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(vault);
 		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (vaultIdentity == null)
 			throw new DiamondWebException("vault " + vault + " not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("can't find aoc");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops
 					.startFlowDynamic(DiamondReqChangeOwnerFlow.Initiator.class, basketno, owner, vaultIdentity);
@@ -609,8 +655,8 @@ public class DiamondTradeApi {
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
 			strbuf.append(" supplied by ");
-			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
+			strbuf.append(DiamondApplicationRunner.getAllUserMap().get("AOC")).append(" basketno ").append(basketno);
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to reqVaultVerify diamond:", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -625,17 +671,13 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String changeOwnerResp(String basketno, String aoc) throws DiamondWebException {
+	public void changeOwnerResp(String basketno, String aoc,String status) throws DiamondWebException {
 		logger.debug("changeOwnerResp aoc: {} ,basketno : {}", aoc, basketno);
+		checkPreStatus(basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((vaultlist == null) || (vaultlist.size() == 0))
-			throw new DiamondWebException("can't find vault");
-		logger.info(String.format("Diamond %1$s is verify completely by %2$s", basketno,
-				vaultlist.get(0).getName().toString()));
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops
 					.startFlowDynamic(DiamondChangeOwnerRespFlow.Initiator.class, basketno, aocIdentity);
@@ -647,7 +689,7 @@ public class DiamondTradeApi {
 			strbuf.append(basketno);
 			strbuf.append(" having verified and sent to ");
 			strbuf.append(aoc);
-			return (strbuf.toString());
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -662,27 +704,24 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String auditDiamond(String auditor, String basketno) throws DiamondWebException {
+	public void auditDiamond(String auditor, String basketno,String status) throws DiamondWebException {
 		logger.debug("auditDiamond auditor: {} ,basketno : {}", auditor, basketno);
+		checkPreStatus(basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(auditor);
 		final Party auditorIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (auditorIdentity == null)
 			throw new DiamondWebException("auditor not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("can't find aoc");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops
 					.startFlowDynamic(DiamondReqAuditFlow.Initiator.class, basketno, auditorIdentity);
 			final SignedTransaction stxn = flowhandle.getReturnValue().get();
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
-			strbuf.append(stxn.getId());
-			strbuf.append(" supplied by ");
-			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
+			strbuf.append(stxn.getId()).append(" basketno ").append(basketno);
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to audit diamond:", ex);
+
 			throw new DiamondWebException(ex.getMessage(), ex);
 		}
 	}
@@ -698,18 +737,14 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String auditDiamondResp(String basketno, String aoc, String auditdate, String status, String result)
+	public void auditDiamondResp(String basketno, String aoc, String auditdate, String status, String result)
 			throws DiamondWebException {
 		logger.debug("auditDiamondResp aoc: {} ,basketno : {},status: {} , result: {}", aoc, basketno, status, result);
+		checkPreStatus(basketno, status);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> auditlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((auditlist == null) || (auditlist.size() == 0))
-			throw new DiamondWebException("Unkown Lab");
-		logger.info(String.format("Diamond %1$s is verify completely by %2$s", basketno,
-				auditlist.get(0).getName().toString()));
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(
 					DiamondAuditRespFlow.Initiator.class, basketno, aocIdentity, auditdate, status, result);
@@ -721,7 +756,7 @@ public class DiamondTradeApi {
 			strbuf.append(basketno);
 			strbuf.append(" having verified and sent to ");
 			strbuf.append(aoc);
-			return (strbuf.toString());
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to confirm diamond lab verify:{}", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -736,15 +771,12 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String redeemDiamond(String basketno, String vault) throws DiamondWebException {
+	public void redeemDiamond(String basketno, String vault) throws DiamondWebException {
 		logger.debug("redeemDiamond vault: {} ,basketno : {}", vault, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(vault);
 		final Party vaultIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (vaultIdentity == null)
 			throw new DiamondWebException("vault not found");
-		List<Party> aoclist = rpcops.nodeInfo().getLegalIdentities();
-		if ((aoclist == null) || (aoclist.size() == 0))
-			throw new DiamondWebException("can't find aoc");
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops.startFlowDynamic(DiamondRedeemFlow.Initiator.class,
 					vaultIdentity, basketno);
@@ -752,9 +784,8 @@ public class DiamondTradeApi {
 			StringBuilder strbuf = new StringBuilder();
 			strbuf.append("Transaction completed with id ");
 			strbuf.append(stxn.getId());
-			strbuf.append(" supplied by ");
-			strbuf.append(aoclist.get(0).getName()).append(" basketno ").append(basketno);
-			return (strbuf.toString());
+			strbuf.append(" basketno ").append(basketno);
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to redeem diamond:", ex.getMessage());
 			throw new DiamondWebException(ex.getMessage(), ex);
@@ -769,17 +800,12 @@ public class DiamondTradeApi {
 	 * @return
 	 * @throws DiamondWebException
 	 */
-	public String redeemDiamondResp(String basketno, String aoc) throws DiamondWebException {
+	public void redeemDiamondResp(String basketno, String aoc) throws DiamondWebException {
 		logger.debug("redeemDiamondResp aoc: {} ,basketno : {}", aoc, basketno);
 		CordaX500Name x500Name = CordaX500Name.parse(aoc);
 		final Party aocIdentity = rpcops.wellKnownPartyFromX500Name(x500Name);
 		if (aocIdentity == null)
 			throw new DiamondWebException("AOC not found");
-		List<Party> vaultlist = rpcops.nodeInfo().getLegalIdentities();
-		if ((vaultlist == null) || (vaultlist.size() == 0))
-			throw new DiamondWebException("can't find vault");
-		logger.info(String.format("Diamond %1$s is verify completely by %2$s", basketno,
-				vaultlist.get(0).getName().toString()));
 		try {
 			final FlowHandle<SignedTransaction> flowhandle = rpcops
 					.startFlowDynamic(DiamondRedeemRespFlow.Initiator.class, basketno, aocIdentity);
@@ -791,7 +817,7 @@ public class DiamondTradeApi {
 			strbuf.append(basketno);
 			strbuf.append(" having verified and sent to ");
 			strbuf.append(aoc);
-			return (strbuf.toString());
+			logger.info(strbuf.toString());
 		} catch (Exception ex) {
 			logger.warn("Failure to redeem diamond:{}", ex);
 			throw new DiamondWebException(ex.getMessage(), ex);

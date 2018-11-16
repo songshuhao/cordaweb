@@ -6,6 +6,14 @@ public class ExportConfig {
 	private String step;
 	private String[] status;
 	private String[] header;
+	private String filename;
+	
+	public String getFilename() {
+		return filename;
+	}
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 	public String getStep() {
 		return step;
 	}
@@ -33,10 +41,10 @@ public class ExportConfig {
 		builder.append(Arrays.toString(status));
 		builder.append(", header=");
 		builder.append(Arrays.toString(header));
+		builder.append(", filename=");
+		builder.append(filename);
 		builder.append("]");
 		return builder.toString();
 	}
-	
-	
 	
 }

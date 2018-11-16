@@ -203,7 +203,7 @@
 			  $("#failedMessage").html(showMessage);
 			  if(!isSubmit)
 			  {
-				  if(modalId.indexOf("importModal")>0)
+				  if(null != modalId && modalId.indexOf("importModal")>0)
 				  {
 					  $("#importMessage").html("Please check the import data or try to export again!");
 				  }else

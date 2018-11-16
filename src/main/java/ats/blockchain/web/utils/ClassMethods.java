@@ -29,7 +29,7 @@ public class ClassMethods {
 		
 		for (Method method : methods) {
 			
-			String name = method.getName();
+			String name = method.getName().toUpperCase();
 			//子类已存在的方法不再覆盖
 			if(methodMap.containsKey(name))
 				continue;

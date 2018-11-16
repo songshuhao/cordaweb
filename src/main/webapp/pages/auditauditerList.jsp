@@ -89,6 +89,7 @@
     
     laydate.render({
   	   elem: '#auditdate',
+  	   value: '1988-12-12',
   	   done: function(value, date){
   		  $("#addForm").data('bootstrapValidator')
        	 .updateStatus('auditdate', 'NOT_VALIDATED',null)
@@ -199,8 +200,9 @@
 		'click #addBtn': function(e, value, row, index) {
 			resetAddModal();
 			//console.log(row);
+			var now=new Date();
 			$("#basketno").val(row.basketno);
-			$("#auditdate").val(row.auditdate);
+			$("#auditdate").val(now.getFullYear()+"-"+now.getMonth()+"-"+now.getDate());
 			$("#result").val(row.result);
 			$("#seqNo").val(row.seqNo);
 			$("#conf").text("Add");

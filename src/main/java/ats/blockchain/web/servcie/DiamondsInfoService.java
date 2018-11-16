@@ -24,4 +24,9 @@ public interface DiamondsInfoService {
 	
 	Map<String,Object> checkGiano(String userid,String tradeid,String giano);
 	
+	/**
+	 * 获取最新状态下重复钻石的集合。
+	 * add by shuhao.song
+	 */
+	Map<String,List<DiamondInfoData>> getDuplicateDiamondsList(String basketno);
 }
